@@ -66,9 +66,16 @@ img{max-width:100%}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 
-#blockToast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:#fff;color:#111;padding:13px 22px 13px 14px;border-radius:14px;font-size:15px;font-weight:500;z-index:2147483000;box-shadow:0 6px 24px rgba(0,0,0,.35);display:none;align-items:center;gap:12px;width:max-content;max-width:88vw}
-#blockToast img{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none}
-#customToast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:12px 25px;border-radius:25px;font-size:13px;font-weight:700;z-index:999999;box-shadow:0 5px 15px rgba(0,0,0,.2);display:none;text-align:center;min-width:250px}
+#payReturn{position:fixed;inset:0;z-index:2147483100;background:#fafafa;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px}
+#payReturn img{width:84px;height:84px;border-radius:50%;object-fit:cover;box-shadow:0 6px 20px rgba(0,0,0,.18);margin-bottom:18px}
+#payReturn h2{font-size:21px;font-weight:700;margin-bottom:8px}
+#payReturn p{font-size:14px;color:#555;max-width:300px;line-height:1.5;margin-bottom:22px}
+#payReturn button{width:min(280px,80vw);padding:14px;border:none;border-radius:12px;background:#111;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+#payReturn button.alt{background:transparent;color:#555;margin-top:8px;font-weight:600}
+#customToast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(14px);background:rgba(18,18,18,.96);color:#fff;padding:11px 20px 11px 12px;border-radius:30px;font-size:14px;font-weight:500;line-height:1.35;z-index:2147483000;box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;align-items:center;gap:10px;width:max-content;max-width:86vw;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,transform .25s ease,visibility 0s .25s}
+#customToast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);transition:opacity .25s ease,transform .25s ease}
+#customToast img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none}
+#customToast span{word-break:break-word}
 
 /* ---------- Auth ---------- */
 #authScreen{position:fixed;inset:0;z-index:9999;background:#fafafa;overflow:hidden}
@@ -621,8 +628,8 @@ window.setSplashLogo(window.SPLASH_LOGO);
   </div>
 </div>
 
-<div id="customToast">Message</div>
-<div id="blockToast"><img alt=""><span>Your account is blocked by admin</span></div>
+<div id="payReturn"><img alt="" id="payRetLogo"><h2 id="payRetTitle">Checking payment...</h2><p id="payRetMsg">Please wait a moment.</p><button type="button" onclick="payRetBack()">BACK TO APP</button><button type="button" class="alt" onclick="payRetLogin()">Continue here</button></div>
+<div id="customToast"><img alt=""><span>Message</span></div>
 
 <!-- Auth -->
 <div id="authScreen" style="display:none">
@@ -967,17 +974,27 @@ window.setSplashLogo(window.SPLASH_LOGO);
 </div></div>
 
 <!-- Refer -->
-<div id="referModal" class="modal-overlay">
-  <div class="modal-content">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px"><h3>Refer &amp; Earn</h3><i class="fa-solid fa-xmark" style="font-size:20px;cursor:pointer" onclick="closeModal('referModal')"></i></div>
-    <div class="wallet-box" style="text-align:center">
-      <i class="fa-solid fa-gift" style="font-size:50px;margin-bottom:15px"></i>
-      <div style="font-size:14px;margin-bottom:10px">Share your code and earn bonus!<br><span style="font-size:10px;color:#c77c00">(Bonus unlocks when your friend plays their 1st Match)</span></div>
-      <div style="background:rgba(0,0,0,.03);border:1px dashed #111;padding:15px;border-radius:12px;font-family:monospace;font-size:24px;font-weight:700;letter-spacing:2px;color:#c77c00;margin-bottom:15px" id="referTabCode">Loading...</div>
-      <div style="display:flex;gap:10px"><button class="btn-outline" style="flex:1;padding:10px" onclick="copyRefCode()"><i class="fa-solid fa-copy"></i> Copy</button><button class="btn-main" style="flex:1;padding:10px;background:#25D366" onclick="shareOnWhatsApp()"><i class="fa-brands fa-whatsapp"></i> Share</button></div>
+<div id="referModal" class="modal-overlay" style="padding:0;align-items:stretch;justify-content:stretch">
+  <div class="modal-content" style="background:#fff;color:#222;width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;padding:0;overflow-y:auto;font-family:'Poppins',sans-serif">
+    <div style="background:#000;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:16px 18px;position:sticky;top:0;z-index:2"><i class="fa-solid fa-arrow-left" style="font-size:20px;cursor:pointer" onclick="closeModal('referModal')"></i><i class="fa-solid fa-ellipsis-vertical" style="font-size:20px;cursor:pointer;padding:0 6px" onclick="document.getElementById('referHistoryBox').scrollIntoView({behavior:'smooth'})"></i></div>
+    <div style="padding:22px 20px 30px;text-align:center">
+      <div style="color:#4ee38f;font-weight:800;font-size:22px;letter-spacing:.5px;margin-bottom:14px">REFER MORE TO EARN MORE</div>
+      <div style="font-size:13px;font-weight:600;color:#333;line-height:1.5;margin-bottom:10px">INVITE YOUR FRIENDS AND WIN MONEY PRIZE .TOP 5 REFFEREL WILL GET ₹10,000 RUPEES INSTANTLY.</div>
+      <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:22px">जो भी टॉप 5 लोग सबसे ज्यादा रेफ़रल करेंगे, उन्हें मिलेंगे ₹10,000 रुपये तक के ईनाम — वो भी तुरंत।</div>
+      <div style="color:#4ee38f;font-weight:700;font-size:14px;margin-bottom:6px">YOUR REFERRAL CODE</div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:26px"><span id="referTabCode" style="font-size:26px;font-weight:700;color:#222">Loading...</span><i class="fa-regular fa-copy" style="font-size:20px;color:#444;cursor:pointer" onclick="copyRefCode()"></i></div>
+      <div style="color:#f26b5b;font-weight:700;font-size:20px;margin-bottom:18px">How It Works</div>
+      <div style="display:flex;justify-content:center;align-items:flex-start;gap:6px;margin-bottom:28px">
+        <div style="width:90px"><div style="width:62px;height:62px;border-radius:50%;background:#2196F3;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 8px"><i class="fa-solid fa-file-pen"></i></div><div style="font-size:11px;color:#777">User Registers</div></div>
+        <div style="color:#4ee38f;margin-top:20px;font-size:16px"><i class="fa-solid fa-angles-right"></i></div>
+        <div style="width:90px"><div style="width:62px;height:62px;border-radius:50%;background:#2196F3;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 8px"><i class="fa-solid fa-gamepad"></i></div><div style="font-size:11px;color:#777">Joins A Match</div></div>
+        <div style="color:#4ee38f;margin-top:20px;font-size:16px"><i class="fa-solid fa-angles-right"></i></div>
+        <div style="width:90px"><div style="width:62px;height:62px;border-radius:50%;background:#2196F3;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 8px"><i class="fa-solid fa-gift"></i></div><div style="font-size:11px;color:#777">You Get Rewarded</div></div>
+      </div>
+      <button onclick="shareOnWhatsApp()" style="width:100%;padding:15px;border:none;border-radius:14px;background:#4ee38f;color:#fff;font-weight:800;font-size:17px;letter-spacing:1px;box-shadow:0 6px 16px rgba(78,227,143,.45);cursor:pointer;font-family:inherit">REFER NOW</button>
+      <div id="referHistoryBox" style="text-align:left;margin-top:30px"><div style="font-weight:700;font-size:15px;color:#222;margin-bottom:6px"><i class="fa-solid fa-clock-rotate-left"></i> Referral History</div>
+      <div id="referHistoryList" style="padding:6px 0;color:#222"><div class="loader">Loading history...</div></div></div>
     </div>
-    <div class="section-title" style="padding:0"><i class="fa-solid fa-clock-rotate-left"></i> Referral History</div>
-    <div id="referHistoryList" style="padding:10px 0"><div class="loader">Loading history...</div></div>
   </div>
 </div>
 
@@ -1193,14 +1210,15 @@ const EMOJI_LIST=["👦","👧","👨","👩","🧔","👱‍♂️","🧑‍�
 const setTxt=(id,v)=>{const e=document.getElementById(id); if(e) e.innerText=v;};
 const setHtml=(id,v)=>{const e=document.getElementById(id); if(e) e.innerHTML=v;};
 
-let __blkT=null;
-function showBlockedToast(){
-  const t=document.getElementById('blockToast'); if(!t) return;
-  const im=t.querySelector('img'); if(window.SPLASH_LOGO) im.src=window.SPLASH_LOGO;
-  t.style.display='flex'; clearTimeout(__blkT); __blkT=setTimeout(()=>{t.style.display='none'},3500);
-}
+function showLogoToast(msg){ showToast(msg); }
+function showBlockedToast(){ showToast('Your account is blocked by admin'); }
 const isBlockedUser=d=>/^(blocked|block|banned|ban)$/i.test(String((d&&d.status)||'').trim());
-function showToast(msg,isErr=false){const t=document.getElementById('customToast'); if(!t) return; t.innerText=msg; t.style.background=isErr?"var(--primary-red)":"var(--success)"; t.style.display='block'; setTimeout(()=>{t.style.display='none'},3500);}
+function showToast(msg,isErr=false){
+  const t=document.getElementById('customToast'); if(!t) return;
+  const im=t.querySelector('img'); if(im){ if(window.SPLASH_LOGO){ if(im.getAttribute('src')!==window.SPLASH_LOGO) im.src=window.SPLASH_LOGO; im.style.display=''; } else im.style.display='none'; }
+  const sp=t.querySelector('span'); if(sp) sp.textContent=String(msg==null?'':msg);
+  t.classList.add('show'); clearTimeout(window.__toastT); window.__toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
 window.alert=function(m){showToast(m,false)};
 
 window.openModal=id=>{const e=document.getElementById(id); if(e) e.style.display='flex';};
@@ -1216,7 +1234,27 @@ window.copyAdminUpi=()=>window.copyToClipboard(window.appSettings?.upiId||"");
 window.openReferModal=()=>{loadReferralHistory(); openModal('referModal');};
 window.openNotifs=()=>{localStorage.setItem('lastNotifView',Date.now()); const b=document.getElementById('notifBadge'); if(b) b.style.display='none'; openModal('notificationsModal');};
 window.shareApp=()=>{ if(navigator.share) navigator.share({title:document.title,text:'Join our tournament app!',url:location.href}).catch(()=>{}); else showToast('Share not supported'); };
-window.openSupportWa=()=>{ let sl=(window.appSocials&&window.appSocials.support||'').toString().trim(); if(sl){ if(!/^(https?:|tg:)/i.test(sl)) sl='https://'+sl; window.open(sl,'_blank'); return; } const f=document.getElementById('floatingWa'); if(window.appSettings?.whatsapp && f && f.href) window.open(f.href,'_blank'); else showToast("Admin has not set WhatsApp number yet!",true); };
+/* ---------- External links: open outside the app (WhatsApp, Telegram, etc.) ---------- */
+window.openExternal=function(url){
+  try{
+    url=String(url||'').trim(); if(!url) return;
+    if(!/^[a-z][a-z0-9+.-]*:/i.test(url)) url='https://'+url;
+    if(/^(tg|whatsapp|intent|market|mailto|tel):/i.test(url)){ window.location.href=url; return; }
+    const isAndroid=/Android/i.test(navigator.userAgent);
+    if(isAndroid){
+      const u=new URL(url); const h=u.hostname.replace(/^www\./,'').toLowerCase(); let pkg='';
+      if(/(^|\.)(wa\.me|whatsapp\.com)$/.test(h)) pkg='com.whatsapp';
+      else if(/(^|\.)(t\.me|telegram\.me|telegram\.org)$/.test(h)) pkg='org.telegram.messenger';
+      else if(/(^|\.)instagram\.com$/.test(h)) pkg='com.instagram.android';
+      else if(/(^|\.)(youtube\.com|youtu\.be)$/.test(h)) pkg='com.google.android.youtube';
+      else if(/(^|\.)(discord\.gg|discord\.com)$/.test(h)) pkg='com.discord';
+      const intent='intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+(pkg?';package='+pkg:'')+';S.browser_fallback_url='+encodeURIComponent(url)+';end';
+      window.location.href=intent; return;
+    }
+    window.open(url,'_blank','noopener');
+  }catch(e){ try{ window.open(url,'_blank'); }catch(e2){} }
+};
+window.openSupportWa=()=>{ let sl=(window.appSocials&&window.appSocials.support||'').toString().trim(); if(sl){ window.openExternal(sl); return; } const f=document.getElementById('floatingWa'); if(window.appSettings?.whatsapp && f && f.href) window.openExternal(f.href); else showToast("Admin has not set WhatsApp number yet!",true); };
 
 /* ---------- Tabs ---------- */
 window.switchTab=(tabId)=>{
@@ -1232,7 +1270,7 @@ window.switchTab=(tabId)=>{
   if(tabId==='Help') renderSocials();
   if(tabId==='More') renderMorePage();
 };
-window.handleWaClick=(e)=>{ if(!window.appSettings?.whatsapp){e.preventDefault(); showToast("Admin has not set WhatsApp number yet!",true);} };
+window.handleWaClick=(e)=>{ e.preventDefault(); if(!window.appSettings?.whatsapp){ showToast("Admin has not set WhatsApp number yet!",true); return; } const f=document.getElementById('floatingWa'); if(f&&f.href) window.openExternal(f.href); };
 
 /* ---------- Logo helper: one logo, fitted everywhere ---------- */
 function applyLogo(url){
@@ -1411,7 +1449,23 @@ function auStop(){ if(auTimer){clearInterval(auTimer); auTimer=null;} }
   el.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});
   el.addEventListener('touchend',e=>{ if(x0===null) return; const dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)>40){ auShow(auIdx+(dx<0?1:-1)); auStart(); } },{passive:true});
 })();
+window.__payReturn=(function(){ try{ const sp=new URLSearchParams(location.search); const q=sp.get('order_id')||sp.get('zap_order'); return (q&&/^ORD[A-Za-z0-9]+$/.test(q))?q:null; }catch(e){ return null; } })();
+window.payRetBack=()=>{ try{ if(history.length>1){ history.back(); return; } }catch(e){} try{ window.close(); }catch(e){} payRetLogin(); };
+window.payRetLogin=()=>{ window.__payReturn=null; const o=document.getElementById('payReturn'); if(o) o.style.display='none'; showAuth(); };
+async function showPayReturn(){
+  const o=document.getElementById('payReturn'); if(!o) return;
+  const im=document.getElementById('payRetLogo'); if(im){ if(window.SPLASH_LOGO) im.src=window.SPLASH_LOGO; else im.style.display='none'; }
+  o.style.display='flex';
+  const ttl=document.getElementById('payRetTitle'), msg=document.getElementById('payRetMsg');
+  try{
+    const st=await zapPost('order-status',{order_id:window.__payReturn}); const d=st.data||st; const x=String(d.status||'').toLowerCase();
+    if(x==='success'){ ttl.textContent='Payment successful'; msg.textContent='Wallet update karne ke liye app me wapas jaiye.'; }
+    else if(x==='failed'||x==='cancelled'||x==='expired'){ ttl.textContent='Payment failed'; msg.textContent='Payment complete nahi hua. App me wapas jaakar dobara try karein.'; }
+    else{ ttl.textContent='Payment processing'; msg.textContent='Payment confirm hone me time lag sakta hai. App me wapas jaiye.'; }
+  }catch(e){ ttl.textContent='Payment status'; msg.textContent='App me wapas jaiye, wahan wallet apne aap update ho jayega.'; }
+}
 window.showAuth=()=>{
+  if(window.__payReturn && !window.currentUser){ showPayReturn(); return; }
   const a=document.getElementById('authScreen'); if(!a) return; a.style.display='block';
   const cur=document.querySelector('#authScreen .au-pg.on'); if(cur) return;
   if(!auSafe.get(AU_KEY_LANG)) auGo('lang'); else if(!auSafe.get(AU_KEY_INTRO)) auGo('intro'); else auGo('login');
@@ -1508,7 +1562,7 @@ window.registerUser=async()=>{
   const btn=document.getElementById('signupBtn');
   const v=id=>(document.getElementById(id)?.value||'').trim();
   const first=v('regFirst'), last=v('regLast'), ffName=v('regFfName'), code=v('regCode')||'+91', mobile=v('regMobile').replace(/\D/g,'');
-  const refCode=v('regRefCode').toUpperCase(); const pass=document.getElementById('regPass')?.value||'';
+  const refCodeRaw=v('regRefCode').trim(); const refCode=refCodeRaw.toUpperCase(); const pass=document.getElementById('regPass')?.value||'';
   let email=v('regEmail').toLowerCase(); let synthetic=false;
   if(!first) return showToast('First Name daalein!',true);
   if(!last) return showToast('Last Name daalein!',true);
@@ -1522,6 +1576,10 @@ window.registerUser=async()=>{
   if(!auth||!db) return showToast('Firebase is not ready. Please reload the app.',true);
   if(btn){btn.innerText='Creating...'; btn.disabled=true;}
   let createdUser=null;
+  try{
+    const uq=await db.collection('users').where('usernameLower','==',ffName.toLowerCase()).limit(1).get();
+    if(!uq.empty){ showLogoToast('Username already exists'); if(btn){btn.innerText='SIGNUP'; btn.disabled=false;} return; }
+  }catch(e){ console.warn('username check skipped',e); }
   window.__registering=true; window.__regPromise=new Promise(r=>{window.__regResolve=r;});
   try{
     const cred=await auth.createUserWithEmailAndPassword(email,pass); createdUser=cred.user; const uid=createdUser.uid;
@@ -1538,16 +1596,16 @@ window.registerUser=async()=>{
     if(signupBonus>0){ try{ await db.collection('transactions').add({userId:uid,type:'Signup Bonus',desc:'Welcome Bonus',amount:signupBonus,status:'Success',date:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){} }
     if(refCode){
       try{
-        const rs=await db.collection('users').where('myReferralCode','==',refCode).limit(1).get();
+        let rs=await db.collection('users').where('myReferralCode','==',refCodeRaw).limit(1).get(); if(rs.empty&&refCode!==refCodeRaw) rs=await db.collection('users').where('myReferralCode','==',refCode).limit(1).get();
         if(!rs.empty){ const r=rs.docs[0];
-          await db.collection('referrals').add({referrerUid:r.id,referrerName:r.data().ffName||'',referrerEmail:r.data().email||'',refereeUid:uid,refereeName:ffName,refereeEmail:email,code:refCode,status:'Pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+          await db.collection('referrals').add({referrerUid:r.id,referrerName:r.data().ffName||'',referrerEmail:r.data().email||'',refereeUid:uid,refereeName:ffName,refereeEmail:email,code:refCodeRaw,status:'Pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         }
-      }catch(e){}
+      }catch(e){ console.error('referral create failed',e); }
     }
     showToast('Account created successfully!');
   }catch(e){
     const ecode=e?.code||''; let msg='Account creation failed. Please try again.';
-    if(eecode==='auth/email-already-in-use') msg='Ye Username/Email pehle se registered hai. Please Login.';
+    if(ecode==='auth/email-already-in-use'){ showLogoToast(synthetic?'Username already exists':'Email already exists'); return; }
     else if(ecode==='auth/invalid-email') msg='Invalid email address.';
     else if(ecode==='auth/weak-password') msg='Password must be at least 6 characters.';
     else if(ecode==='auth/operation-not-allowed') msg='Email/Password login is disabled in Firebase.';
@@ -1828,16 +1886,16 @@ window.openPolicyModal=(type)=>{
   if(c.startsWith("http")) setHtml('policyContent',`<a href="${c}" target="_blank" style="color:var(--info)">Click here to view ${type}</a>`); else setTxt('policyContent',c);
   openModal('policyModal');
 };
-window.openDeveloperContact=()=>{ let dl=(window.appSocials&&window.appSocials.developer||'').toString().trim(); if(!dl){ showToast("Developer link abhi set nahi hai",true); return; } if(!/^(https?:|tg:)/i.test(dl)) dl='https://'+dl; showToast("Connecting to Developer..."); setTimeout(()=>window.open(dl,'_blank'),1000); };
+window.openDeveloperContact=()=>{ let dl=(window.appSocials&&window.appSocials.developer||'').toString().trim(); if(!dl){ showToast("Developer link abhi set nahi hai",true); return; } showToast("Connecting to Developer..."); setTimeout(()=>window.openExternal(dl),1000); };
 
 /* ---------- Socials ---------- */
 function socialsHtml(){
   const d=window.appSocials||{}; let h='';
-  if(d.whatsapp) h+=`<div class="social-icon wa" onclick="window.open('${d.whatsapp}','_blank')"><i class="fa-brands fa-whatsapp"></i></div>`;
-  if(d.telegram) h+=`<div class="social-icon tg" onclick="window.open('${d.telegram}','_blank')"><i class="fa-brands fa-telegram"></i></div>`;
-  if(d.instagram) h+=`<div class="social-icon ig" onclick="window.open('${d.instagram}','_blank')"><i class="fa-brands fa-instagram"></i></div>`;
-  if(d.youtube) h+=`<div class="social-icon yt" onclick="window.open('${d.youtube}','_blank')"><i class="fa-brands fa-youtube"></i></div>`;
-  if(d.discord) h+=`<div class="social-icon dc" onclick="window.open('${d.discord}','_blank')"><i class="fa-brands fa-discord"></i></div>`;
+  if(d.whatsapp) h+=`<div class="social-icon wa" onclick="window.openExternal(window.appSocials.whatsapp)"><i class="fa-brands fa-whatsapp"></i></div>`;
+  if(d.telegram) h+=`<div class="social-icon tg" onclick="window.openExternal(window.appSocials.telegram)"><i class="fa-brands fa-telegram"></i></div>`;
+  if(d.instagram) h+=`<div class="social-icon ig" onclick="window.openExternal(window.appSocials.instagram)"><i class="fa-brands fa-instagram"></i></div>`;
+  if(d.youtube) h+=`<div class="social-icon yt" onclick="window.openExternal(window.appSocials.youtube)"><i class="fa-brands fa-youtube"></i></div>`;
+  if(d.discord) h+=`<div class="social-icon dc" onclick="window.openExternal(window.appSocials.discord)"><i class="fa-brands fa-discord"></i></div>`;
   return h;
 }
 function renderSocials(){ const h=socialsHtml(); setHtml('helpSocials',h||"<div class='loader' style='padding:10px'>No links configured.</div>"); setHtml('homeSocials',h||'<div style="font-size:11px;color:#999">No social links configured</div>'); }
@@ -2479,14 +2537,20 @@ async function loadLeaderboard(){
 }
 
 /* ---------- Referral ---------- */
-window.shareOnWhatsApp=()=>{ const code=window.userData?.myReferralCode||""; const link="https://tnvesports.github.io/TNVesports/msztournament"; const name=window.appSettings?.appName||"CLASH X WAR"; const msg=`Hey! Download ${name} and play tournaments with me. Use my Referral Code: *${code}* to get a signup bonus! Download here: ${link}`; window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank'); };
+window.shareOnWhatsApp=()=>{ const code=window.userData?.myReferralCode||""; const msg="Free Fire khelte ho? Ab har kill ka milega reward.\n\nJoin ClashxWar – ek eSports platform jahan har roz matches hote hain. Har kill pe milta hai reward, aur Booyah pe badi winning.\n\nApp download karo, promo code se sign up karo aur 10 Play Coins ka free signup bonus pao – bina kisi risk ke.\n\nGame wahi, reward naya.\nDownload Now: https://github.com/youtu7854-boop/clashxwaapk/releases/download/V1/Clash.x.War_1.1.apk\n\nReferral Code : "+code; window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank'); };
 async function loadReferralHistory(){
   setHtml('referHistoryList',"<div class='loader'>Loading history...</div>");
   try{
-    const snap=await db.collection("referrals").where("referrerUid","==",window.currentUser.uid).get(); let h='';
-    snap.forEach(d=>{ const x=d.data(); const sc=x.status==='Approved'?'var(--success)':(x.status==='Pending'?'#c77c00':'var(--primary-red)'); h+=`<div class="txn-item"><div style="font-weight:700;font-size:13px">${x.refereeName}</div><div style="font-size:12px;color:${sc};font-weight:700">${x.status}</div></div>`; });
+    const u=window.currentUser||auth.currentUser; if(!u){ setHtml('referHistoryList',"<div class='loader'>Please login.</div>"); return; }
+    const snap=await db.collection("referrals").where("referrerUid","==",u.uid).get();
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    rows.sort((p,q)=>((q.createdAt&&q.createdAt.seconds)||0)-((p.createdAt&&p.createdAt.seconds)||0));
+    const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    let h='';
+    rows.forEach(x=>{ const st=x.status||'Pending'; const sc=st==='Approved'?'#16a34a':(st==='Pending'?'#c77c00':'#e53935'); const nm=x.refereeName||x.refereeEmail||'User';
+      h+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #eee"><div style="font-weight:700;font-size:13px;color:#222">${esc(nm)}</div><div style="font-size:12px;color:${sc};font-weight:700">${esc(st)}</div></div>`; });
     setHtml('referHistoryList',h||"<div class='loader' style='padding:20px 0'>You haven't referred anyone yet.</div>");
-  }catch(e){ setHtml('referHistoryList',"<div class='loader'>Error loading referrals.</div>"); }
+  }catch(e){ console.error('referral history',e); setHtml('referHistoryList',"<div class='loader'>Error loading referrals: "+((e&&e.code)||'')+"</div>"); }
 }
 
 /* ---------- Deposit / Withdraw ---------- */
@@ -2500,7 +2564,16 @@ const ZAP_API="https://pay.zapupi.com/api";
 // Payment ke baad user isi URL pe wapas aayega. Vercel pe host hai to apne aap set ho jata hai.
 // Agar ye app local/asset se khulta hai to neeche apna Vercel URL daalo (https://.../ )
 // Payment ke baad user usi address pe wapas aayega jis par app abhi khula hai (isse login/session nahi jata).
-const SITE_URL=location.protocol.startsWith('http')?(location.origin+location.pathname):'https://youtu7854-boop.github.io/clashxwa223/';
+const PUBLIC_SITE_URL='https://youtu7854-boop.github.io/clashxwa223/';
+/* Payment gateway ko hamesha public https URL chahiye. App ka local server (192.x / localhost / file) bahar se khul hi nahi sakta. */
+const SITE_URL=(function(){
+  try{
+    const h=location.hostname;
+    const isLocal=!h||h==='localhost'||/^(\d{1,3}\.){3}\d{1,3}$/.test(h)||/\.local$/.test(h);
+    if(location.protocol==='https:'&&!isLocal) return location.origin+location.pathname;
+  }catch(e){}
+  return PUBLIC_SITE_URL;
+})();
 async function zapPost(path,fields){
   const r=await fetch(ZAP_API+'/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({zap_key:ZAP_TOKEN},fields))});
   const txt=await r.text();
@@ -2736,8 +2809,8 @@ async function loadNotifications(){
     if(running||!window.currentUser) return;
     var oid=null;
     try{
-      var q=new URLSearchParams(location.search).get('zap_order');
-      if(q) localStorage.setItem('pendingZapOrder',q);
+      var sp=new URLSearchParams(location.search); var q=sp.get('zap_order')||sp.get('order_id');
+      if(q&&/^ORD[A-Za-z0-9]+$/.test(q)){ localStorage.setItem('pendingZapOrder',q); try{ history.replaceState(null,'',location.pathname); }catch(e3){} }
       oid=localStorage.getItem('pendingZapOrder');
     }catch(e){}
     if(!oid) return;
