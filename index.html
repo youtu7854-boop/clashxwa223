@@ -1087,6 +1087,66 @@ window.setSplashLogo(window.SPLASH_LOGO);
   </div>
 </div>
 
+<!-- Withdraw Money screen -->
+<style>
+#wdScreen{display:none;position:fixed;inset:0;background:#f3f4f8;z-index:10000;overflow-y:auto;animation:slideInRight .25s;padding-bottom:40px}
+.wd-top{position:sticky;top:0;background:#fff;display:flex;align-items:center;gap:16px;padding:18px;box-shadow:0 1px 6px rgba(0,0,0,.08);z-index:2}
+.wd-top i{font-size:19px;cursor:pointer;color:#222}.wd-top h2{font-size:21px;font-weight:600;color:#1b1f3b}
+.wd-ban{margin:16px 14px;background:#e6f6ee;border-radius:20px;padding:22px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.wd-ban h3{color:#0b6b4a;font-size:22px;font-weight:600;line-height:1.25}.wd-ban p{color:#6b7280;font-size:14px;margin-top:8px}.wd-ban .em{font-size:58px;line-height:1}
+.wd-card{background:#fff;margin:14px;padding:20px 16px;border-radius:8px}
+.wd-h{border-left:5px solid #17a673;padding-left:14px;font-size:20px;font-weight:600;color:#1b1f3b;margin-bottom:18px;line-height:1.35}
+.wd-opt{display:flex;align-items:center;gap:16px;padding:12px 6px;font-size:17px;color:#444;cursor:pointer;line-height:1.35}
+.wd-opt .rd{width:28px;height:28px;border:2.5px solid #8a8a8a;border-radius:50%;flex:none;position:relative}
+.wd-opt.on .rd{border-color:#111;border-width:3px}.wd-opt.on .rd::after{content:'';position:absolute;inset:4px;background:#111;border-radius:50%}
+.wd-lbl{font-size:17px;color:#4b4f7a;margin:18px 2px 10px;font-weight:500}
+.wd-in{display:flex;align-items:center;gap:12px;border:1.5px solid #ddd;border-radius:18px;padding:0 18px;height:62px}
+.wd-in i{color:#17a673;font-size:22px}.wd-in input{border:none;outline:none;flex:1;font-size:18px;background:transparent;color:#222;min-width:0}
+.wd-chips{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+.wd-chip{flex:none;min-width:100px;padding:16px 10px;border:1.5px solid #ddd;border-radius:16px;text-align:center;font-size:18px;color:#333;background:#fff;cursor:pointer}
+.wd-chip.on{border-color:#17a673;background:#e6f6ee;color:#0b6b4a;font-weight:600}
+.wd-coin{display:flex;align-items:center;gap:16px;border:1.5px solid #ddd;border-radius:20px;padding:12px 16px}
+.wd-coin .ci{width:76px;height:76px;border-radius:50%;background:#17a673;display:flex;align-items:center;justify-content:center;flex:none}
+.wd-coin .ci span{width:52px;height:52px;border-radius:50%;background:#f5a623;display:flex;align-items:center;justify-content:center;font-size:26px;border:3px solid #e08e0b}
+.wd-coin small{color:#8a8fa5;font-size:15px;display:block}.wd-coin input{border:none;outline:none;font-size:34px;font-weight:600;width:100%;color:#222;background:transparent}
+.wd-info{font-size:13px;color:#6b7280;margin-top:12px}
+.wd-note{display:none;background:#fff8e1;border:1px dashed #f5a623;color:#7a5200;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px;line-height:1.5}
+.wd-go{display:block;width:calc(100% - 28px);margin:26px 14px 14px;padding:24px;border:none;border-radius:22px;background:linear-gradient(135deg,#17a673,#0b6b4a);color:#fff;font-size:23px;font-weight:700;letter-spacing:1px;cursor:pointer}
+.wd-go:disabled{opacity:.6}
+.wd-sec{margin:0 14px;background:linear-gradient(135deg,#0b6b4a,#17a673);border-radius:20px;padding:22px 10px;color:#fff;display:flex;justify-content:space-around;align-items:center;font-size:18px;font-weight:700;text-align:center}
+.wd-why{background:#fff;margin:18px 14px;padding:20px 16px;border-radius:8px}
+.wd-why h4{font-size:21px;font-weight:600;color:#1b1f3b;margin-bottom:18px}
+.wd-why .row{display:flex;justify-content:space-around;text-align:center;gap:6px}
+.wd-why .ic{width:84px;height:84px;border-radius:22px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:36px}
+.wd-why b{display:block;font-size:17px;color:#222;font-weight:600}.wd-why span{font-size:14px;color:#8a8fa5}
+</style>
+<div id="wdScreen">
+  <div class="wd-top"><i class="fa-solid fa-arrow-left" onclick="closeWithdraw()"></i><h2>Withdraw Money</h2></div>
+  <div class="wd-ban"><div><h3>Withdraw Your Winnings</h3><p>Only win amount can be withdrawn</p></div><div class="em">👛</div></div>
+  <div class="wd-card">
+    <div class="wd-h" id="wdHead">Withdraw to</div>
+    <div id="wdOpts"></div>
+    <div id="wdDetBox">
+      <div class="wd-lbl">Enter UPI ID / Mobile / Email</div>
+      <div class="wd-in"><i class="fa-solid fa-shield-halved"></i><input type="text" id="wdDet" placeholder="UPI ID" autocomplete="off"></div>
+    </div>
+  </div>
+  <div class="wd-card">
+    <div class="wd-h">Select Amount</div>
+    <div class="wd-chips" id="wdChips"></div>
+    <div class="wd-coin"><div class="ci"><span>⚡</span></div><div style="flex:1;min-width:0"><small>Coins to Withdraw</small><input type="number" inputmode="numeric" id="wdAmt" placeholder="0" oninput="wdAmtInput()"></div></div>
+    <div class="wd-info" id="wdInfo"></div>
+    <div class="wd-note" id="wdNote"></div>
+  </div>
+  <button class="wd-go" id="wdSubmitBtn" onclick="submitWithdraw()"><i class="fa-solid fa-shield-halved"></i> WITHDRAW NOW</button>
+  <div class="wd-sec"><span><i class="fa-solid fa-shield-halved"></i> 100% SECURE</span><span><i class="fa-solid fa-circle-check"></i> Instant Transfer</span></div>
+  <div class="wd-why"><h4>Why Withdraw With Us?</h4><div class="row">
+    <div><div class="ic" style="background:#e0f5ec;color:#f5a623"><i class="fa-solid fa-star"></i></div><b>Instant</b><span>Fast Transfer</span></div>
+    <div><div class="ic" style="background:#ece9ff;color:#6c63ff"><i class="fa-solid fa-shield-halved"></i></div><b>Secure</b><span>100% Safe</span></div>
+    <div><div class="ic" style="background:#fff3d6;color:#e08e0b"><i class="fa-solid fa-wallet"></i></div><b>Multiple</b><span>Methods</span></div>
+  </div></div>
+</div>
+
 <!-- Withdraw -->
 <div id="withdrawModal" class="modal-overlay"><div class="modal-content">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h3>Withdraw Winnings</h3><i class="fa-solid fa-xmark" style="font-size:20px;cursor:pointer" onclick="closeModal('withdrawModal')"></i></div>
@@ -2499,28 +2559,64 @@ window.submitFinalDeposit=async()=>{
   }catch(e){showToast(e.message||"Error submitting request",true);}
   btn.innerText="Confirm Deposit"; btn.disabled=false;
 };
-window.openWithdraw=()=>{
-  setTxt('widAvailBal',window.userData?.wallets?.winning||0); setTxt('widMin',window.appSettings?.widMin||50); setTxt('widMax',window.appSettings?.widMax||5000);
-  setTxt('widDailyCountText',`Daily limit: ${isVipNow()?3:1} withdrawals`); openModal('withdrawModal');
-};
+/* ---------- Withdraw Money screen ---------- */
+const WD_METHODS=[['W2D','Win Money To Deposit Money + Get 10% Extra Coin ✓'],['Paytm','Paytm'],['PhonePe','Phone pe'],['GPay','G-pay'],['Fampay','Fampay'],['OtherUPI','Other UPI'],['GPlay','Google Play Redeem Code ( 20% Commission Cut )']];
+const WD_PH={Paytm:'Paytm number / UPI ID',PhonePe:'PhonePe number / UPI ID',GPay:'G-pay number / UPI ID',Fampay:'Fampay number / UPI ID',OtherUPI:'UPI ID',GPlay:'Email'};
+window.__wd={method:'W2D'};
+const wdEl=id=>document.getElementById(id);
+// Min / Max admin se set hote hain (Admin > Payment Method)
+const wdLimits=()=>{ const st=window.appSettings||{}; const min=Number(st.minWithdraw)||Number(st.widMin)||50; let max=Number(st.maxWithdraw)||Number(st.widMax)||5000; if(max<min) max=min; return {min,max}; };
+const wdFmt=n=>String(Math.round(n*100)/100);
+function wdUpdate(){
+  const a=Math.floor(Number(wdEl('wdAmt').value)||0), m=window.__wd.method;
+  document.querySelectorAll('#wdChips .wd-chip').forEach(c=>c.classList.toggle('on',Number(c.dataset.n)===a));
+  let note='';
+  if(a>0&&m==='W2D'){ const bn=Math.round(a*10)/100; note='Admin approve karte hi ₹'+a+' + 10% extra (₹'+wdFmt(bn)+') = ₹'+wdFmt(a+bn)+' aapke Deposit wallet me add ho jayega.'; }
+  else if(a>0&&m==='GPlay'){ note='20% commission cut ke baad aapko ₹'+wdFmt(a*0.8)+' ka Google Play code milega.'; }
+  const ne=wdEl('wdNote'); ne.textContent=note; ne.style.display=note?'block':'none';
+}
+function wdRender(){
+  const m=window.__wd.method, isW=m==='W2D', L=wdLimits(), bal=Number(window.userData?.wallets?.winning||0);
+  const cur=WD_METHODS.find(x=>x[0]===m)||WD_METHODS[0];
+  wdEl('wdHead').textContent='Withdraw to '+cur[1];
+  wdEl('wdOpts').innerHTML=WD_METHODS.map(x=>'<div class="wd-opt '+(x[0]===m?'on':'')+'" onclick="wdPick(\''+x[0]+'\')"><span class="rd"></span><span>'+x[1]+'</span></div>').join('');
+  wdEl('wdDetBox').style.display=isW?'none':'block';
+  wdEl('wdDet').placeholder=WD_PH[m]||'UPI ID';
+  let list=[30,50,100,200,500,1000,2000].filter(n=>n>=L.min&&n<=L.max); if(!list.includes(L.min)) list.unshift(L.min);
+  wdEl('wdChips').innerHTML=list.map(n=>'<div class="wd-chip" data-n="'+n+'" onclick="wdChip('+n+')">₹ '+n+'</div>').join('');
+  wdEl('wdInfo').textContent='Min ₹'+L.min+' • Max ₹'+L.max+' • Winning Balance ₹'+wdFmt(bal);
+  wdUpdate();
+}
+window.openWithdraw=()=>{ window.__wd.method='W2D'; wdEl('wdAmt').value=''; wdEl('wdDet').value=''; wdRender(); const sc=wdEl('wdScreen'); sc.style.display='block'; sc.scrollTop=0; };
+window.closeWithdraw=()=>{ wdEl('wdScreen').style.display='none'; };
+window.wdPick=k=>{ window.__wd.method=k; wdRender(); };
+window.wdChip=n=>{ wdEl('wdAmt').value=n; wdUpdate(); };
+window.wdAmtInput=()=>wdUpdate();
 window.submitWithdraw=async()=>{
-  const amt=Number(document.getElementById('widAmt').value)||0, upi=document.getElementById('widUpi').value, name=document.getElementById('widName').value;
-  const winBal=Number(window.userData?.wallets?.winning||0), min=Number(window.appSettings?.widMin||50), max=Number(window.appSettings?.widMax||5000);
-  if(!amt||amt<min||amt>max) return showToast(`Amount must be between ₹${min} and ₹${max}`,true);
+  if(!window.currentUser) return showToast("Please login first",true);
+  const m=window.__wd.method, isW=m==='W2D', cur=WD_METHODS.find(x=>x[0]===m)||WD_METHODS[0];
+  const amt=Math.floor(Number(wdEl('wdAmt').value)||0), L=wdLimits(), winBal=Number(window.userData?.wallets?.winning||0);
+  if(!amt||amt<L.min||amt>L.max) return showToast('Amount must be between ₹'+L.min+' and ₹'+L.max,true);
   if(amt>winBal) return showToast("Insufficient Winning Balance!",true);
-  if(!upi||!name) return showToast("Fill details.",true);
-  const today=new Date(); today.setHours(0,0,0,0);
+  let detail=''; if(!isW){ detail=wdEl('wdDet').value.trim(); if(!detail) return showToast("UPI ID / Mobile / Email daalo",true); }
+  const uid=window.currentUser.uid, FVv=firebase.firestore.FieldValue;
+  if(!isW){
+    const today=new Date(); today.setHours(0,0,0,0);
+    try{
+      const ws=await db.collection("withdrawals").where("userId","==",uid).where("createdAt",">=",today).get(); const maxW=isVipNow()?3:1;
+      const used=ws.docs.filter(d=>d.data().method!=='W2D').length;
+      if(used>=maxW) return showToast('Daily limit reached! You can withdraw '+maxW+' time(s) a day.',true);
+    }catch(e){}
+  }
+  const btn=wdEl('wdSubmitBtn'); const old=btn.innerHTML; btn.innerText="Processing..."; btn.disabled=true;
   try{
-    const ws=await db.collection("withdrawals").where("userId","==",window.currentUser.uid).where("createdAt",">=",today).get(); const maxW=isVipNow()?3:1;
-    if(ws.size>=maxW) return showToast(`Daily limit reached! You can withdraw ${maxW} time(s) a day.`,true);
-  }catch(e){}
-  const btn=document.getElementById('widSubmitBtn'); btn.innerText="Processing..."; btn.disabled=true;
-  try{
-    await db.collection("users").doc(window.currentUser.uid).update({"wallets.winning":firebase.firestore.FieldValue.increment(-amt)});
-    await db.collection("withdrawals").add({userId:window.currentUser.uid,userEmail:window.userData?.email||'',amount:amt,upiId:upi,accountName:name,status:'Pending',createdAt:new Date()});
-    showToast("Withdraw Request Placed!"); closeModal('withdrawModal'); await loadUserProfile(window.currentUser.uid); await loadUserTransactions();
-  }catch(e){showToast("Error",true);}
-  btn.innerText="Request Withdraw"; btn.disabled=false;
+    const batch=db.batch(), wref=db.collection("withdrawals").doc();
+    batch.update(db.collection("users").doc(uid),{"wallets.winning":FVv.increment(-amt)});
+    batch.set(wref,{userId:uid,userEmail:window.userData?.email||'',amount:amt,upiId:isW?'Win Money → Deposit (+10% Extra Coin)':detail,accountName:window.userData?.ffName||'',method:m,methodLabel:cur[1],bonusPercent:isW?10:0,status:'Pending',createdAt:new Date()});
+    await batch.commit();
+    showToast("Withdraw Request Placed!"); closeWithdraw(); await loadUserProfile(uid); await loadUserTransactions();
+  }catch(e){ showToast("Error, dobara try karo",true); }
+  btn.innerHTML=old; btn.disabled=false;
 };
 
 /* ---------- Transactions & notifications ---------- */
@@ -2591,7 +2687,7 @@ async function loadUserTransactions(){
     let txns=[];
     ts.forEach(d=>{const x=d.data(); if(x.type!=='Deposit Req'&&x.type!=='Withdraw Req') txns.push({...x,tType:x.type,date:x.date||x.createdAt});});
     ds.forEach(d=>{const x=d.data(); let desc=`Via ${x.type}`; if(x.status==='Rejected'&&x.rejectReason) desc+=` (Reason: ${x.rejectReason})`; txns.push({...x,tType:'Deposit',desc,date:x.createdAt,isPlus:true});});
-    ws.forEach(d=>{const x=d.data(); let desc=`To ${x.upiId}`; if(x.status==='Rejected'&&x.rejectReason) desc+=` (Reason: ${x.rejectReason})`; txns.push({...x,tType:'Withdraw',desc,date:x.createdAt,isMinus:true});});
+    ws.forEach(d=>{const x=d.data(); let desc=x.method==='W2D'?'Win → Deposit (+10% Extra Coin)':`To ${x.upiId}`; if(x.status==='Rejected'&&x.rejectReason) desc+=` (Reason: ${x.rejectReason})`; txns.push({...x,tType:'Withdraw',desc,date:x.createdAt,isMinus:true});});
     rs.forEach(d=>{const x=d.data(); if(x.status==='Approved') txns.push({...x,tType:'Referral Bonus',desc:`Referred ${x.refereeName}`,amount:window.appSettings?.referralBonus||0,status:'Success',date:x.createdAt,isPlus:true});});
     txns.sort((a,b)=>(b.date?.toMillis?.()||0)-(a.date?.toMillis?.()||0)); window.allUserTxns=txns;
     renderTxnHistory();
@@ -2607,7 +2703,7 @@ async function loadNotifications(){
       window.allUserTxns.forEach(tx=>{
         let t="",b="";
         if(tx.tType==='Deposit'){ if(tx.status==='Approved'){t="Deposit Successful";b=`₹${tx.amount} has been added to your wallet.`;} else if(tx.status==='Rejected'){t="Deposit Failed";b=`₹${tx.amount} deposit was rejected. ${tx.rejectReason?'Reason: '+tx.rejectReason:''}`;} else if(tx.status==='Pending'){t="Deposit Pending";b=`Your deposit of ₹${tx.amount} is under review.`;} }
-        else if(tx.tType==='Withdraw'){ if(tx.status==='Approved'){t="Withdrawal Successful";b=`₹${tx.amount} has been sent to your account.`;} else if(tx.status==='Rejected'){t="Withdrawal Rejected (Refunded)";b=`₹${tx.amount} refunded to winning wallet. ${tx.rejectReason?'Reason: '+tx.rejectReason:''}`;} else if(tx.status==='Pending'){t="Withdrawal Pending";b=`Your withdrawal request of ₹${tx.amount} is being processed.`;} }
+        else if(tx.tType==='Withdraw'){ if(tx.status==='Approved'||tx.status==='Success'){ if(tx.method==='W2D'){t="Converted to Deposit";b=`₹${tx.amount} + 10% extra coin added to your deposit wallet.`;} else {t="Withdrawal Successful";b=`₹${tx.amount} has been sent to your account.`;} } else if(tx.status==='Rejected'){t="Withdrawal Rejected (Refunded)";b=`₹${tx.amount} refunded to winning wallet. ${tx.rejectReason?'Reason: '+tx.rejectReason:''}`;} else if(tx.status==='Pending'){t="Withdrawal Pending";b=`Your withdrawal request of ₹${tx.amount} is being processed.`;} }
         else if(tx.tType==='Match Entry'){t="Match Joined";b=`Entry fee of ₹${tx.amount} deducted for joining the match. Good luck!`;}
         else if(tx.tType==='Signup Bonus'){t="Welcome Bonus";b=`₹${tx.amount} signup bonus added to your wallet!`;}
         else if(tx.tType==='Referral Bonus'){t="Referral Reward";b=`₹${tx.amount} bonus credited for your successful referral!`;}
