@@ -1122,6 +1122,7 @@ try {
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   auth = firebase.auth(); db = firebase.firestore();
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 } catch(e) { const s=document.getElementById('splashStatus'); if(s) s.innerText='Unable to start Firebase'; }
 
 window.currentUser=null; window.userData=null; window.appSettings={pricing:{}}; window.appSocials={}; window.allTournaments=[]; window.selectedMatch=null; window.selectedSlots=[];
@@ -1155,7 +1156,7 @@ window.copyAdminUpi=()=>window.copyToClipboard(window.appSettings?.upiId||"");
 window.openReferModal=()=>{loadReferralHistory(); openModal('referModal');};
 window.openNotifs=()=>{localStorage.setItem('lastNotifView',Date.now()); const b=document.getElementById('notifBadge'); if(b) b.style.display='none'; openModal('notificationsModal');};
 window.shareApp=()=>{ if(navigator.share) navigator.share({title:document.title,text:'Join our tournament app!',url:location.href}).catch(()=>{}); else showToast('Share not supported'); };
-window.openSupportWa=()=>{ const f=document.getElementById('floatingWa'); if(window.appSettings?.whatsapp && f && f.href) window.open(f.href,'_blank'); else showToast("Admin has not set WhatsApp number yet!",true); };
+window.openSupportWa=()=>{ let sl=(window.appSocials&&window.appSocials.support||'').toString().trim(); if(sl){ if(!/^(https?:|tg:)/i.test(sl)) sl='https://'+sl; window.open(sl,'_blank'); return; } const f=document.getElementById('floatingWa'); if(window.appSettings?.whatsapp && f && f.href) window.open(f.href,'_blank'); else showToast("Admin has not set WhatsApp number yet!",true); };
 
 /* ---------- Tabs ---------- */
 window.switchTab=(tabId)=>{
@@ -1230,13 +1231,17 @@ window.finishSplash=(status)=>{
     if(sp){sp.style.opacity='0'; sp.style.transition='opacity .35s ease'; setTimeout(()=>sp.style.display='none',380);}
   },wait);
 };
-setTimeout(()=>{
-  if(!splashFinished){
-    window.finishSplash('');
-    const a=document.getElementById('authScreen'), m=document.getElementById('mainApp');
-    if(a&&m&&m.style.display!=='block') showAuth();
-  }
-},8000);
+(function(){
+  var had=false; try{ had=localStorage.getItem('msz_session')==='1'; }catch(e){}
+  // Pehle se logged-in user ke liye zyada intezaar (slow net par login page na dikhe)
+  setTimeout(()=>{
+    if(!splashFinished){
+      window.finishSplash('');
+      const a=document.getElementById('authScreen'), m=document.getElementById('mainApp');
+      if(a&&m&&m.style.display!=='block') showAuth();
+    }
+  }, had?25000:8000);
+})();
 
 /* ---------- Config ---------- */
 async function fetchAppConfig(){
@@ -1412,6 +1417,7 @@ if(!auth){
   if(user && window.__registering){ try{ await window.__regPromise; }catch(e){} }
   if(user){
     window.currentUser=user;
+    try{ localStorage.setItem('msz_session','1'); }catch(e){}
     try{ const dev=await getDeviceInfo(); const chk=await deviceCheck(dev,user.uid,false);
       if(chk==='banned'){ await auth.signOut(); showToast('Aapka device ban hai. Admin se contact karein.',true); return; }
       db.collection('users').doc(user.uid).set({deviceId:dev.deviceId,deviceFp:dev.deviceFp,deviceInfo:dev.deviceInfo,lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(()=>{});
@@ -1428,6 +1434,7 @@ if(!auth){
   }else{
     if(window.__userDocUnsub){ try{window.__userDocUnsub();}catch(e){} window.__userDocUnsub=null; }
     if(window.__appRefreshTimer){ clearInterval(window.__appRefreshTimer); window.__appRefreshTimer=null; }
+    try{ localStorage.removeItem('msz_session'); }catch(e){}
     window.currentUser=null; window.userData=null; window.finishSplash('');
     document.getElementById('mainApp').style.display='none';
     document.getElementById('appScheduleOverlay').style.display='none';
@@ -1761,7 +1768,7 @@ window.openPolicyModal=(type)=>{
   if(c.startsWith("http")) setHtml('policyContent',`<a href="${c}" target="_blank" style="color:var(--info)">Click here to view ${type}</a>`); else setTxt('policyContent',c);
   openModal('policyModal');
 };
-window.openDeveloperContact=()=>{ showToast("Connecting to Developer..."); setTimeout(()=>window.open("https://www.instagram.com/ff_middle_gamer_t?igsh=M2Y0ZWc4eWd6aHVy","_blank"),1000); };
+window.openDeveloperContact=()=>{ let dl=(window.appSocials&&window.appSocials.developer||'').toString().trim(); if(!dl){ showToast("Developer link abhi set nahi hai",true); return; } if(!/^(https?:|tg:)/i.test(dl)) dl='https://'+dl; showToast("Connecting to Developer..."); setTimeout(()=>window.open(dl,'_blank'),1000); };
 
 /* ---------- Socials ---------- */
 function socialsHtml(){
@@ -2430,6 +2437,10 @@ window.setDepAmt=a=>{document.getElementById('depAmtInput').value=a;};
 /* ---- ZapUPI auto deposit (sirf HTML me, koi backend nahi) ---- */
 const ZAP_TOKEN="zap6e7a5441a367375bd69db87309995892";
 const ZAP_API="https://pay.zapupi.com/api";
+// Payment ke baad user isi URL pe wapas aayega. Vercel pe host hai to apne aap set ho jata hai.
+// Agar ye app local/asset se khulta hai to neeche apna Vercel URL daalo (https://.../ )
+// Payment ke baad user usi address pe wapas aayega jis par app abhi khula hai (isse login/session nahi jata).
+const SITE_URL=location.protocol.startsWith('http')?(location.origin+location.pathname):'https://youtu7854-boop.github.io/clashxwa223/';
 async function zapPost(path,fields){
   const r=await fetch(ZAP_API+'/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({zap_key:ZAP_TOKEN},fields))});
   const txt=await r.text();
@@ -2443,9 +2454,9 @@ window.goToDepositStep2=async()=>{
   const uid=window.currentUser.uid; const orderId=('ORD'+Date.now()+uid.slice(0,6)).replace(/[^A-Za-z0-9]/g,'');
   try{
     await db.collection('deposits').doc(orderId).set({userId:uid,userEmail:window.userData?.email||'',amount:amt,type:'ZapUPI',proofUrl:'',orderId:orderId,status:'Created',createdAt:new Date()});
-    const base=location.href.split('?')[0].split('#')[0];
+    if(SITE_URL.indexOf('YOUR-PROJECT')>-1) throw new Error('index.html me SITE_URL me apna Vercel URL daalo');
     const mob=String(window.userData?.mobile||'').replace(/\D/g,'').slice(-10)||'9999999999';
-    const z=await zapPost('create-order',{order_id:orderId,amount:String(amt),customer_mobile:mob,remark:'Add Cash',success_url:base+'?zap_order='+orderId,failed_url:base+'?zap_order='+orderId,timeout_url:base+'?zap_order='+orderId});
+    const z=await zapPost('create-order',{order_id:orderId,amount:String(amt),customer_mobile:mob,remark:'Add Cash',success_url:SITE_URL,failed_url:SITE_URL,timeout_url:SITE_URL});
     const zd=z.data||z; const payUrl=zd.payment_url||zd.paymentUrl||zd.url||z.payment_url;
     const ok=(z.status===true||String(z.status).toLowerCase()==='success');
     if(!ok||!payUrl){
@@ -2622,32 +2633,45 @@ async function loadNotifications(){
 </script>
 
 <script>
-/* ZapUPI: payment ke baad wapas aane par order check karke wallet update */
+/* ZapUPI: payment ke baad (app khulne / wapas aane / focus par) order check karke wallet update */
 (function(){
-  var oid=null;
-  try{ var p=new URLSearchParams(location.search); oid=p.get('zap_order')||localStorage.getItem('pendingZapOrder'); }catch(e){}
-  if(!oid) return;
+  var running=false;
+  async function check(){
+    if(running||!window.currentUser) return;
+    var oid=null;
+    try{
+      var q=new URLSearchParams(location.search).get('zap_order');
+      if(q) localStorage.setItem('pendingZapOrder',q);
+      oid=localStorage.getItem('pendingZapOrder');
+    }catch(e){}
+    if(!oid) return;
+    running=true;
+    try{
+      for(var i=0;i<6;i++){
+        try{
+          var j=await zapSettle(oid);
+          if(j.status==='Approved'){
+            try{localStorage.removeItem('pendingZapOrder');}catch(e){}
+            showToast('₹'+j.amount+' successfully add ho gaya!');
+            if(typeof loadUserProfile==='function') await loadUserProfile(window.currentUser.uid);
+            if(typeof loadUserTransactions==='function') await loadUserTransactions();
+            return;
+          }
+          if(j.status==='Failed'||j.status==='NotFound'){
+            try{localStorage.removeItem('pendingZapOrder');}catch(e){}
+            showToast('Payment fail ya cancel ho gaya',true); return;
+          }
+        }catch(e){}
+        await new Promise(function(s){setTimeout(s,5000);});
+      }
+      showToast('Payment confirm hone me time lag raha hai, thodi der baad app dobara kholo',true);
+    }finally{ running=false; }
+  }
   var tries=0;
-  var t=setInterval(async function(){
-    if(!window.currentUser){ if(++tries>40) clearInterval(t); return; }
-    clearInterval(t);
-    try{ history.replaceState(null,'',location.pathname); }catch(e){}
-    for(var i=0;i<6;i++){
-      try{
-        var j=await zapSettle(oid);
-        if(j.status==='Approved'){
-          try{localStorage.removeItem('pendingZapOrder');}catch(e){}
-          showToast('₹'+j.amount+' successfully add ho gaya!');
-          if(typeof loadUserProfile==='function') await loadUserProfile(window.currentUser.uid);
-          if(typeof loadUserTransactions==='function') await loadUserTransactions();
-          return;
-        }
-        if(j.status==='Failed'||j.status==='NotFound'){ try{localStorage.removeItem('pendingZapOrder');}catch(e){} showToast('Payment fail ya cancel ho gaya',true); return; }
-      }catch(e){}
-      await new Promise(function(s){setTimeout(s,5000);});
-    }
-    showToast('Payment confirm hone me time lag raha hai, thodi der baad app dobara kholo',true);
-  },500);
+  var t=setInterval(function(){ if(window.currentUser){ clearInterval(t); check(); } else if(++tries>40) clearInterval(t); },500);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) check(); });
+  window.addEventListener('focus',check);
+  window.addEventListener('pageshow',check);
 })();
 </script>
 </body>
