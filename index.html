@@ -1270,6 +1270,47 @@ window.switchTab=(tabId)=>{
   if(tabId==='Help') renderSocials();
   if(tabId==='More') renderMorePage();
 };
+/* ---------- Android Back button + Pull-to-refresh (Sketchware WebView) ---------- */
+window.__backT=0;
+window.handleBack=function(){
+  try{
+    const byId=id=>document.getElementById(id);
+    const vis=el=>{ if(!el) return false; const cs=getComputedStyle(el); return cs.display!=='none'&&cs.visibility!=='hidden'; };
+    const sh=id=>{ const e=byId(id); return !!(e&&e.classList.contains('show')); };
+    if(vis(byId('payReturn'))){ if(window.payRetBack) window.payRetBack(); return true; }
+    const mods=[...document.querySelectorAll('.modal-overlay')].filter(m=>m.id!=='forceUpdateModal'&&vis(m));
+    if(mods.length){ const m=mods[mods.length-1]; if(m.id==='depositModal'&&window.closeDepositModal) window.closeDepositModal(); else window.closeModal(m.id); return true; }
+    if(sh('jdOverlay')){ window.jdClose(); return true; }
+    if(sh('jmScreen')){ window.jmBack(); return true; }
+    if(sh('jpScreen')){ window.closeJoinFlow(); return true; }
+    if(sh('resultScreen')){ window.closeResultScreen(); return true; }
+    if(sh('ongoingScreen')){ window.closeOngoingScreen(); return true; }
+    if(sh('txnScreen')){ window.closeTxnScreen(); return true; }
+    if(vis(byId('wdScreen'))){ window.closeWithdraw(); return true; }
+    if(vis(byId('categoryMatchesScreen'))){ window.closeCategoryScreen(); return true; }
+    const as=document.querySelector('.app-section.active'); const cur=as?as.id.replace('tab-',''):'Home';
+    if(cur!=='Home'&&vis(byId('mainApp'))){ window.switchTab('Home'); return true; }
+    if(vis(byId('authScreen'))) return false;
+    const now=Date.now(); if(now-window.__backT<2000) return false;
+    window.__backT=now; showToast('Band karne ke liye dobara Back dabao'); return true;
+  }catch(e){ return false; }
+};
+// Pull-to-refresh: page reload nahi, sirf data refresh
+window.refreshData=async function(){
+  if(!window.currentUser) return;
+  try{
+    await fetchAppConfig();
+    await loadUserProfile(window.currentUser.uid);
+    const as=document.querySelector('.app-section.active'); const id=as?as.id.replace('tab-',''):'Home';
+    if(id==='Home') await loadHomeData();
+    if(id==='Leaderboard') await loadLeaderboard();
+    if(id==='Wallet'||id==='Profile') await loadUserTransactions();
+    if(id==='Profile'){ calculateProfileStats(); renderSocials(); }
+    if(id==='Help') renderSocials();
+    if(id==='More') renderMorePage();
+    showToast('Refreshed');
+  }catch(e){ showToast('Refresh failed',true); }
+};
 window.handleWaClick=(e)=>{ e.preventDefault(); if(!window.appSettings?.whatsapp){ showToast("Admin has not set WhatsApp number yet!",true); return; } const f=document.getElementById('floatingWa'); if(f&&f.href) window.openExternal(f.href); };
 
 /* ---------- Logo helper: one logo, fitted everywhere ---------- */
