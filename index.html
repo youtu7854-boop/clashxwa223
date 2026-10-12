@@ -1605,7 +1605,7 @@ window.__saveFcmTok=async function(){
     if(window.__fcmSaved===u.uid+':'+t) return;
     await db.collection('users').doc(u.uid).set({fcmTok:t,fcmUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
     window.__fcmSaved=u.uid+':'+t;
-  }catch(e){}
+  }catch(e){ console.warn('FCM save error',e); }
 };
 /* Native app must call: window.setFcmToken('<token>') (via loadUrl("javascript:...") or evaluateJavascript) */
 window.setFcmToken=function(t){
@@ -1616,7 +1616,7 @@ window.setFcmToken=function(t){
 try{ const q=new URLSearchParams(location.search).get('fcm'); if(q) window.setFcmToken(q); }catch(e){}
 try{ const old=localStorage.getItem('msz_fcm'); if(old) window.__fcmTok=old; }catch(e){}
 if(window.firebase&&firebase.auth) firebase.auth().onAuthStateChanged(u=>{ if(u) setTimeout(()=>window.__saveFcmTok(),1500); });
-window.logoutUser=async()=>{ if(confirm("Logout from App?")) await auth.signOut(); };
+window.logoutUser=async()=>{ if(confirm("Logout from App?")){ try{ const cu=auth.currentUser; if(cu) await db.collection('users').doc(cu.uid).update({fcmTok:firebase.firestore.FieldValue.delete()}); }catch(e){} window.__fcmSaved=null; await auth.signOut(); } };
 
 window.registerUser=async()=>{
   const btn=document.getElementById('signupBtn');
