@@ -72,7 +72,7 @@ img{max-width:100%}
 #payReturn p{font-size:14px;color:#555;max-width:300px;line-height:1.5;margin-bottom:22px}
 #payReturn button{width:min(280px,80vw);padding:14px;border:none;border-radius:12px;background:#111;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
 #payReturn button.alt{background:transparent;color:#555;margin-top:8px;font-weight:600}
-#customToast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(14px);background:rgba(18,18,18,.96);color:#fff;padding:11px 20px 11px 12px;border-radius:30px;font-size:14px;font-weight:500;line-height:1.35;z-index:2147483000;box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;align-items:center;gap:10px;width:max-content;max-width:86vw;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,transform .25s ease,visibility 0s .25s}
+#customToast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(14px);background:rgba(50,50,52,.95);color:#fff;padding:11px 20px 11px 12px;border-radius:30px;font-size:14px;font-weight:500;line-height:1.35;z-index:2147483000;box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;align-items:center;gap:10px;width:max-content;max-width:86vw;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,transform .25s ease,visibility 0s .25s}
 #customToast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);transition:opacity .25s ease,transform .25s ease}
 #customToast img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none}
 #customToast span{word-break:break-word}
@@ -1292,7 +1292,7 @@ window.handleBack=function(){
     if(cur!=='Home'&&vis(byId('mainApp'))){ window.switchTab('Home'); return true; }
     if(vis(byId('authScreen'))) return false;
     const now=Date.now(); if(now-window.__backT<2000) return false;
-    window.__backT=now; showToast('Band karne ke liye dobara Back dabao'); return true;
+    window.__backT=now; showToast('Press back again to exit'); return true;
   }catch(e){ return false; }
 };
 // Pull-to-refresh: page reload nahi, sirf data refresh
@@ -1500,10 +1500,10 @@ async function showPayReturn(){
   const ttl=document.getElementById('payRetTitle'), msg=document.getElementById('payRetMsg');
   try{
     const st=await zapPost('order-status',{order_id:window.__payReturn}); const d=st.data||st; const x=String(d.status||'').toLowerCase();
-    if(x==='success'){ ttl.textContent='Payment successful'; msg.textContent='Wallet update karne ke liye app me wapas jaiye.'; }
-    else if(x==='failed'||x==='cancelled'||x==='expired'){ ttl.textContent='Payment failed'; msg.textContent='Payment complete nahi hua. App me wapas jaakar dobara try karein.'; }
-    else{ ttl.textContent='Payment processing'; msg.textContent='Payment confirm hone me time lag sakta hai. App me wapas jaiye.'; }
-  }catch(e){ ttl.textContent='Payment status'; msg.textContent='App me wapas jaiye, wahan wallet apne aap update ho jayega.'; }
+    if(x==='success'){ ttl.textContent='Payment successful'; msg.textContent='Go back to the app to update your wallet.'; }
+    else if(x==='failed'||x==='cancelled'||x==='expired'){ ttl.textContent='Payment failed'; msg.textContent='Payment was not completed. Go back to the app and try again.'; }
+    else{ ttl.textContent='Payment processing'; msg.textContent='Payment confirmation may take some time. Go back to the app.'; }
+  }catch(e){ ttl.textContent='Payment status'; msg.textContent='Go back to the app; your wallet will update automatically.'; }
 }
 window.showAuth=()=>{
   if(window.__payReturn && !window.currentUser){ showPayReturn(); return; }
@@ -1516,8 +1516,8 @@ const auUserEmail=u=>{ const c=String(u||'').trim().toLowerCase().replace(/[^a-z
 window.auReset=async()=>{
   let v=(document.getElementById('loginEmail')?.value||'').trim();
   if(!v||!v.includes('@')) v=(prompt('Apni registered email daalein:')||'').trim();
-  if(!v) return; if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return showToast('Valid email daalein',true);
-  try{ await auth.sendPasswordResetEmail(v); showToast('Password reset link email par bhej diya gaya'); }catch(e){ showToast(e?.code==='auth/user-not-found'?'Is email se account nahi mila (bina email wale account ka reset admin se karwayein)':'Reset email nahi bhej paaye',true); }
+  if(!v) return; if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return showToast('Enter a valid email',true);
+  try{ await auth.sendPasswordResetEmail(v); showToast('Password reset link sent to your email'); }catch(e){ showToast(e?.code==='auth/user-not-found'?'No account found with this email (for accounts without email, ask admin to reset)':'Could not send reset email',true); }
 };
 
 
@@ -1574,7 +1574,7 @@ if(!auth){
     window.currentUser=user;
     try{ localStorage.setItem('msz_session','1'); }catch(e){}
     try{ const dev=await getDeviceInfo(); const chk=await deviceCheck(dev,user.uid,false);
-      if(chk==='banned'){ await auth.signOut(); showToast('Aapka device ban hai. Admin se contact karein.',true); return; }
+      if(chk==='banned'){ await auth.signOut(); showToast('Your device is banned. Please contact admin.',true); return; }
       db.collection('users').doc(user.uid).set({deviceId:dev.deviceId,deviceFp:dev.deviceFp,deviceInfo:dev.deviceInfo,lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(()=>{});
     }catch(e){}
     try{ await Promise.race([loadUserProfile(user.uid), new Promise(r=>setTimeout(r,6500))]); }catch(e){}
@@ -1605,12 +1605,12 @@ window.registerUser=async()=>{
   const first=v('regFirst'), last=v('regLast'), ffName=v('regFfName'), code=v('regCode')||'+91', mobile=v('regMobile').replace(/\D/g,'');
   const refCodeRaw=v('regRefCode').trim(); const refCode=refCodeRaw.toUpperCase(); const pass=document.getElementById('regPass')?.value||'';
   let email=v('regEmail').toLowerCase(); let synthetic=false;
-  if(!first) return showToast('First Name daalein!',true);
-  if(!last) return showToast('Last Name daalein!',true);
-  if(!ffName) return showToast('Username daalein!',true);
-  if(ffName.length<3) return showToast('Username kam se kam 3 characters ka hona chahiye',true);
-  if(mobile&&code==='+91'&&mobile.length!==10) return showToast('10 digit ka mobile number daalein!',true);
-  if(!email){ email=auUserEmail(ffName); synthetic=true; if(!email) return showToast('Username me letters ya numbers hone chahiye',true); }
+  if(!first) return showToast('Enter your first name!',true);
+  if(!last) return showToast('Enter your last name!',true);
+  if(!ffName) return showToast('Enter a username!',true);
+  if(ffName.length<3) return showToast('Username must be at least 3 characters',true);
+  if(mobile&&code==='+91'&&mobile.length!==10) return showToast('Enter a valid 10-digit mobile number!',true);
+  if(!email){ email=auUserEmail(ffName); synthetic=true; if(!email) return showToast('Username must contain letters or numbers',true); }
   else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showToast('Enter a valid email address!',true);
   if(!pass) return showToast('Create a password!',true);
   if(pass.length<6) return showToast('Password must be at least 6 characters!',true);
@@ -1625,7 +1625,7 @@ window.registerUser=async()=>{
   try{
     const cred=await auth.createUserWithEmailAndPassword(email,pass); createdUser=cred.user; const uid=createdUser.uid;
     const dev=await getDeviceInfo(); const dchk=await deviceCheck(dev,uid,false);
-    if(dchk){ try{ await createdUser.delete(); }catch(e){ try{ await auth.signOut(); }catch(e2){} } createdUser=null; const er=new Error(dchk==='banned'?'Ye device ban hai. Admin se contact karein.':'Account registration is restricted only if this device is banned.'); er.code='msz/device'; throw er; }
+    if(dchk){ try{ await createdUser.delete(); }catch(e){ try{ await auth.signOut(); }catch(e2){} } createdUser=null; const er=new Error(dchk==='banned'?'This device is banned. Please contact admin.':'Account registration is restricted only if this device is banned.'); er.code='msz/device'; throw er; }
     let signupBonus=Number(window.appSettings?.signupBonus||0); if(!Number.isFinite(signupBonus)||signupBonus<0) signupBonus=0;
     let prefix='APP'; if(window.appSettings?.appName){const c=String(window.appSettings.appName).replace(/\s+/g,'').toUpperCase(); if(c) prefix=c.substring(0,4);}
     const myRef=prefix+Math.floor(Math.random()*9000+1000);
@@ -1660,7 +1660,7 @@ window.registerUser=async()=>{
 };
 window.loginUser=async()=>{
   const btn=document.getElementById('loginBtn'); let id=document.getElementById('loginEmail').value.trim(); const pass=document.getElementById('loginPass').value;
-  if(!id||!pass) return showToast("Username aur Password daalein!",true);
+  if(!id||!pass) return showToast("Enter username and password!",true);
   if(btn){btn.innerText="Loading..."; btn.disabled=true;}
   try{
     let email=id.includes('@')?id.toLowerCase():auUserEmail(id);
@@ -1672,7 +1672,7 @@ window.loginUser=async()=>{
         if(real&&real!==email){ await auth.signInWithEmailAndPassword(real,pass); } else throw e1;
       } else throw e1;
     }
-  }catch(e){const c=e?.code||''; showToast(c==='auth/network-request-failed'?'Network error. Check your internet.':c==='auth/too-many-requests'?'Too many attempts. Please wait and try again.':c==='auth/operation-not-allowed'?'Email/Password login is disabled in Firebase.':c==='auth/invalid-email'?'Invalid Username/Email.':"Login Failed! Username/Password check karein.",true);}
+  }catch(e){const c=e?.code||''; showToast(c==='auth/network-request-failed'?'Network error. Check your internet.':c==='auth/too-many-requests'?'Too many attempts. Please wait and try again.':c==='auth/operation-not-allowed'?'Email/Password login is disabled in Firebase.':c==='auth/invalid-email'?'Invalid Username/Email.':"Login failed! Please check your username and password.",true);}
   if(btn){btn.innerText="LOGIN"; btn.disabled=false;}
 };
 
@@ -1927,7 +1927,7 @@ window.openPolicyModal=(type)=>{
   if(c.startsWith("http")) setHtml('policyContent',`<a href="${c}" target="_blank" style="color:var(--info)">Click here to view ${type}</a>`); else setTxt('policyContent',c);
   openModal('policyModal');
 };
-window.openDeveloperContact=()=>{ let dl=(window.appSocials&&window.appSocials.developer||'').toString().trim(); if(!dl){ showToast("Developer link abhi set nahi hai",true); return; } showToast("Connecting to Developer..."); setTimeout(()=>window.openExternal(dl),1000); };
+window.openDeveloperContact=()=>{ let dl=(window.appSocials&&window.appSocials.developer||'').toString().trim(); if(!dl){ showToast("Developer link is not set yet",true); return; } showToast("Connecting to Developer..."); setTimeout(()=>window.openExternal(dl),1000); };
 
 /* ---------- Socials ---------- */
 function socialsHtml(){
@@ -2464,16 +2464,16 @@ window.ogBtnClick=()=>{
   const m=window.allTournaments.find(x=>x.id===window.__ogId); if(!m) return;
   if(m.status!=='Upcoming') return ogSpectate();
   const uid=window.currentUser?.uid; const isJoined=(m.joinedUsers||[]).some(u=>u.userDocId===uid);
-  if(isJoined) return showToast('Aap is match me already join ho chuke hain');
-  if(m.isVipOnly&&!isVipNow()) return showToast('Ye VIP only match hai',true);
-  if((Number(m.max)||0)-(m.joinedUsers||[]).length<=0) return showToast('Match full ho chuka hai',true);
+  if(isJoined) return showToast('You have already joined this match');
+  if(m.isVipOnly&&!isVipNow()) return showToast('This is a VIP-only match',true);
+  if((Number(m.max)||0)-(m.joinedUsers||[]).length<=0) return showToast('This match is full',true);
   openJoinFlow(m.id);
 };
-window.ogPlayNow=()=>{ try{ window.location.href='intent://#Intent;package=com.dts.freefireth;end'; }catch(e){} setTimeout(()=>showToast('Free Fire open karke room join karein'),600); };
+window.ogPlayNow=()=>{ try{ window.location.href='intent://#Intent;package=com.dts.freefireth;end'; }catch(e){} setTimeout(()=>showToast('Open Free Fire and join the room'),600); };
 window.ogSpectate=()=>{
   const m=window.allTournaments.find(x=>x.id===window.__ogId); if(!m) return;
   const link=m.liveLink||m.spectateLink||m.streamLink||m.watchLink||m.youtubeLink||m.youtube||m.liveUrl||'';
-  if(/^https?:\/\//i.test(link)) window.open(link,'_blank'); else showToast('Live link abhi available nahi hai',true);
+  if(/^https?:\/\//i.test(link)) window.open(link,'_blank'); else showToast('Live link is not available yet',true);
 };
 
 window.selectSlot=(num,el)=>{
@@ -2628,17 +2628,17 @@ window.goToDepositStep2=async()=>{
   const uid=window.currentUser.uid; const orderId=('ORD'+Date.now()+uid.slice(0,6)).replace(/[^A-Za-z0-9]/g,'');
   try{
     await db.collection('deposits').doc(orderId).set({userId:uid,userEmail:window.userData?.email||'',amount:amt,type:'ZapUPI',proofUrl:'',orderId:orderId,status:'Created',createdAt:new Date()});
-    if(SITE_URL.indexOf('YOUR-PROJECT')>-1) throw new Error('index.html me SITE_URL me apna Vercel URL daalo');
+    if(SITE_URL.indexOf('YOUR-PROJECT')>-1) throw new Error('Site URL is not configured');
     const mob=String(window.userData?.mobile||'').replace(/\D/g,'').slice(-10)||'9999999999';
     const z=await zapPost('create-order',{order_id:orderId,amount:String(amt),customer_mobile:mob,remark:'Add Cash',success_url:SITE_URL,failed_url:SITE_URL,timeout_url:SITE_URL});
     const zd=z.data||z; const payUrl=zd.payment_url||zd.paymentUrl||zd.url||z.payment_url;
     const ok=(z.status===true||String(z.status).toLowerCase()==='success');
     if(!ok||!payUrl){
       try{ await db.collection('deposits').doc(orderId).update({status:'Rejected',rejectReason:'Order create failed'}); }catch(e){}
-      throw new Error(z.message||"Order create nahi hua, dobara try karo");
+      throw new Error(z.message||"Could not create order. Please try again.");
     }
     try{ localStorage.setItem('pendingZapOrder',orderId); }catch(e){}
-    showToast("Order created! Payment page khul raha hai...");
+    showToast("Order created! Opening payment page...");
     window.location.href=payUrl;
   }catch(e){ showToast(e.message||"Error",true); btn.innerHTML=old; btn.disabled=false; }
 };
@@ -2685,8 +2685,8 @@ function wdUpdate(){
   const a=Math.floor(Number(wdEl('wdAmt').value)||0), m=window.__wd.method;
   document.querySelectorAll('#wdChips .wd-chip').forEach(c=>c.classList.toggle('on',Number(c.dataset.n)===a));
   let note='';
-  if(a>0&&m==='W2D'){ const bn=Math.round(a*10)/100; note='Admin approve karte hi ₹'+a+' + 10% extra (₹'+wdFmt(bn)+') = ₹'+wdFmt(a+bn)+' aapke Deposit wallet me add ho jayega.'; }
-  else if(a>0&&m==='GPlay'){ note='20% commission cut ke baad aapko ₹'+wdFmt(a*0.8)+' ka Google Play code milega.'; }
+  if(a>0&&m==='W2D'){ const bn=Math.round(a*10)/100; note='Once admin approves, ₹'+a+' + 10% extra (₹'+wdFmt(bn)+') = ₹'+wdFmt(a+bn)+' will be added to your Deposit wallet.'; }
+  else if(a>0&&m==='GPlay'){ note='After the 20% commission cut, you will get a Google Play code worth ₹'+wdFmt(a*0.8)+'.'; }
   const ne=wdEl('wdNote'); ne.textContent=note; ne.style.display=note?'block':'none';
 }
 function wdRender(){
@@ -2712,7 +2712,7 @@ window.submitWithdraw=async()=>{
   const amt=Math.floor(Number(wdEl('wdAmt').value)||0), L=wdLimits(), winBal=Number(window.userData?.wallets?.winning||0);
   if(!amt||amt<L.min||amt>L.max) return showToast('Amount must be between ₹'+L.min+' and ₹'+L.max,true);
   if(amt>winBal) return showToast("Insufficient Winning Balance!",true);
-  let detail=''; if(!isW){ detail=wdEl('wdDet').value.trim(); if(!detail) return showToast("UPI ID / Mobile / Email daalo",true); }
+  let detail=''; if(!isW){ detail=wdEl('wdDet').value.trim(); if(!detail) return showToast("Enter UPI ID / Mobile / Email",true); }
   const uid=window.currentUser.uid, FVv=firebase.firestore.FieldValue;
   if(!isW){
     const today=new Date(); today.setHours(0,0,0,0);
@@ -2729,7 +2729,7 @@ window.submitWithdraw=async()=>{
     batch.set(wref,{userId:uid,userEmail:window.userData?.email||'',amount:amt,upiId:isW?'Win Money → Deposit (+10% Extra Coin)':detail,accountName:window.userData?.ffName||'',method:m,methodLabel:cur[1],bonusPercent:isW?10:0,status:'Pending',createdAt:new Date()});
     await batch.commit();
     showToast("Withdraw Request Placed!"); closeWithdraw(); await loadUserProfile(uid); await loadUserTransactions();
-  }catch(e){ showToast("Error, dobara try karo",true); }
+  }catch(e){ showToast("Something went wrong. Please try again.",true); }
   btn.innerHTML=old; btn.disabled=false;
 };
 
@@ -2862,19 +2862,19 @@ async function loadNotifications(){
           var j=await zapSettle(oid);
           if(j.status==='Approved'){
             try{localStorage.removeItem('pendingZapOrder');}catch(e){}
-            showToast('₹'+j.amount+' successfully add ho gaya!');
+            showToast('₹'+j.amount+' added successfully!');
             if(typeof loadUserProfile==='function') await loadUserProfile(window.currentUser.uid);
             if(typeof loadUserTransactions==='function') await loadUserTransactions();
             return;
           }
           if(j.status==='Failed'||j.status==='NotFound'){
             try{localStorage.removeItem('pendingZapOrder');}catch(e){}
-            showToast('Payment fail ya cancel ho gaya',true); return;
+            showToast('Payment failed or cancelled',true); return;
           }
         }catch(e){}
         await new Promise(function(s){setTimeout(s,5000);});
       }
-      showToast('Payment confirm hone me time lag raha hai, thodi der baad app dobara kholo',true);
+      showToast('Payment confirmation is taking time. Please reopen the app in a while.',true);
     }finally{ running=false; }
   }
   var tries=0;
