@@ -1597,6 +1597,25 @@ if(!auth){
     if(adTimerInt) clearInterval(adTimerInt);
   }
 });
+/* ===== FCM token bridge (native Sketchware app -> Firestore users/{uid}.fcmTok) ===== */
+window.__saveFcmTok=async function(){
+  try{
+    const t=window.__fcmTok||localStorage.getItem('msz_fcm'); const u=window.currentUser;
+    if(!t||!u) return;
+    if(window.__fcmSaved===u.uid+':'+t) return;
+    await db.collection('users').doc(u.uid).set({fcmTok:t,fcmUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    window.__fcmSaved=u.uid+':'+t;
+  }catch(e){}
+};
+/* Native app must call: window.setFcmToken('<token>') (via loadUrl("javascript:...") or evaluateJavascript) */
+window.setFcmToken=function(t){
+  if(!t||typeof t!=='string') return;
+  window.__fcmTok=t; try{localStorage.setItem('msz_fcm',t);}catch(e){}
+  window.__saveFcmTok();
+};
+try{ const q=new URLSearchParams(location.search).get('fcm'); if(q) window.setFcmToken(q); }catch(e){}
+try{ const old=localStorage.getItem('msz_fcm'); if(old) window.__fcmTok=old; }catch(e){}
+if(window.firebase&&firebase.auth) firebase.auth().onAuthStateChanged(u=>{ if(u) setTimeout(()=>window.__saveFcmTok(),1500); });
 window.logoutUser=async()=>{ if(confirm("Logout from App?")) await auth.signOut(); };
 
 window.registerUser=async()=>{
