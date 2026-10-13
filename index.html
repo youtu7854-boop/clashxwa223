@@ -1446,7 +1446,8 @@ window.openAllCategories=async()=>{
   const grid=document.getElementById('allCategoryGrid');
   try{
     const snap=await db.collection("admin_games").get(); let h='';
-    snap.forEach(d=>{const x=d.data(); h+=`<div class="cat-tile" onclick="openCategory('${String(x.name||'').replace(/'/g,"\\'")}')"><img src="${x.url}" alt="${x.name||''}"></div>`;});
+    const gl=snap.docs.map(d=>d.data()).sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority));
+    gl.forEach(x=>{h+=`<div class="cat-tile" onclick="openCategory('${String(x.name||'').replace(/'/g,"\\'")}')"><img src="${x.url}" alt="${x.name||''}"></div>`;});
     grid.innerHTML=h||'<div class="loader" style="grid-column:1/-1">No tournaments available.</div>';
   }catch(e){grid.innerHTML='<div class="loader" style="grid-column:1/-1">Unable to load tournaments.</div>';}
 };
