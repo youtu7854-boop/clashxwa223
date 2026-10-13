@@ -1311,6 +1311,35 @@ window.refreshData=async function(){
     showToast('Refreshed');
   }catch(e){ showToast('Refresh failed',true); }
 };
+/* ---------- FCM token (Android app se) -> Firestore, taaki phone par notification aa sake ---------- */
+(function(){
+  let lastKey='', warned=false, failShown=false; const startedAt=Date.now();
+  window.__fcmTokenFromApp='';
+  // Android app token yahan bhej sakta hai: window.setFcmToken('...')
+  window.setFcmToken=function(tk){ window.__fcmTokenFromApp=String(tk||''); syncFcm(); };
+  async function syncFcm(){
+    try{
+      if(!window.currentUser) return;
+      let tk=window.__fcmTokenFromApp||'';
+      try{ if(!tk&&window.AndroidApp&&window.AndroidApp.getFcmToken) tk=String(window.AndroidApp.getFcmToken()||''); }catch(e){}
+      if(!tk){
+        if(!warned&&Date.now()-startedAt>25000){
+          const inWv=/; wv\)/.test(navigator.userAgent);
+          if(window.AndroidApp){ warned=true; showToast('Notification token not available yet',true); }
+          else if(inWv){ warned=true; showToast('App bridge missing: install the latest app version',true); }
+        }
+        return;
+      }
+      const key=window.currentUser.uid+'|'+tk; if(key===lastKey) return;
+      await db.collection('users').doc(window.currentUser.uid).update({fcmToken:tk,fcmUpdatedAt:new Date()});
+      lastKey=key;
+      try{ if(!localStorage.getItem('fcmShown')){ localStorage.setItem('fcmShown','1'); showToast('Notifications enabled'); } }catch(e){}
+    }catch(e){
+      if(!failShown){ failShown=true; showToast('Notification setup failed: '+((e&&e.message)||'error'),true); }
+    }
+  }
+  setTimeout(syncFcm,1500); setInterval(syncFcm,5000);
+})();
 window.handleWaClick=(e)=>{ e.preventDefault(); if(!window.appSettings?.whatsapp){ showToast("Admin has not set WhatsApp number yet!",true); return; } const f=document.getElementById('floatingWa'); if(f&&f.href) window.openExternal(f.href); };
 
 /* ---------- Logo helper: one logo, fitted everywhere ---------- */
@@ -1597,26 +1626,7 @@ if(!auth){
     if(adTimerInt) clearInterval(adTimerInt);
   }
 });
-/* ===== FCM token bridge (native Sketchware app -> Firestore users/{uid}.fcmTok) ===== */
-window.__saveFcmTok=async function(){
-  try{
-    const t=window.__fcmTok||localStorage.getItem('msz_fcm'); const u=window.currentUser;
-    if(!t||!u) return;
-    if(window.__fcmSaved===u.uid+':'+t) return;
-    await db.collection('users').doc(u.uid).set({fcmTok:t,fcmUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-    window.__fcmSaved=u.uid+':'+t;
-  }catch(e){ console.warn('FCM save error',e); }
-};
-/* Native app must call: window.setFcmToken('<token>') (via loadUrl("javascript:...") or evaluateJavascript) */
-window.setFcmToken=function(t){
-  if(!t||typeof t!=='string') return;
-  window.__fcmTok=t; try{localStorage.setItem('msz_fcm',t);}catch(e){}
-  window.__saveFcmTok();
-};
-try{ const q=new URLSearchParams(location.search).get('fcm'); if(q) window.setFcmToken(q); }catch(e){}
-try{ const old=localStorage.getItem('msz_fcm'); if(old) window.__fcmTok=old; }catch(e){}
-if(window.firebase&&firebase.auth) firebase.auth().onAuthStateChanged(u=>{ if(u) setTimeout(()=>window.__saveFcmTok(),1500); });
-window.logoutUser=async()=>{ if(confirm("Logout from App?")){ try{ const cu=auth.currentUser; if(cu) await db.collection('users').doc(cu.uid).update({fcmTok:firebase.firestore.FieldValue.delete()}); }catch(e){} window.__fcmSaved=null; await auth.signOut(); } };
+window.logoutUser=async()=>{ if(confirm("Logout from App?")) await auth.signOut(); };
 
 window.registerUser=async()=>{
   const btn=document.getElementById('signupBtn');
