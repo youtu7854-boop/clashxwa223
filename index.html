@@ -861,7 +861,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
         <div class="menu-cell" onclick="switchTab('Wallet')"><i class="fa-solid fa-cart-shopping"></i>My Order</div>
         <div class="menu-cell" onclick="switchTab('Profile')"><i class="fa-solid fa-chart-column"></i>My Statistics</div>
         <div class="menu-cell" onclick="openModal('levelModal')"><i class="fa-solid fa-gift"></i>My Rewards</div>
-        <div class="menu-cell" onclick="openReferModal()"><i class="fa-solid fa-users"></i>My Referrals</div>
+        <div class="menu-cell" onclick="openMyRefModal()"><i class="fa-solid fa-users"></i>My Referrals</div>
         <div class="menu-cell" onclick="openNotifs()"><i class="fa-solid fa-flag"></i>Announcement</div>
       </div></div>
       <div class="info-card"><div class="card-heading">Platform Information</div>
@@ -1007,6 +1007,27 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <button onclick="shareOnWhatsApp()" style="width:100%;padding:15px;border:none;border-radius:14px;background:#4ee38f;color:#fff;font-weight:800;font-size:17px;letter-spacing:1px;box-shadow:0 6px 16px rgba(78,227,143,.45);cursor:pointer;font-family:inherit">REFER NOW</button>
       <div id="referHistoryBox" style="text-align:left;margin-top:30px"><div style="font-weight:700;font-size:15px;color:#222;margin-bottom:6px"><i class="fa-solid fa-clock-rotate-left"></i> Referral History</div>
       <div id="referHistoryList" style="padding:6px 0;color:#222"><div class="loader">Loading history...</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- My Referrals page -->
+<div id="myRefModal" class="modal-overlay" style="padding:0;align-items:stretch;justify-content:stretch">
+  <div class="modal-content" style="background:#fafafa;color:#222;width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;padding:0;overflow-y:auto;font-family:'Poppins',sans-serif">
+    <div style="background:#000;color:#fff;display:flex;align-items:center;gap:18px;padding:14px 18px;position:sticky;top:0;z-index:2"><i class="fa-solid fa-arrow-left" style="font-size:20px;cursor:pointer" onclick="closeModal('myRefModal')"></i><span style="font-size:20px;font-weight:600">My Referrals</span></div>
+    <div style="padding:20px 20px 30px">
+      <div style="background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.2);overflow:hidden;margin-bottom:40px">
+        <div style="background:#55e896;color:#fff;text-align:center;font-weight:500;font-size:17px;padding:20px 10px;text-transform:uppercase">My Referrals Summary</div>
+        <div style="display:flex;justify-content:space-around;text-align:center;padding:22px 10px 26px;color:#333">
+          <div><div style="font-size:17px;color:#444">Referrals</div><div id="mrCount" style="font-size:20px;margin-top:4px">0</div></div>
+          <div><div style="font-size:17px;color:#444">Earnings</div><div style="font-size:20px;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px"><svg class="coin-ic" viewBox="0 0 32 32" style="width:22px;height:22px"><use href="#coinSym"/></svg><span id="mrEarn">0</span></div></div>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.2);overflow:hidden">
+        <div style="background:#55e896;color:#fff;text-align:center;font-weight:500;font-size:17px;padding:20px 10px;text-transform:uppercase">My Referrals List</div>
+        <div style="background:#343a40;color:#fff;display:grid;grid-template-columns:1fr 1.4fr 1fr;text-align:center;font-size:17px;font-weight:500;padding:20px 6px"><div>Date</div><div>Player Name</div><div>Status</div></div>
+        <div id="mrList"><div class="loader">Loading...</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -2657,6 +2678,25 @@ async function loadReferralHistory(){
       h+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #eee"><div style="font-weight:700;font-size:13px;color:#222">${esc(nm)}</div><div style="font-size:12px;color:${sc};font-weight:700">${esc(st)}</div></div>`; });
     setHtml('referHistoryList',h||"<div class='loader' style='padding:20px 0'>You haven't referred anyone yet.</div>");
   }catch(e){ console.error('referral history',e); setHtml('referHistoryList',"<div class='loader'>Error loading referrals: "+((e&&e.code)||'')+"</div>"); }
+}
+
+window.openMyRefModal=()=>{ loadMyReferrals(); openModal('myRefModal'); };
+async function loadMyReferrals(){
+  setHtml('mrList',"<div class='loader'>Loading...</div>");
+  try{
+    const u=window.currentUser||auth.currentUser; if(!u){ setHtml('mrList',"<div class='loader'>Please login.</div>"); return; }
+    const snap=await db.collection("referrals").where("referrerUid","==",u.uid).get();
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    rows.sort((p,q)=>((q.createdAt&&q.createdAt.seconds)||0)-((p.createdAt&&p.createdAt.seconds)||0));
+    const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const approved=rows.filter(x=>x.status==='Approved').length, bonus=Number(window.appSettings?.referralBonus)||0;
+    setTxt('mrCount',rows.length); setTxt('mrEarn',Number((approved*bonus).toFixed(2)));
+    let h='';
+    rows.forEach(x=>{ const st=x.status||'Pending'; const sc=st==='Approved'?'#16a34a':(st==='Pending'?'#c77c00':'#e53935'); const nm=x.refereeName||x.refereeEmail||'User';
+      const dt=x.createdAt&&x.createdAt.seconds?new Date(x.createdAt.seconds*1000).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'-';
+      h+=`<div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;text-align:center;align-items:center;padding:14px 6px;border-top:1px solid #eee;font-size:14px;color:#333"><div>${dt}</div><div style="font-weight:600;word-break:break-word">${esc(nm)}</div><div style="color:${sc};font-weight:700">${esc(st)}</div></div>`; });
+    setHtml('mrList',h||"<div style='text-align:center;padding:20px 10px;font-size:19px;color:#333'>No Referrals Found.</div>");
+  }catch(e){ console.error('my referrals',e); setHtml('mrList',"<div class='loader'>Error loading referrals</div>"); }
 }
 
 /* ---------- Deposit / Withdraw ---------- */
