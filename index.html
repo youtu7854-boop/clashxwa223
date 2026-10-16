@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="referrer" content="no-referrer">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CLASH X WAR</title>
@@ -538,6 +539,13 @@ img{max-width:100%}
 .quick-amt-btn{background:rgba(0,0,0,.03);border:1px solid var(--border-color);padding:10px;text-align:center;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
 .txn-item{background:#fff;padding:14px;border-radius:12px;margin-bottom:10px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center}
 .loader{text-align:center;padding:30px;color:var(--text-sub);font-size:13px}
+/* Skeleton shimmer for banners / game cards / category tiles */
+.sk-shim{position:relative;overflow:hidden;background:#dcdce0}
+.sk-shim::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.7) 50%,transparent 65%);transform:translateX(-100%);animation:skSweep 1.1s infinite}
+.sk-banner{flex:0 0 90%;aspect-ratio:16/9;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.15);scroll-snap-align:center}
+.sk-game{aspect-ratio:1/1;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.sk-tile{aspect-ratio:1/1;border-radius:14px;box-shadow:0 2px 7px rgba(0,0,0,.12)}
+.sk-promo{width:100%;aspect-ratio:16/9;border-radius:12px;border:1px solid var(--border-color)}
 /* Skeleton loading (game card tap -> match list) */
 .sk-card{background:#efeff1;margin:0 16px 12px;border-radius:14px;padding:12px;position:relative;overflow:hidden;box-shadow:0 5px 15px rgba(0,0,0,.05)}
 .sk-card .sk{background:#dcdce0;border-radius:6px}
@@ -734,7 +742,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <i class="fa-solid fa-chevron-right" style="font-size:13px"></i>
     </div>
 
-    <div class="banner-container" id="userBanners"><div class="loader">Loading Banners...</div></div>
+    <div class="banner-container" id="userBanners"><div class="sk-shim sk-banner"></div><div class="sk-shim sk-banner"></div></div>
 
     <div class="quick-row">
       <div class="quick-item" onclick="openReferModal()"><div class="quick-icon">👥</div>Refer &amp; Earn</div>
@@ -751,7 +759,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
       </div>
       <button class="view-all" onclick="openAllCategories()">View All ›</button>
     </div>
-    <div class="games-grid" id="userGames"><div class="loader" style="grid-column:1/-1">Loading Games...</div></div>
+    <div class="games-grid" id="userGames"><div class="sk-shim sk-game"></div><div class="sk-shim sk-game"></div></div>
 
     <div class="tourney-card">
       <div class="tourney-top">
@@ -796,7 +804,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <div class="cat-header"><i class="fa-solid fa-arrow-left" onclick="closeCategoryScreen()" style="cursor:pointer"></i><span id="catScreenTitle">Tournaments</span><div class="cat-bal"><svg class="coin-ic" viewBox="0 0 32 32"><use href="#coinSym"/></svg><span id="catBalTxt">0.0</span></div></div>
       <div class="cat-tabs" id="catTabs"><div class="cat-tab" data-t="Ongoing" onclick="setCatTab('Ongoing')">Ongoing</div><div class="cat-tab on" data-t="Upcoming" onclick="setCatTab('Upcoming')">Upcoming</div><div class="cat-tab" data-t="Results" onclick="setCatTab('Results')">Results</div></div>
     </div>
-    <div id="catMatchesContainer"><div class="cat-grid" id="allCategoryGrid"><div class="loader">Loading...</div></div></div>
+    <div id="catMatchesContainer"><div class="cat-grid" id="allCategoryGrid"><div class="sk-shim sk-tile"></div><div class="sk-shim sk-tile"></div><div class="sk-shim sk-tile"></div><div class="sk-shim sk-tile"></div><div class="sk-shim sk-tile"></div><div class="sk-shim sk-tile"></div><div class="sk-shim sk-tile"></div><div class="sk-shim sk-tile"></div><div class="sk-shim sk-tile"></div></div></div>
   </div>
 
   <!-- WALLET -->
@@ -830,7 +838,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <div class="me-head"><h2>Community</h2></div>
       <div class="account-card social-row-card"><div class="card-heading">Connect With Us</div><div class="social-row" id="helpSocials"></div></div>
       <div class="card-heading" style="padding:0 4px">Special Promotions</div>
-      <div id="helpBanners" style="display:flex;flex-direction:column;gap:12px"></div>
+      <div id="helpBanners" style="display:flex;flex-direction:column;gap:12px"><div class="sk-shim sk-promo"></div><div class="sk-shim sk-promo"></div></div>
     </div>
   </div>
 
@@ -872,7 +880,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
         <div class="menu-cell" onclick="switchTab('Wallet')"><i class="fa-solid fa-cart-shopping"></i>My Order</div>
         <div class="menu-cell" onclick="switchTab('Profile')"><i class="fa-solid fa-chart-column"></i>My Statistics</div>
         <div class="menu-cell" onclick="openModal('levelModal')"><i class="fa-solid fa-gift"></i>My Rewards</div>
-        <div class="menu-cell" onclick="openReferModal()"><i class="fa-solid fa-users"></i>My Referrals</div>
+        <div class="menu-cell" onclick="openMyReferrals()"><i class="fa-solid fa-users"></i>My Referrals</div>
         <div class="menu-cell" onclick="openNotifs()"><i class="fa-solid fa-flag"></i>Announcement</div>
       </div></div>
       <div class="info-card"><div class="card-heading">Platform Information</div>
@@ -1018,6 +1026,27 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <button onclick="shareOnWhatsApp()" style="width:100%;padding:15px;border:none;border-radius:14px;background:#4ee38f;color:#fff;font-weight:800;font-size:17px;letter-spacing:1px;box-shadow:0 6px 16px rgba(78,227,143,.45);cursor:pointer;font-family:inherit">REFER NOW</button>
       <div id="referHistoryBox" style="text-align:left;margin-top:30px"><div style="font-weight:700;font-size:15px;color:#222;margin-bottom:6px"><i class="fa-solid fa-clock-rotate-left"></i> Referral History</div>
       <div id="referHistoryList" style="padding:6px 0;color:#222"><div class="loader">Loading history...</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- My Referrals -->
+<div id="myReferModal" class="modal-overlay" style="padding:0;align-items:stretch;justify-content:stretch">
+  <div class="modal-content" style="background:#fafafa;color:#3a3f47;width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;padding:0;overflow-y:auto;font-family:'Poppins',sans-serif">
+    <div style="background:#000;color:#fff;display:flex;align-items:center;gap:22px;padding:0 20px;height:68px;position:sticky;top:0;z-index:2"><i class="fa-solid fa-arrow-left" style="font-size:22px;cursor:pointer" onclick="closeModal('myReferModal')"></i><span style="font-size:20px;font-weight:600">My Referrals</span></div>
+    <div style="padding:10px 10px 20px">
+      <div style="background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.25);overflow:hidden;margin-bottom:20px">
+        <div style="background:#54e896;color:#fff;text-align:center;font-weight:500;font-size:16px;height:43px;line-height:43px;text-transform:uppercase">My Referrals Summary</div>
+        <div style="display:flex;justify-content:space-around;align-items:flex-start;padding:19px 10px 24px;text-align:center;color:#3a3f47">
+          <div><div style="font-size:16px;line-height:24px">Referrals</div><div id="myRefCount" style="font-size:19px;font-weight:500;line-height:28px">0</div></div>
+          <div><div style="font-size:16px;line-height:24px">Earnings</div><div style="font-size:19px;font-weight:500;line-height:28px;display:flex;align-items:center;justify-content:center;gap:6px"><svg class="coin-ic" viewBox="0 0 32 32" style="width:20px;height:20px;filter:none"><use href="#coinSym"/></svg><span id="myRefEarn">0</span></div></div>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.25);overflow:hidden">
+        <div style="background:#54e896;color:#fff;text-align:center;font-weight:500;font-size:16px;height:43px;line-height:43px;text-transform:uppercase">My Referrals List</div>
+        <div style="display:flex;background:#343a40;color:#fff;font-weight:500;font-size:16px;height:43px;align-items:center;text-align:center"><div style="flex:1">Date</div><div style="flex:1.4">Player Name</div><div style="flex:1">Status</div></div>
+        <div id="myReferList"><div style="text-align:center;padding:14px 10px;font-size:16px;font-weight:500;color:#3a3f47">Loading...</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1253,9 +1282,18 @@ window.closeModal=id=>{
   if(id==='globalChatModal' && gChatUnsub){gChatUnsub();gChatUnsub=null;}
 };
 window.copyToClipboard=t=>{navigator.clipboard.writeText(t).then(()=>showToast("Copied!")).catch(()=>showToast("Failed to copy",true));};
+window.bnUrl=function(u){
+  u=String(u||'').trim(); if(!u) return '';
+  let m=u.match(/drive\.google\.com\/file\/d\/([\w-]+)/)||u.match(/drive\.google\.com\/(?:open|uc|thumbnail)\?(?:[^#]*&)?id=([\w-]+)/)||u.match(/docs\.google\.com\/uc\?(?:[^#]*&)?id=([\w-]+)/);
+  if(m) return 'https://lh3.googleusercontent.com/d/'+m[1]+'=w1200';
+  if((m=u.match(/^https?:\/\/(?:www\.)?imgur\.com\/(?:a\/|gallery\/)?(\w+)\/?$/i))) return 'https://i.imgur.com/'+m[1]+'.jpg';
+  if(/dropbox\.com/i.test(u)) return u.replace(/www\.dropbox\.com/i,'dl.dropboxusercontent.com').replace(/[?&]dl=0/,'');
+  return u;
+};
 window.copyRefCode=()=>window.copyToClipboard(window.userData?.myReferralCode||"N/A");
 window.copyAdminUpi=()=>window.copyToClipboard(window.appSettings?.upiId||"");
 window.openReferModal=()=>{loadReferralHistory(); openModal('referModal');};
+window.openMyReferrals=()=>{loadMyReferrals(); openModal('myReferModal');};
 window.openNotifs=()=>{localStorage.setItem('lastNotifView',Date.now()); const b=document.getElementById('notifBadge'); if(b) b.style.display='none'; openModal('notificationsModal');};
 window.shareApp=()=>{ if(navigator.share) navigator.share({title:document.title,text:'Join our tournament app!',url:location.href}).catch(()=>{}); else showToast('Share not supported'); };
 /* ---------- External links: open outside the app (WhatsApp, Telegram, etc.) ---------- */
@@ -1466,7 +1504,7 @@ window.openAppTutorial=()=>{
 window.openAllCategories=async()=>{
   const screen=document.getElementById('categoryMatchesScreen'); if(screen) screen.style.display='block';
   setCatMode(false); setTxt('catScreenTitle','Tournaments');
-  setHtml('catMatchesContainer','<div class="cat-grid" id="allCategoryGrid"><div class="loader" style="grid-column:1/-1">Loading...</div></div>');
+  setHtml('catMatchesContainer','<div class="cat-grid" id="allCategoryGrid">'+'<div class="sk-shim sk-tile"></div>'.repeat(9)+'</div>');
   const grid=document.getElementById('allCategoryGrid');
   try{
     const snap=await db.collection("admin_games").get(); let h='';
@@ -2179,7 +2217,7 @@ window.renderCatList=(catName,tab)=>{
     const d=new Date(m.time); let dt='--',tm='';
     if(!isNaN(d)){ const p=n=>String(n).padStart(2,'0'); dt=`${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`; let hh=d.getHours(); const ap=hh>=12?'pm':'am'; hh=hh%12||12; tm=`${hh}:${p(d.getMinutes())} ${ap}`; }
     const title=String(m.name||'')+(m.serial?` - Match #${String(m.serial).replace(/^#+/,'')}`:'');
-    const banner=m.banner?`background-image:url('${String(m.banner).replace(/'/g,"%27")}')`:'';
+    const banner=m.banner?`background-image:url('${bnUrl(m.banner).replace(/'/g,"%27")}')`:'';
     const vip=m.isVipOnly?'<div class="mc2-vip"><i class="fa-solid fa-crown"></i> VIP</div>':'';
     const openFn=`event.stopPropagation();openMatchDetails('${m.id}')`;
     const coinSvg='<svg class="coin-ic" viewBox="0 0 32 32"><use href="#coinSym"/></svg>';
@@ -2244,7 +2282,7 @@ window.openMatchDetails=(mId,force)=>{
   document.getElementById('mTabDetailsBtn').classList.add('active'); document.getElementById('mTabDetails').style.display='block';
   setTxt('mModalName',m.name+(m.serial?` [#${m.serial}]`:'')); setTxt('mModalTime',new Date(m.time).toLocaleString());
   setTxt('mModalFee',"₹"+m.fee); setTxt('mModalPool',"₹"+m.pool); setTxt('mModalKill',"₹"+(m.perKill||0)); setTxt('mModalType',`${m.map} | ${m.type}`); setTxt('mModalRules',m.rules||"No specific rules provided by Admin.");
-  const bn=document.getElementById('mModalBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${m.banner}')`:"none";
+  const bn=document.getElementById('mModalBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:"none";
   let isJoined=false,mySlots="";
   if(m.joinedUsers){ const mine=m.joinedUsers.filter(u=>u.userDocId===window.currentUser.uid); if(mine.length){isJoined=true; mySlots=mine.map(u=>u.slot).join(', ');} }
   let ph='';
@@ -2447,7 +2485,7 @@ window.__renderResultScreen=(m)=>{
   // Result note sent from staff panel -> shown as "Comment". Hidden when empty.
   const cmtRaw=[m.resultNote,m.resultComment,m.resultNotes,m.result_note,m.comment,m.note].find(v=>typeof v==='string'&&v.trim()!=='');
   const cmtHtml=cmtRaw?`<div class="og-h">Comment</div><div style="font-size:14px;line-height:20px;color:#222;padding:0 2px;white-space:pre-wrap;word-break:break-word">${ogEsc(cmtRaw.trim())}</div>`:'';
-  const bn=document.getElementById('rsBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${String(m.banner).replace(/'/g,'%27')}')`:'none';
+  const bn=document.getElementById('rsBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:'none';
   setHtml('rsBody',`<div class="og-h first">${ogEsc(title)}</div>
   <div class="og-chips"><div class="og-chip">Organised on <b>${when}</b></div><div class="og-chip">Winning Prize : <b>${Number(m.pool)||0}(₹)</b></div><div class="og-chip">Per Kill : <b>${Number(m.perKill)||0}(₹)</b></div><div class="og-chip">Entry Fee : ${fee>0?coin+' <b>'+fee+'</b>':'<b>FREE</b>'}</div></div>
   ${cmtHtml}
@@ -2501,7 +2539,7 @@ window.ogRender=(m)=>{
       else { bb.textContent='JOIN NOW'+(fe>0?' (₹'+fe+')':' (FREE)'); }
     } else bb.textContent='SPECTATE';
   })();
-  const bn=document.getElementById('ogBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${String(m.banner).replace(/'/g,'%27')}')`:'none';
+  const bn=document.getElementById('ogBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:'none';
   let h='';
   let rd='';if(isJoined){
     const showRoom=isJoined&&m.publishRoom&&m.roomId;
@@ -2689,6 +2727,26 @@ async function loadReferralHistory(){
       h+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #eee"><div style="font-weight:700;font-size:13px;color:#222">${esc(nm)}</div><div style="font-size:12px;color:${sc};font-weight:700">${esc(st)}</div></div>`; });
     setHtml('referHistoryList',h||"<div class='loader' style='padding:20px 0'>You haven't referred anyone yet.</div>");
   }catch(e){ console.error('referral history',e); setHtml('referHistoryList',"<div class='loader'>Error loading referrals: "+((e&&e.code)||'')+"</div>"); }
+}
+
+async function loadMyReferrals(){
+  const L=document.getElementById('myReferList'); if(!L) return;
+  const msg=t=>{ L.innerHTML="<div style='text-align:center;padding:14px 10px;font-size:16px;font-weight:500;color:#3a3f47'>"+t+"</div>"; };
+  try{
+    const u=window.currentUser||auth.currentUser; if(!u){ msg('Please login.'); return; }
+    const snap=await db.collection("referrals").where("referrerUid","==",u.uid).get();
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    rows.sort((p,q)=>((q.createdAt&&q.createdAt.seconds)||0)-((p.createdAt&&p.createdAt.seconds)||0));
+    const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const approved=rows.filter(x=>x.status==='Approved').length, bonus=Number(window.appSettings?.referralBonus)||0;
+    setTxt('myRefCount',rows.length); setTxt('myRefEarn',approved*bonus);
+    if(!rows.length){ msg('No Referrals Found.'); return; }
+    let h='';
+    rows.forEach(x=>{ const st=x.status||'Pending'; const sc=st==='Approved'?'#16a34a':(st==='Pending'?'#c77c00':'#e53935'); const nm=x.refereeName||x.refereeEmail||'User';
+      let dt='--'; const sec=x.createdAt&&x.createdAt.seconds; if(sec){ const d=new Date(sec*1000), p=n=>String(n).padStart(2,'0'); dt=p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(); }
+      h+=`<div style="display:flex;align-items:center;text-align:center;padding:13px 4px;border-top:1px solid #eee;font-size:14px;color:#3a3f47"><div style="flex:1">${dt}</div><div style="flex:1.4;word-break:break-word">${esc(nm)}</div><div style="flex:1;color:${sc};font-weight:600">${esc(st)}</div></div>`; });
+    L.innerHTML=h;
+  }catch(e){ console.error('referral history',e); msg('Error loading referrals: '+((e&&e.code)||'')); }
 }
 
 /* ---------- Deposit / Withdraw ---------- */
