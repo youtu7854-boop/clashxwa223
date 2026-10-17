@@ -590,6 +590,19 @@ img{max-width:100%}
 .cat-tile{position:relative;-webkit-user-select:none;user-select:none}
 .game-card .ripple,.cat-tile .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);transform:scale(0);animation:gcRipple .6s ease-out forwards;pointer-events:none;z-index:5}
 @keyframes gcRipple{0%{transform:scale(0);opacity:1}70%{opacity:.7}100%{transform:scale(1);opacity:0}}
+/* Tournaments tiles: exact size/spacing from reference screenshot (scales with screen width) */
+.cat-grid{gap:6.11vw;padding:4.72vw}
+.cat-tile img{aspect-ratio:188/220}
+.sk-tile{aspect-ratio:188/220}
+/* Home game cards: exact sizes from reference video (scale with screen width) */
+.games-grid{gap:3.75vw;padding:0 3.47vw 18px}
+.game-card{aspect-ratio:322/300;overflow:visible}
+.game-img{border-radius:12px}
+.fair-tag{top:-1.1vw;left:-1.25vw;height:6.8vw;padding:0 2.2vw 0 2.8vw;gap:1.1vw;border-radius:1.4vw;background:#4caf50;font-size:2.92vw;font-weight:500;line-height:1;box-sizing:border-box;white-space:nowrap}
+.fair-tag svg{width:3.4vw;height:3.4vw;flex:none}
+.play-tag{right:2.1vw;bottom:2.5vw;height:5.56vw;padding:0 1.7vw 0 1.8vw;gap:1.1vw;border-radius:1.2vw;font-size:2.78vw;font-weight:500;line-height:1;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.play-tag i{font-size:2.6vw}
+.sk-game{aspect-ratio:322/300}
 </style>
 </head>
 <body>
@@ -1189,6 +1202,66 @@ window.setSplashLogo(window.SPLASH_LOGO);
 .wd-why .row{display:flex;justify-content:space-around;text-align:center;gap:6px}
 .wd-why .ic{width:84px;height:84px;border-radius:22px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:36px}
 .wd-why b{display:block;font-size:17px;color:#222;font-weight:600}.wd-why span{font-size:14px;color:#8a8fa5}
+</style>
+<style id="size-wallet-withdraw">
+/* === Wallet page: sizes matched to reference video === */
+.w2-wrap{background:#f3f4fb;padding-bottom:90px}
+.w2-head{height:56px;padding:0 20px 0 22px;gap:16px;font-size:17.6px;font-weight:500}
+.w2-head i,.wd-top i{font-size:15px;width:14px;text-align:center;flex:none}
+.w2-total{margin:14px;padding:16px;min-height:130px;border-radius:20px;display:grid;grid-template-columns:90px 82px 1fr;column-gap:0;row-gap:0;align-items:center}
+.w2-total>div:first-child{align-self:start;grid-column:1;grid-row:1}
+.w2-lbl{font-size:13px;line-height:18px;letter-spacing:0;padding-top:2.5px}
+.w2-bal{font-size:28px;font-weight:700;line-height:42px;margin-top:7.5px}
+.w2-wimg{width:82px;font-size:66px;text-align:center;justify-self:center;grid-column:2;grid-row:1}
+.w2-txbtn{grid-column:3;grid-row:1;justify-self:end;width:116.5px;height:37.5px;padding:0;margin-top:0;border-radius:11px;font-size:11px;font-weight:400;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.w2-txbtn i{font-size:10px}
+.w2-card{margin:0 14px 14px;padding:0 16px;border-radius:20px}
+.w2-row{gap:12px;padding:13px 0}
+.w2-mid{padding-bottom:4px}
+.w2-k{font-size:12px;line-height:18px}
+.w2-v{font-size:16px;line-height:24px;font-weight:500;margin-top:4.5px}
+.w2-btn{width:116.5px;min-width:0;height:41px;padding:0;font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px}
+.w2-btn.g{width:114px;height:45px;font-weight:600}
+.w2-btn i{font-size:9px}
+.w2-ar{font-size:11px;padding-right:2px}
+.w2-note{margin:0 14px;padding:15px 20px 15px 18px;gap:18px;border-radius:20px;font-size:11.7px;line-height:20.5px}
+.w2-note>i{font-size:33px;width:32px;text-align:center;flex:none}
+/* === Withdraw screen: sizes matched to reference video === */
+#wdScreen{background:#f3f4fb;padding-bottom:5px}
+.wd-top{height:56px;padding:0 20px 0 22px;gap:16px}
+.wd-top h2{font-size:17.6px;font-weight:500}
+.wd-ban{margin:14px 14px 16px;height:88px;padding:0 16px 0 14px;border-radius:16px;gap:10px}
+.wd-ban h3{font-size:14.4px;font-weight:600;line-height:21.6px}
+.wd-ban p{font-size:12px;line-height:18px;margin-top:5px}
+.wd-ban .em{font-size:50px}
+.wd-card{margin:14px;padding:14px;border-radius:4px}
+.wd-h{display:flex;align-items:center;border-left:0;padding-left:0;font-size:14.7px;font-weight:500;line-height:21.5px;margin-bottom:14.5px}
+.wd-h::before{content:'';width:4px;height:17.5px;background:#17a673;margin-right:8.5px;flex:none}
+.wd-opt{gap:14.5px;padding:5px 6px;min-height:48px;font-size:13.2px;line-height:19px}
+.wd-opt .rd{width:20px;height:20px;border:2px solid #8a8a8a}
+.wd-opt.on .rd{border-color:#111;border-width:2.5px}.wd-opt.on .rd::after{inset:2px}
+.wd-lbl{font-size:12.3px;margin:18.5px 0 9px;line-height:18px;color:#565a85}
+.wd-in{height:52px;border-radius:16px;padding:0 15px;gap:11.5px;border-width:2px}
+.wd-in i{font-size:16px}.wd-in input{font-size:14px}
+#wdChips{margin-top:2px;padding-bottom:0;margin-bottom:15px;gap:9px}
+.wd-chip{width:79px;min-width:79px;height:37px;padding:0;display:flex;align-items:center;justify-content:center;border-width:2px;border-radius:14px;font-size:13px}
+.wd-coin{height:57px;min-height:57px;box-sizing:border-box;padding:0 12px 0 11.5px;gap:10.5px;border-width:2px;border-radius:14px}
+.wd-coin .ci{width:38px;height:38px;background:#17a673!important}
+.wd-coin .ci svg{width:25px!important;height:25px!important}
+.wd-coin small{font-size:10.7px;line-height:16px}
+.wd-coin input{font-size:17px;font-weight:500;line-height:25px;margin-top:2px;height:25px}
+.wd-info:empty{display:none}
+.wd-go{margin:50px 14px 14px;width:calc(100% - 28px);height:56px;padding:0;border-radius:16px;font-size:15px;letter-spacing:.8px;font-weight:600}
+.wd-sec{margin:0 14px;height:44px;padding:0;border-radius:14px;font-size:12.2px;letter-spacing:1px;justify-content:center;gap:0}
+.wd-sec span{display:flex;align-items:center;gap:10px}
+.wd-sec span+span{font-size:12px;font-weight:400;letter-spacing:0;border-left:1px solid rgba(255,255,255,.55);margin-left:13px;padding-left:14.5px;height:16px}
+.wd-sec i{font-size:14px}
+.wd-why{margin:16px 14px 0;padding:14px 14px 22px;border-radius:4px}
+.wd-why h4{font-size:13.6px;font-weight:500;line-height:20px;margin-bottom:15.5px}
+.wd-why .row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.wd-why .ic{width:42px;height:42px;border-radius:12px;font-size:18px;margin:0 auto 10px}
+.wd-why b{font-size:11.5px;font-weight:500;line-height:17.25px}
+.wd-why span{font-size:11px;line-height:16.5px;display:block;margin-top:2.5px}
 </style>
 <div id="wdScreen">
   <div class="wd-top"><i class="fa-solid fa-arrow-left" onclick="closeWithdraw()"></i><h2>Withdraw Money</h2></div>
@@ -2086,7 +2159,7 @@ document.addEventListener('pointerdown',function(e){
 window.renderTopGames=()=>{
   const as=window.appSettings||{};
   const mainImg=as.topGameLogo||DEFAULT_FF_LOGO; const privImg=as.privateContestLogo||as.topGameLogo||DEFAULT_FF_LOGO;
-  const card=(img,fn)=>`<div class="game-card" onclick="${fn}()"><div class="game-img" style="background-image:url('${img}')"></div><div class="fair-tag"><i class="fa-solid fa-shield-halved"></i> FairPlay : ON</div><div class="play-tag">Play <i class="fa-solid fa-play"></i></div></div>`;
+  const card=(img,fn)=>`<div class="game-card" onclick="${fn}()"><div class="game-img" style="background-image:url('${img}')"></div><div class="fair-tag"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 1.5 3.5 4.6v6.2c0 5.2 3.6 9.6 8.5 11.7 4.9-2.1 8.5-6.5 8.5-11.7V4.6z"/><path fill="none" stroke="#4caf50" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="m7.8 12.2 3 3 5.6-6"/></svg> FairPlay : ON</div><div class="play-tag">Play <i class="fa-solid fa-play"></i></div></div>`;
   setHtml('userGames',card(mainImg,'openAllCategories')+card(privImg,'openPrivateContest'));
 };
 /* ---------- Category / match list ---------- */
