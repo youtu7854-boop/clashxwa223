@@ -166,6 +166,21 @@ img{max-width:100%}
 @keyframes swipeInL{from{opacity:.4;transform:translateX(-38px)}to{opacity:1;transform:translateX(0)}}
 .app-section.swipe-r{animation:swipeInR .28s ease}
 .app-section.swipe-l{animation:swipeInL .28s ease}
+.app-section{touch-action:pan-y}
+.app-section.noanim{animation:none!important}
+.app-section.sliding{display:block!important;animation:none!important;position:fixed;left:0;right:0;width:100%;min-height:100vh;background:var(--bg-main);will-change:transform;backface-visibility:hidden;z-index:1}
+/* More page */
+#tab-More{background:#fff;min-height:100vh}
+.mr-head{background:#000;color:#fff;padding:28px 14px 22px 18px;display:flex;align-items:center;justify-content:space-between}
+.mr-head h2{font-size:22px}
+.mr-right{display:flex;align-items:center;gap:16px}
+.mr-right>i{font-size:20px;cursor:pointer}
+.mr-bal{display:flex;align-items:center;gap:6px;background:#fff;color:#111;border-radius:8px;padding:3px 10px 3px 6px;font-size:16px;font-weight:500;line-height:20px}
+.mr-bal .coin-ic{width:18px;height:18px;filter:none}
+.mr-list{padding:9px 8.5px 0}
+.mr-card{background:#fff;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.14);padding:8px 0;margin-bottom:18.5px;cursor:pointer}
+.mr-card img{display:block;width:100%;height:auto;min-height:60px}
+.mr-list .sk-shim{margin-bottom:12px}
 
 /* Header */
 .top-header{display:flex;justify-content:space-between;align-items:center;height:86px;padding:12px 16px;background:#fff;border-bottom:1px solid #e9e9eb;position:sticky;top:0;z-index:100}
@@ -487,14 +502,16 @@ img{max-width:100%}
 .btn-join{background:#111;color:#fff;padding:8px 20px;border-radius:8px;font-weight:700;font-size:12px;border:none;cursor:pointer}
 .spots-text{font-size:12px}
 
-/* Bottom nav */
-.bottom-nav{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);width:92%;display:flex;align-items:center;padding:10px 12px;border-radius:26px;background:rgba(255,255,255,.97);border:1px solid #e5e5e5;box-shadow:0 8px 25px rgba(0,0,0,.14);z-index:1000}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;color:var(--text-sub);font-size:10px;font-weight:500;gap:4px;cursor:pointer}
-.nav-item i{font-size:18px}
-.nav-item.active{color:#111}
-.nav-gap{flex:1.1}
-.center-brand{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);width:68px;height:68px;border-radius:50%;background:#222;border:6px solid #d3cfd6;box-shadow:0 4px 14px rgba(0,0,0,.28);z-index:1100;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}
-.center-brand img{width:100%;height:100%;object-fit:cover;display:block}
+/* Bottom nav (More | Play | Me) */
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;width:100%;height:calc(60px + env(safe-area-inset-bottom,0px));padding:7px 0 env(safe-area-inset-bottom,0px);display:flex;align-items:flex-start;background:#000;border-radius:20px 20px 0 0;z-index:1000}
+.nav-item{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;color:#fff;font-size:12px;font-weight:500;line-height:18px;gap:2px;cursor:pointer;transition:color .15s}
+.nav-item i{font-size:21px;height:23px;line-height:23px}
+.nav-item .nav-coin{width:23px;height:23px;display:block}
+.nav-item.active{color:#9b9b9b}
+.nav-gap{flex:0 0 92px}
+.nav-item.nav-play{position:absolute;left:50%;bottom:calc(15px + env(safe-area-inset-bottom,0px));margin-left:-31px;width:62px;height:62px;flex:none;border-radius:50%;background:#3a3a3c;border:4px solid #000;box-shadow:0 0 0 6px rgba(140,80,200,.25);display:block;gap:0}
+.nav-play img{position:absolute;left:0;top:0;width:100%;height:100%;margin:0;border-radius:50%;object-fit:cover;display:block}
+.nav-play span{display:none;position:absolute;left:0;right:0;top:calc(50% + 12px);text-align:center;font-size:12px;line-height:16px}
 
 .floating-wa{position:fixed;bottom:112px;right:16px;background:#25D366;width:52px;height:52px;border-radius:50%;display:none;justify-content:center;align-items:center;color:#fff;font-size:27px;box-shadow:0 5px 20px rgba(37,211,102,.5);z-index:9999;text-decoration:none}
 .floating-airdrop{position:fixed;bottom:112px;left:16px;background:linear-gradient(135deg,var(--primary-red),#ff5722);width:52px;height:52px;border-radius:50%;display:none;justify-content:center;align-items:center;color:#fff;font-size:22px;box-shadow:0 5px 20px rgba(220,53,69,.6);z-index:9998;cursor:pointer;animation:floatBounce 2s infinite;border:2px solid #fff}
@@ -731,6 +748,8 @@ window.setSplashLogo(window.SPLASH_LOGO);
 <!-- Main App -->
 <div id="mainApp" style="display:none">
 
+  <!-- HOME -->
+  <div id="tab-Home" class="app-section active">
   <div class="top-header">
     <div class="hd-left">
       <div class="hd-avatar" onclick="switchTab('Profile')">
@@ -751,8 +770,6 @@ window.setSplashLogo(window.SPLASH_LOGO);
     </div>
   </div>
 
-  <!-- HOME -->
-  <div id="tab-Home" class="app-section active">
     <div class="notice-bar">
       <div class="notice-pill">📢 NOTICE</div>
       <div class="notice-text"><span class="notice-track"><b>Announcement :</b> <span id="homeNoticeText">Follow The Latest Updates</span></span></div>
@@ -766,7 +783,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <div class="quick-item" onclick="openAppTutorial()"><div class="quick-icon">📖</div>App Tutorial</div>
       <div class="quick-item" onclick="switchTab('Wallet')"><div class="quick-icon">👛</div>My Wallet</div>
       <div class="quick-item" onclick="switchTab('Leaderboard')"><div class="quick-icon">👑</div>Leaders</div>
-      <div class="quick-item" onclick="switchTab('More')"><div class="quick-icon">👤</div>Profile</div>
+      <div class="quick-item" onclick="switchTab('Me')"><div class="quick-icon">👤</div>Profile</div>
     </div>
 
     <div class="sec-head">
@@ -911,14 +928,10 @@ window.setSplashLogo(window.SPLASH_LOGO);
   .lbx-me .w{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:500;color:#111;flex:none;align-self:flex-start;margin-top:12px;font-size:14px}
   </style>
 
-  <!-- HELP -->
-  <div id="tab-Help" class="app-section">
-    <div class="profile-page">
-      <div class="me-head"><h2>Community</h2></div>
-      <div class="account-card social-row-card"><div class="card-heading">Connect With Us</div><div class="social-row" id="helpSocials"></div></div>
-      <div class="card-heading" style="padding:0 4px">Special Promotions</div>
-      <div id="helpBanners" style="display:flex;flex-direction:column;gap:12px"><div class="sk-shim sk-promo"></div><div class="sk-shim sk-promo"></div></div>
-    </div>
+  <!-- MORE -->
+  <div id="tab-More" class="app-section">
+    <div class="mr-head"><h2>More</h2><div class="mr-right"><i class="fa-solid fa-share-nodes" onclick="shareApp()"></i><div class="mr-bal"><svg class="coin-ic" viewBox="0 0 32 32"><use href="#coinSym"/></svg><span id="moreBalTxt">0.0</span></div></div></div>
+    <div class="mr-list" id="helpBanners"><div class="sk-shim sk-promo"></div><div class="sk-shim sk-promo"></div></div>
   </div>
 
   <!-- PROFILE -->
@@ -937,7 +950,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
   </div>
 
   <!-- ME -->
-  <div id="tab-More" class="app-section">
+  <div id="tab-Me" class="app-section">
     <div class="profile-page">
       <div class="me-head"><h2>Me</h2></div>
       <div class="account-card">
@@ -978,13 +991,11 @@ window.setSplashLogo(window.SPLASH_LOGO);
 
   <!-- Bottom nav -->
   <div class="bottom-nav">
-    <div class="nav-item active" data-tab="Home" onclick="switchTab('Home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
-    <div class="nav-item" data-tab="Wallet" onclick="switchTab('Wallet')"><i class="fa-solid fa-wallet"></i><span>Wallet</span></div>
+    <div class="nav-item" data-tab="More" onclick="switchTab('More')"><svg class="nav-coin" viewBox="0 0 32 32"><use href="#coinSym"/></svg><span>More</span></div>
     <div class="nav-gap"></div>
-    <div class="nav-item" data-tab="Help" onclick="switchTab('Help')"><i class="fa-solid fa-headset"></i><span>Help</span></div>
-    <div class="nav-item" data-tab="More" onclick="switchTab('More')"><i class="fa-solid fa-user"></i><span>Me</span></div>
+    <div class="nav-item" data-tab="Me" onclick="switchTab('Me')"><i class="fa-solid fa-user"></i><span>Me</span></div>
+    <div class="nav-item nav-play active" data-tab="Home" onclick="switchTab('Home')"><img class="app-brand-logo-raw" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="Logo"><span>Play</span></div>
   </div>
-  <div class="center-brand" onclick="switchTab('Leaderboard')"><img class="app-brand-logo-raw" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="Logo"></div>
 
   <a href="#" id="floatingWa" class="floating-wa" target="_blank" onclick="handleWaClick(event)"><i class="fa-brands fa-whatsapp"></i></a>
   <div id="floatingAirdrop" class="floating-airdrop" onclick="openModal('airdropModal')"><i class="fa-solid fa-parachute-box"></i><div class="ad-timer" id="adFloatTimer">--:--:--</div></div>
@@ -1468,40 +1479,112 @@ window.switchTab=(tabId)=>{
   if(tabId==='Leaderboard') loadLeaderboard();
   if(tabId==='Wallet') loadUserTransactions();
   if(tabId==='Profile'){calculateProfileStats(); renderSocials();}
-  if(tabId==='Help') renderSocials();
-  if(tabId==='More') renderMorePage();
+  if(tabId==='Me'||tabId==='More') renderMorePage();
 };
-/* ---------- Swipe left/right to change main tabs ---------- */
+/* ---------- Main tabs (More | Play | Me): finger-follow swipe + slide ---------- */
 (function(){
-  const ORDER=['Home','Wallet','Leaderboard','Help','More'];
-  let sx=0,sy=0,st=0,ok=false;
-  const vis=id=>{const e=document.getElementById(id); if(!e) return false; const c=getComputedStyle(e); return c.display!=='none'&&c.visibility!=='hidden';};
+  const ORDER=['More','Home','Me'];
+  const origSwitch=window.switchTab;
+  const DUR=280;
+  let busy=false, ds=null;
+  const byId=id=>document.getElementById(id);
+  const vis=id=>{const e=byId(id); if(!e) return false; const c=getComputedStyle(e); return c.display!=='none'&&c.visibility!=='hidden';};
   const blocked=()=>{
     if(!vis('mainApp')) return true;
     if(vis('payReturn')||vis('categoryMatchesScreen')||vis('wdScreen')) return true;
     if([...document.querySelectorAll('.modal-overlay')].some(m=>vis(m.id)||getComputedStyle(m).display!=='none')) return true;
-    return ['jdOverlay','jmScreen','jpScreen','resultScreen','ongoingScreen','txnScreen'].some(id=>{const e=document.getElementById(id); return e&&e.classList.contains('show');});
+    return ['jdOverlay','jmScreen','jpScreen','resultScreen','ongoingScreen','txnScreen'].some(id=>{const e=byId(id); return e&&e.classList.contains('show');});
   };
   const hScroll=el=>{ for(;el&&el!==document.body;el=el.parentElement){ if(el.scrollWidth>el.clientWidth+4){ const o=getComputedStyle(el).overflowX; if(o==='auto'||o==='scroll') return true; } } return false; };
+  const curId=()=>{ const a=document.querySelector('.app-section.active'); return a?a.id.replace('tab-',''):'Home'; };
+  const secEl=id=>byId('tab-'+id);
+  const setNav=id=>document.querySelectorAll('.bottom-nav .nav-item').forEach(n=>n.classList.toggle('active',n.dataset.tab===id));
+  const clear=e=>{ if(!e) return; e.classList.remove('sliding'); e.style.top=''; e.style.transform=''; e.style.transition=''; };
+  function begin(curE){
+    const a=byId('mainApp'); const sy=window.pageYOffset||0;
+    a.style.minHeight=a.offsetHeight+'px';
+    curE.classList.add('noanim','sliding'); curE.style.top=(-sy)+'px';
+  }
+  function prepNb(nbE,id){
+    if(id==='Me'||id==='More') try{ renderMorePage(); }catch(e){}
+    nbE.classList.add('noanim','sliding'); nbE.style.top='0px';
+  }
+  function place(curE,nbE,dx,side){
+    const W=window.innerWidth;
+    curE.style.transform='translate3d('+dx+'px,0,0)';
+    if(nbE) nbE.style.transform='translate3d('+(dx+(side<0?W:-W))+'px,0,0)';
+  }
+  function settle(curE,nbE,side,commit,targetId){
+    busy=true; const W=window.innerWidth;
+    const tr='transform '+DUR+'ms cubic-bezier(.22,.61,.36,1)';
+    curE.style.transition=tr; if(nbE) nbE.style.transition=tr;
+    if(commit) setNav(targetId);
+    void curE.offsetWidth;
+    curE.style.transform='translate3d('+(commit?(side<0?-W:W):0)+'px,0,0)';
+    if(nbE) nbE.style.transform='translate3d('+(commit?0:(side<0?W:-W))+'px,0,0)';
+    setTimeout(()=>{
+      clear(curE); clear(nbE);
+      if(commit){ secEl(targetId).classList.add('noanim'); origSwitch(targetId); }
+      byId('mainApp').style.minHeight=''; busy=false; ds=null;
+    },DUR+30);
+  }
+  function tapSlide(cur,id){
+    const side=ORDER.indexOf(id)>ORDER.indexOf(cur)?-1:1;
+    const curE=secEl(cur), nbE=secEl(id);
+    begin(curE); prepNb(nbE,id); place(curE,nbE,0,side); settle(curE,nbE,side,true,id);
+  }
+  /* finger-follow swipe between main tabs */
   document.addEventListener('touchstart',e=>{
-    if(e.touches.length!==1){ ok=false; return; }
-    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now();
-    ok=!blocked()&&!hScroll(e.target)&&!/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||''));
+    ds=null;
+    if(busy||e.touches.length!==1||blocked()) return;
+    const t=e.target;
+    if(t&&t.closest&&t.closest('input,textarea,select,#authScreen,#splashScreen')) return;
+    if(hScroll(t)) return;
+    const cur=curId(); if(ORDER.indexOf(cur)<0) return;
+    const x=e.touches[0].clientX, W=window.innerWidth;
+    if(x<14||x>W-14) return;
+    ds={cur:cur,sx:x,sy:e.touches[0].clientY,t:Date.now(),lock:0,dx:0,nbE:null,nbId:null,curE:null,side:0};
   },{passive:true});
-  document.addEventListener('touchend',e=>{
-    if(!ok) return; ok=false;
-    const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
-    if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-st>800) return;
-    if(blocked()) return;
-    const as=document.querySelector('.app-section.active'); if(!as) return;
-    const cur=as.id.replace('tab-',''); const i=ORDER.indexOf(cur); if(i<0) return;
-    const ni=dx<0?i+1:i-1; if(ni<0||ni>=ORDER.length) return;
-    window.switchTab(ORDER[ni]);
-    const na=document.getElementById('tab-'+ORDER[ni]); if(!na) return;
-    na.classList.remove('swipe-r','swipe-l'); void na.offsetWidth;
-    na.classList.add(dx<0?'swipe-r':'swipe-l');
-    setTimeout(()=>na.classList.remove('swipe-r','swipe-l'),320);
-  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!ds||busy) return;
+    const tc=e.touches[0], ddx=tc.clientX-ds.sx, ddy=tc.clientY-ds.sy;
+    if(!ds.lock){
+      if(Math.abs(ddx)<10&&Math.abs(ddy)<10) return;
+      if(Math.abs(ddx)>Math.abs(ddy)*1.2){
+        ds.lock=1; ds.curE=secEl(ds.cur);
+        if(!ds.curE){ ds=null; return; }
+        begin(ds.curE);
+      } else { ds=null; return; }
+    }
+    if(e.cancelable) e.preventDefault();
+    ds.dx=ddx;
+    const idx=ORDER.indexOf(ds.cur)+(ddx<0?1:-1);
+    const tid=ORDER[idx]||null;
+    ds.side=ddx<0?-1:1;
+    if(tid!==ds.nbId){
+      if(ds.nbE) clear(ds.nbE);
+      ds.nbId=tid; ds.nbE=tid?secEl(tid):null;
+      if(ds.nbE) prepNb(ds.nbE,tid);
+    }
+    if(ds.nbE) place(ds.curE,ds.nbE,ddx,ds.side);
+    else place(ds.curE,null,ddx*0.25,ds.side);
+  },{passive:false});
+  const endSwipe=cancel=>{
+    if(!ds) return;
+    if(ds.lock!==1){ ds=null; return; }
+    const W=window.innerWidth, dt=Math.max(1,Date.now()-ds.t), adx=Math.abs(ds.dx);
+    const commit=!cancel&&!!ds.nbE&&(adx>W*0.28||(adx/dt>0.5&&adx>40));
+    settle(ds.curE,ds.nbE,ds.side,commit,ds.nbId);
+  };
+  document.addEventListener('touchend',()=>endSwipe(false),{passive:true});
+  document.addEventListener('touchcancel',()=>endSwipe(true),{passive:true});
+  window.switchTab=function(id){
+    if(busy) return;
+    const cur=curId();
+    if(id!==cur&&ORDER.indexOf(id)>=0&&ORDER.indexOf(cur)>=0&&vis('mainApp')&&!vis('categoryMatchesScreen')){ tapSlide(cur,id); return; }
+    document.querySelectorAll('.app-section.noanim').forEach(e=>e.classList.remove('noanim'));
+    origSwitch(id);
+  };
 })();
 /* ---------- Android Back button + Pull-to-refresh (Sketchware WebView) ---------- */
 window.__backT=0;
@@ -1539,8 +1622,7 @@ window.refreshData=async function(){
     if(id==='Leaderboard') await loadLeaderboard();
     if(id==='Wallet'||id==='Profile') await loadUserTransactions();
     if(id==='Profile'){ calculateProfileStats(); renderSocials(); }
-    if(id==='Help') renderSocials();
-    if(id==='More') renderMorePage();
+    if(id==='Me'||id==='More') renderMorePage();
     showToast('Refreshed');
   }catch(e){ showToast('Refresh failed',true); }
 };
@@ -1795,7 +1877,7 @@ function applyLiveUserData(data, uid){
   const total = winning + deposit + bonus;
   setTxt('topWalletBal', total.toFixed(2));
   setTxt('wWin', winning); setTxt('wDep', deposit); setTxt('wBon', bonus); setTxt('w2Total', total.toFixed(1));
-  setTxt('catBalTxt', total.toFixed(1));
+  setTxt('catBalTxt', total.toFixed(1)); setTxt('moreBalTxt', total.toFixed(1));
   setTxt('homeTotalWin', winning.toFixed(0));
   const name = String(data.ffName || data.username || 'User');
   setTxt('homeUserName', name); setTxt('pName', name); setTxt('meName', name);
@@ -2205,7 +2287,7 @@ function socialsHtml(){
 function renderSocials(){ const h=socialsHtml(); setHtml('helpSocials',h||"<div class='loader' style='padding:10px'>No links configured.</div>"); setHtml('homeSocials',h||'<div style="font-size:11px;color:#999">No social links configured</div>'); }
 function renderMorePage(){
   const d=window.userData||{}, w=d.wallets||{};
-  setTxt('meName',d.ffName||'unknown'); setTxt('meBalance',Number((w.winning||0)+(w.deposit||0)+(w.bonus||0)).toFixed(1));
+  setTxt('meName',d.ffName||'unknown'); setTxt('meBalance',Number((w.winning||0)+(w.deposit||0)+(w.bonus||0)).toFixed(1)); setTxt('moreBalTxt',Number((w.winning||0)+(w.deposit||0)+(w.bonus||0)).toFixed(1));
   setTxt('mePlayed',document.getElementById('statPlayed')?.innerText||'0'); setTxt('meWon',Number(w.winning||0).toFixed(0)); setTxt('meKilled','0'); setTxt('meVersion',APP_VERSION);
 }
 
@@ -2215,7 +2297,7 @@ async function loadHomeData(){
     const bs=await db.collection("admin_banners").get(); let bh='',hb='';
     bs.forEach(d=>{ const x=d.data(); const c=x.link?`onclick="window.open('${x.link}','_blank')"`:'';
       bh+=`<div class="banner-card" style="background-image:url('${x.url}')" ${c}></div>`;
-      hb+=`<img src="${x.url}" style="width:100%;border-radius:12px;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--border-color);cursor:pointer" ${c}>`; });
+      hb+=`<div class="mr-card" ${c}><img src="${x.url}" alt=""></div>`; });
     setHtml('userBanners',bh||'<div class="loader">No banners</div>'); setHtml('helpBanners',hb||'<div class="loader">No promotions available</div>');
     if(window.bannerInterval) clearInterval(window.bannerInterval);
     window.bannerInterval=setInterval(()=>{
@@ -2762,6 +2844,68 @@ window.closeOngoingScreen=()=>{
   if(window.__ogUnsub){ try{window.__ogUnsub();}catch(e){} window.__ogUnsub=null; }
   window.__ogId=null;
 };
+/* ---------- Match screen: Description <-> Joined Member finger-follow swipe ---------- */
+(function(){
+  const sc=document.getElementById('ogScroll'); if(!sc) return;
+  const DUR=280, EASE='transform '+DUR+'ms cubic-bezier(.22,.61,.36,1)';
+  const byId=id=>document.getElementById(id);
+  let ds=null, busy=false;
+  sc.style.touchAction='pan-y';
+  const curTab=()=>byId('ogDesc').style.display==='none'?'mem':'desc';
+  const hScroll=el=>{ for(;el&&el!==sc;el=el.parentElement){ if(el.scrollWidth>el.clientWidth+4){ const o=getComputedStyle(el).overflowX; if(o==='auto'||o==='scroll') return true; } } return false; };
+  const reset=e=>{ ['transform','transition','position','left','right','top','willChange'].forEach(k=>e.style[k]=''); };
+  sc.addEventListener('touchstart',e=>{
+    ds=null;
+    if(busy||e.touches.length!==1) return;
+    const t=e.target;
+    if(t&&t.closest&&t.closest('input,textarea,select')) return;
+    if(hScroll(t)) return;
+    const x=e.touches[0].clientX, W=window.innerWidth;
+    if(x<14||x>W-14) return;
+    ds={sx:x,sy:e.touches[0].clientY,t:Date.now(),lock:0,dx:0,cur:curTab()};
+  },{passive:true});
+  sc.addEventListener('touchmove',e=>{
+    if(!ds||busy) return;
+    const tc=e.touches[0], ddx=tc.clientX-ds.sx, ddy=tc.clientY-ds.sy;
+    if(!ds.lock){
+      if(Math.abs(ddx)<10&&Math.abs(ddy)<10) return;
+      if(Math.abs(ddx)>Math.abs(ddy)*1.2){
+        ds.lock=1;
+        ds.curE=byId(ds.cur==='desc'?'ogDesc':'ogMem'); ds.nbE=byId(ds.cur==='desc'?'ogMem':'ogDesc');
+        sc.style.position='relative'; sc.style.overflowX='hidden';
+        ds.nbE.style.display='block'; ds.nbE.style.position='absolute'; ds.nbE.style.left='0'; ds.nbE.style.right='0'; ds.nbE.style.top=ds.curE.offsetTop+'px';
+        ds.curE.style.willChange=ds.nbE.style.willChange='transform';
+      } else { ds=null; return; }
+    }
+    if(e.cancelable) e.preventDefault();
+    ds.dx=ddx;
+    const W=window.innerWidth;
+    const valid=(ds.cur==='desc'&&ddx<0)||(ds.cur==='mem'&&ddx>0);
+    const eff=valid?ddx:ddx*0.25;
+    ds.curE.style.transform='translate3d('+eff+'px,0,0)';
+    ds.nbE.style.transform='translate3d('+(eff+(ds.cur==='desc'?W:-W))+'px,0,0)';
+  },{passive:false});
+  const end=cancel=>{
+    if(!ds) return;
+    if(ds.lock!==1){ ds=null; return; }
+    const d=ds; ds=null; busy=true;
+    const W=window.innerWidth, dt=Math.max(1,Date.now()-d.t), adx=Math.abs(d.dx);
+    const valid=(d.cur==='desc'&&d.dx<0)||(d.cur==='mem'&&d.dx>0);
+    const commit=!cancel&&valid&&(adx>W*0.28||(adx/dt>0.5&&adx>40));
+    const nbSide=d.cur==='desc'?W:-W;
+    d.curE.style.transition=EASE; d.nbE.style.transition=EASE;
+    void d.curE.offsetWidth;
+    d.curE.style.transform='translate3d('+(commit?-nbSide:0)+'px,0,0)';
+    d.nbE.style.transform='translate3d('+(commit?0:nbSide)+'px,0,0)';
+    setTimeout(()=>{
+      reset(d.curE); reset(d.nbE); sc.style.position=''; sc.style.overflowX='';
+      ogTab(commit?(d.cur==='desc'?'mem':'desc'):d.cur);
+      busy=false;
+    },DUR+30);
+  };
+  sc.addEventListener('touchend',()=>end(false),{passive:true});
+  sc.addEventListener('touchcancel',()=>end(true),{passive:true});
+})();
 window.ogOpenChat=()=>{ const id=window.__ogId; if(!id) return; openMatchDetails(id,true); switchMatchModalTab('Chat'); };
 window.ogBtnClick=()=>{
   const m=window.allTournaments.find(x=>x.id===window.__ogId); if(!m) return;
