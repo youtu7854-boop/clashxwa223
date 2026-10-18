@@ -1481,18 +1481,24 @@ window.switchTab=(tabId)=>{
   if(tabId==='Profile'){calculateProfileStats(); renderSocials();}
   if(tabId==='Me'||tabId==='More') renderMorePage();
 };
-/* ---------- APK: side-swipe ke time Android ka pull-to-refresh band ---------- */
+/* ---------- APK: pull-to-refresh sirf tab chale jab ungli saaf seedha neeche kheeche (side-swipe par kabhi nahi) ---------- */
 (function(){
-  let tx=0,ty=0,blk=false;
-  document.addEventListener('touchstart',e=>{ if(e.touches.length===1){ tx=e.touches[0].clientX; ty=e.touches[0].clientY; } blk=false; },{passive:true,capture:true});
+  let tx=0,ty=0,top=false,done=true;
+  const ptr=b=>{ try{ if(window.AndroidApp&&typeof window.AndroidApp.setCanScrollUp==='function') window.AndroidApp.setCanScrollUp(b); }catch(err){} };
+  document.addEventListener('touchstart',e=>{
+    done=true; top=false;
+    if(e.touches.length!==1) return;
+    tx=e.touches[0].clientX; ty=e.touches[0].clientY;
+    const el=window.__spEl;
+    top=!el||(el.scrollTop<=0);
+    if(top){ done=false; ptr(true); }
+  },{passive:true});
   document.addEventListener('touchmove',e=>{
-    if(blk||e.touches.length!==1) return;
-    const dx=Math.abs(e.touches[0].clientX-tx), dy=Math.abs(e.touches[0].clientY-ty);
-    if(dx>=4&&dx>=dy*0.6){
-      blk=true; window.__hSwipeAt=Date.now();
-      try{ if(window.AndroidApp&&typeof window.AndroidApp.setCanScrollUp==='function') window.AndroidApp.setCanScrollUp(true); }catch(err){}
-    }
-  },{passive:true,capture:true});
+    if(done||!top||e.touches.length!==1) return;
+    const mx=e.touches[0].clientX-tx, my=e.touches[0].clientY-ty, dx=Math.abs(mx), dy=Math.abs(my);
+    if(dx>=4&&dx>=dy*0.6){ done=true; window.__hSwipeAt=Date.now(); return; }
+    if(my>=10&&dy>=dx*2.2){ done=true; ptr(false); }
+  },{passive:true});
 })();
 /* ---------- Main tabs (More | Play | Me): finger-follow swipe + slide ---------- */
 (function(){
