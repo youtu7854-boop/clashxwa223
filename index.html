@@ -1549,9 +1549,9 @@ window.switchTab=(tabId)=>{
     if(!ds||busy) return;
     const tc=e.touches[0], ddx=tc.clientX-ds.sx, ddy=tc.clientY-ds.sy;
     if(!ds.lock){
-      if(Math.abs(ddx)<10&&Math.abs(ddy)<10) return;
+      if(Math.abs(ddx)<6&&Math.abs(ddy)<6) return;
       if(Math.abs(ddx)>Math.abs(ddy)*1.2){
-        ds.lock=1; ds.curE=secEl(ds.cur);
+        ds.lock=1; window.__hSwipeAt=Date.now(); ds.curE=secEl(ds.cur);
         if(!ds.curE){ ds=null; return; }
         begin(ds.curE);
       } else { ds=null; return; }
@@ -1572,6 +1572,7 @@ window.switchTab=(tabId)=>{
   const endSwipe=cancel=>{
     if(!ds) return;
     if(ds.lock!==1){ ds=null; return; }
+    window.__hSwipeAt=Date.now();
     const W=window.innerWidth, dt=Math.max(1,Date.now()-ds.t), adx=Math.abs(ds.dx);
     const commit=!cancel&&!!ds.nbE&&(adx>W*0.28||(adx/dt>0.5&&adx>40));
     settle(ds.curE,ds.nbE,ds.side,commit,ds.nbId);
@@ -1613,6 +1614,7 @@ window.handleBack=function(){
 };
 // Pull-to-refresh: page reload nahi, sirf data refresh
 window.refreshData=async function(){
+  if(window.__hSwipeAt&&Date.now()-window.__hSwipeAt<1500) return; // side-swipe ke time refresh nahi
   if(!window.currentUser) return;
   try{
     await fetchAppConfig();
@@ -2868,9 +2870,9 @@ window.closeOngoingScreen=()=>{
     if(!ds||busy) return;
     const tc=e.touches[0], ddx=tc.clientX-ds.sx, ddy=tc.clientY-ds.sy;
     if(!ds.lock){
-      if(Math.abs(ddx)<10&&Math.abs(ddy)<10) return;
+      if(Math.abs(ddx)<6&&Math.abs(ddy)<6) return;
       if(Math.abs(ddx)>Math.abs(ddy)*1.2){
-        ds.lock=1;
+        ds.lock=1; window.__hSwipeAt=Date.now();
         ds.curE=byId(ds.cur==='desc'?'ogDesc':'ogMem'); ds.nbE=byId(ds.cur==='desc'?'ogMem':'ogDesc');
         sc.style.position='relative'; sc.style.overflowX='hidden';
         ds.nbE.style.display='block'; ds.nbE.style.position='absolute'; ds.nbE.style.left='0'; ds.nbE.style.right='0'; ds.nbE.style.top=ds.curE.offsetTop+'px';
@@ -2888,7 +2890,7 @@ window.closeOngoingScreen=()=>{
   const end=cancel=>{
     if(!ds) return;
     if(ds.lock!==1){ ds=null; return; }
-    const d=ds; ds=null; busy=true;
+    const d=ds; ds=null; busy=true; window.__hSwipeAt=Date.now();
     const W=window.innerWidth, dt=Math.max(1,Date.now()-d.t), adx=Math.abs(d.dx);
     const valid=(d.cur==='desc'&&d.dx<0)||(d.cur==='mem'&&d.dx>0);
     const commit=!cancel&&valid&&(adx>W*0.28||(adx/dt>0.5&&adx>40));
