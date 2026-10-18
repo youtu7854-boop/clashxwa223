@@ -1781,7 +1781,7 @@ window.openAllCategories=async()=>{
   setHtml('catMatchesContainer','<div class="cat-grid" id="allCategoryGrid">'+'<div class="sk-shim sk-tile"></div>'.repeat(9)+'</div>');
   const grid=document.getElementById('allCategoryGrid');
   try{
-    let snap; { const gc=window.__gamesCache; if(gc&&Date.now()-gc.t<600000){ snap={docs:gc.a.map(x=>({data:()=>x}))}; } else { snap=await db.collection("admin_games").get(); window.__gamesCache={t:Date.now(),a:snap.docs.map(d=>d.data())}; } } let h='';
+    const snap=await db.collection("admin_games").get(); let h='';
     const gl=snap.docs.map(d=>d.data()).sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority));
     gl.forEach(x=>{h+=`<div class="cat-tile" onclick="openCategory('${String(x.name||'').replace(/'/g,"\\'")}')"><img src="${x.url}" alt="${x.name||''}"></div>`;});
     grid.innerHTML=h||'<div class="loader" style="grid-column:1/-1">No tournaments available.</div>';
@@ -1924,6 +1924,7 @@ function startBackgroundRefresh(){
     if(document.visibilityState !== 'visible' || !window.currentUser || !document.getElementById('mainApp') || document.getElementById('mainApp').style.display === 'none') return;
     try { await loadHomeData(); } catch(e) {}
     try { await loadUserTransactions(); } catch(e) {}
+    try { await loadReferralHistory(); } catch(e) {}
   }, 30000);
 }
 
@@ -2314,7 +2315,7 @@ function renderMorePage(){
 /* ---------- Home ---------- */
 async function loadHomeData(){
   try{
-    let bs; { const bc=window.__bannerCache; if(bc&&Date.now()-bc.t<600000){ bs={forEach:fn=>bc.a.forEach(x=>fn({data:()=>x}))}; } else { const _s=await db.collection("admin_banners").get(); const _a=[]; _s.forEach(d=>_a.push(d.data())); window.__bannerCache={t:Date.now(),a:_a}; bs=_s; } } let bh='',hb='';
+    const bs=await db.collection("admin_banners").get(); let bh='',hb='';
     bs.forEach(d=>{ const x=d.data(); const c=x.link?`onclick="window.open('${x.link}','_blank')"`:'';
       bh+=`<div class="banner-card" style="background-image:url('${x.url}')" ${c}></div>`;
       hb+=`<div class="mr-card" ${c}><img src="${x.url}" alt=""></div>`; });
@@ -3042,7 +3043,6 @@ function lbDate(v){ if(!v) return null; if(typeof v.toDate==='function') return 
 async function loadLeaderboard(){
   const L=window.__lb; if(!document.getElementById('lbxBody')) return;
   if(!L.rows) setHtml('lbxBody','<div class="loader">Loading...</div>');
-  if(L.rows && L.__at && (Date.now()-L.__at)<180000){ lbRenderChips(); lbRender(); return; }
   try{
     const [gs,ts]=await Promise.all([db.collection("admin_games").get(),db.collection("tournaments").get()]);
     L.games=gs.docs.map(d=>d.data()).sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority)).map(x=>x.name).filter(Boolean);
@@ -3054,7 +3054,7 @@ async function loadLeaderboard(){
       Object.keys(res).forEach(k=>{ const r=res[k]||{}; const amt=Number(r.total)||0; if(amt<=0) return;
         rows.push({key:k,name:r.username||r.ffName||'Player',av:avMap[k]||'',amt,cat:t.category||'',time:when}); });
     });
-    L.rows=rows; L.__at=Date.now();
+    L.rows=rows;
     if(L.game!=='All Games'&&!L.games.includes(L.game)) L.game='All Games';
     lbRenderChips(); lbRender();
   }catch(e){ console.error(e); setHtml('lbxBody',"<div class='loader'>Error loading leaderboard</div>"); }
