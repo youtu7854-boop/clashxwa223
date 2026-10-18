@@ -1593,7 +1593,7 @@ window.switchTab=(tabId)=>{
     if(ds.lock!==1){ ds=null; return; }
     window.__hSwipeAt=Date.now();
     const W=window.innerWidth, dt=Math.max(1,Date.now()-ds.t), adx=Math.abs(ds.dx);
-    const commit=!cancel&&!!ds.nbE&&(adx>W*0.28||(adx/dt>0.5&&adx>40));
+    const commit=!!ds.nbE&&(adx>=14||(adx/dt>0.2&&adx>=8)); // halka sa swipe bhi poora complete
     settle(ds.curE,ds.nbE,ds.side,commit,ds.nbId);
   };
   document.addEventListener('touchend',()=>endSwipe(false),{passive:true});
