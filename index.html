@@ -1481,6 +1481,19 @@ window.switchTab=(tabId)=>{
   if(tabId==='Profile'){calculateProfileStats(); renderSocials();}
   if(tabId==='Me'||tabId==='More') renderMorePage();
 };
+/* ---------- APK: side-swipe ke time Android ka pull-to-refresh band ---------- */
+(function(){
+  let tx=0,ty=0,blk=false;
+  document.addEventListener('touchstart',e=>{ if(e.touches.length===1){ tx=e.touches[0].clientX; ty=e.touches[0].clientY; } blk=false; },{passive:true,capture:true});
+  document.addEventListener('touchmove',e=>{
+    if(blk||e.touches.length!==1) return;
+    const dx=Math.abs(e.touches[0].clientX-tx), dy=Math.abs(e.touches[0].clientY-ty);
+    if(dx>=4&&dx>=dy*0.6){
+      blk=true; window.__hSwipeAt=Date.now();
+      try{ if(window.AndroidApp&&typeof window.AndroidApp.setCanScrollUp==='function') window.AndroidApp.setCanScrollUp(true); }catch(err){}
+    }
+  },{passive:true,capture:true});
+})();
 /* ---------- Main tabs (More | Play | Me): finger-follow swipe + slide ---------- */
 (function(){
   const ORDER=['More','Home','Me'];
