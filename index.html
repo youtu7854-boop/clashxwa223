@@ -162,6 +162,10 @@ img{max-width:100%}
 .app-section{display:none;animation:slideUp .3s ease}
 .app-section.active{display:block}
 @keyframes slideUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes swipeInR{from{opacity:.4;transform:translateX(38px)}to{opacity:1;transform:translateX(0)}}
+@keyframes swipeInL{from{opacity:.4;transform:translateX(-38px)}to{opacity:1;transform:translateX(0)}}
+.app-section.swipe-r{animation:swipeInR .28s ease}
+.app-section.swipe-l{animation:swipeInL .28s ease}
 
 /* Header */
 .top-header{display:flex;justify-content:space-between;align-items:center;height:86px;padding:12px 16px;background:#fff;border-bottom:1px solid #e9e9eb;position:sticky;top:0;z-index:100}
@@ -842,8 +846,70 @@ window.setSplashLogo(window.SPLASH_LOGO);
 
   <!-- LEADERBOARD -->
   <div id="tab-Leaderboard" class="app-section">
-    <div class="profile-page"><div class="me-head"><h2>Top Players</h2></div><div class="wallet-box" style="padding:0;overflow:hidden" id="lbContainer"><div class="loader">Loading...</div></div></div>
+    <div class="lbx">
+      <div class="lbx-top"><i class="fa-solid fa-arrow-left" onclick="switchTab('Home')"></i><span>Top Players</span></div>
+      <div class="lbx-title"><div><h1>Leaderboard</h1><p>Compete. Conquer. Claim your spot.</p></div><div class="lbx-crown"><i class="fa-solid fa-crown"></i></div></div>
+      <div class="lbx-chips" id="lbxChips"></div>
+      <div class="lbx-seg" id="lbxSeg"><div class="on" data-p="weekly" onclick="lbSetPeriod('weekly')">WEEKLY</div><div data-p="monthly" onclick="lbSetPeriod('monthly')">MONTHLY</div><div data-p="overall" onclick="lbSetPeriod('overall')">OVERALL</div></div>
+      <div id="lbxBody"><div class="loader">Loading...</div></div>
+      <div class="lbx-fade"></div>
+      <div class="lbx-me" id="lbxMe" style="display:none"></div>
+    </div>
   </div>
+
+  <style>
+  /* Leaderboard (Top Players) */
+  body:has(#tab-Leaderboard.active) .bottom-nav,body:has(#tab-Leaderboard.active) .center-brand{display:none!important}
+  #tab-Leaderboard .lbx{background:#fff;min-height:100vh;padding-bottom:110px;position:relative}
+  .lbx-top{height:52px;display:flex;align-items:center;gap:20px;padding:0 20px;font-size:17px;font-weight:500;color:#111}
+  .lbx-top i{font-size:17px;cursor:pointer}
+  .lbx-title{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px 0}
+  .lbx-title h1{font-size:26px;font-weight:500;line-height:36px;color:#111}
+  .lbx-title p{font-size:14px;color:#8d8d8d;line-height:21px;margin-top:4px}
+  .lbx-crown{width:28px;height:28px;border-radius:3px;background:#ffe08a;display:flex;align-items:center;justify-content:center;color:#ffb300;font-size:14px;margin-top:6px}
+  .lbx-chips{display:flex;gap:2px;overflow-x:auto;padding:19px 16px 0;scrollbar-width:none}
+  .lbx-chips::-webkit-scrollbar{display:none}
+  .lbx-chip{flex:none;height:36px;padding:0 15px;border:1px solid #dcdcdc;border-radius:18px;font-size:13px;font-weight:500;color:#8a8a8a;display:flex;align-items:center;white-space:nowrap;background:#fff;cursor:pointer}
+  .lbx-chip.on{border:2px solid #0d2b33;color:#111;padding:0 14px}
+  .lbx-seg{margin:17px 16px 0;height:48px;border:1px solid #dcdcdc;border-radius:24px;display:flex;padding:3px;gap:0}
+  .lbx-seg div{flex:1;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:500;color:#8a8a8a;border-radius:16px;cursor:pointer;border:2px solid transparent}
+  .lbx-seg div.on{border-color:#0d2b33;color:#0d2b33}
+  .lbx-pod{display:flex;justify-content:space-between;padding:31px 0 0;margin:0 3px}
+  .lbx-pc{width:33.33%;display:flex;flex-direction:column;align-items:center;min-width:0}
+  .lbx-pc .sp{height:46px}
+  .lbx-pc .cr{height:17px;margin-bottom:7px;color:#ffb300;font-size:17px;line-height:17px}
+  .lbx-pa{position:relative;width:72px;height:72px;border-radius:50%}
+  .lbx-pc.p1 .lbx-pa{width:82px;height:82px}
+  .lbx-pa .im{width:100%;height:100%;border-radius:50%;overflow:hidden;border:3px solid var(--tc);background:#fff;display:flex;align-items:center;justify-content:center;font-size:34px}
+  .lbx-pa .im img,.lbx-pa .im svg{width:100%;height:100%;object-fit:cover;display:block}
+  .lbx-pa .bd{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:var(--tc);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff}
+  .lbx-pc.p1 .lbx-pa .bd{width:22px;height:22px;font-size:13px}
+  .lbx-pc .nm{margin-top:12px;max-width:100%;padding:0 2px;font-size:14px;font-weight:500;line-height:22px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lbx-pc .cp{margin-top:8px;height:25px;padding:0 11px;border-radius:13px;border:1.5px solid var(--tc);background:var(--tb);display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#111}
+  .lbx-pc .cp svg{width:12px;height:12px}
+  .lbx-pc.p1{--tc:#ffb300;--tb:#fff6d6}.lbx-pc.p2{--tc:#b0bec5;--tb:#eceff1}.lbx-pc.p3{--tc:#a1887f;--tb:#f1e8e6}
+  .lbx-th{display:flex;align-items:center;margin-top:34px;padding:0 24px 12px;font-size:11.5px;font-weight:500;color:#7c7c7c;border-bottom:1px solid #ddd;margin-left:16px;margin-right:16px;padding-left:8px;padding-right:8px}
+  .lbx-th .r{width:50px}.lbx-th .p{flex:1}
+  .lbx-list{padding:6px 16px 0}
+  .lbx-row{height:65px;display:flex;align-items:center;border-bottom:1px solid #e5e5e5;padding:0 8px}
+  .lbx-row .r{width:50px;font-size:14px;font-weight:500;color:#111}
+  .lbx-row .av{width:40px;height:40px;border-radius:50%;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff}
+  .lbx-row .av img,.lbx-row .av svg{width:100%;height:100%;object-fit:cover;display:block}
+  .lbx-row .n{flex:1;margin-left:16px;font-size:14px;font-weight:500;color:#111;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lbx-row .w{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:500;color:#111;padding-right:4px}
+  .lbx-row .w svg,.lbx-me .w svg{width:17px;height:17px}
+  .lbx-fade{position:fixed;left:0;right:0;bottom:0;height:96px;background:#fff;z-index:50;pointer-events:none;display:none}
+  #tab-Leaderboard.active .lbx-fade{display:block}
+  .lbx-me{position:fixed;left:16px;right:16px;bottom:16px;min-height:64px;z-index:51;background:#fff5d6;border:2px solid #f3d36b;border-radius:20px;display:flex;align-items:center;gap:8px;padding:6px 14px 6px 14px}
+  #tab-Leaderboard:not(.active) .lbx-me{display:none!important}
+  .lbx-me .rk{width:32px;height:32px;border-radius:50%;background:#c9a77c;color:#fff;font-size:12.5px;font-weight:500;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
+  .lbx-me .av{width:40px;height:40px;border-radius:50%;flex:none;overflow:hidden;border:2px solid #c9a77c;background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .lbx-me .av img,.lbx-me .av svg{width:100%;height:100%;object-fit:cover;display:block}
+  .lbx-me .tx{flex:1;min-width:0;line-height:1.35;margin-left:2px}
+  .lbx-me .tx small{display:block;font-size:11px;color:#c9a227;font-weight:500;text-transform:uppercase}
+  .lbx-me .tx b{display:block;font-size:14px;font-weight:500;color:#111;word-break:break-word}
+  .lbx-me .w{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:500;color:#111;flex:none;align-self:flex-start;margin-top:12px;font-size:14px}
+  </style>
 
   <!-- HELP -->
   <div id="tab-Help" class="app-section">
@@ -1405,6 +1471,38 @@ window.switchTab=(tabId)=>{
   if(tabId==='Help') renderSocials();
   if(tabId==='More') renderMorePage();
 };
+/* ---------- Swipe left/right to change main tabs ---------- */
+(function(){
+  const ORDER=['Home','Wallet','Leaderboard','Help','More'];
+  let sx=0,sy=0,st=0,ok=false;
+  const vis=id=>{const e=document.getElementById(id); if(!e) return false; const c=getComputedStyle(e); return c.display!=='none'&&c.visibility!=='hidden';};
+  const blocked=()=>{
+    if(!vis('mainApp')) return true;
+    if(vis('payReturn')||vis('categoryMatchesScreen')||vis('wdScreen')) return true;
+    if([...document.querySelectorAll('.modal-overlay')].some(m=>vis(m.id)||getComputedStyle(m).display!=='none')) return true;
+    return ['jdOverlay','jmScreen','jpScreen','resultScreen','ongoingScreen','txnScreen'].some(id=>{const e=document.getElementById(id); return e&&e.classList.contains('show');});
+  };
+  const hScroll=el=>{ for(;el&&el!==document.body;el=el.parentElement){ if(el.scrollWidth>el.clientWidth+4){ const o=getComputedStyle(el).overflowX; if(o==='auto'||o==='scroll') return true; } } return false; };
+  document.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1){ ok=false; return; }
+    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now();
+    ok=!blocked()&&!hScroll(e.target)&&!/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||''));
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!ok) return; ok=false;
+    const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-st>800) return;
+    if(blocked()) return;
+    const as=document.querySelector('.app-section.active'); if(!as) return;
+    const cur=as.id.replace('tab-',''); const i=ORDER.indexOf(cur); if(i<0) return;
+    const ni=dx<0?i+1:i-1; if(ni<0||ni>=ORDER.length) return;
+    window.switchTab(ORDER[ni]);
+    const na=document.getElementById('tab-'+ORDER[ni]); if(!na) return;
+    na.classList.remove('swipe-r','swipe-l'); void na.offsetWidth;
+    na.classList.add(dx<0?'swipe-r':'swipe-l');
+    setTimeout(()=>na.classList.remove('swipe-r','swipe-l'),320);
+  },{passive:true});
+})();
 /* ---------- Android Back button + Pull-to-refresh (Sketchware WebView) ---------- */
 window.__backT=0;
 window.handleBack=function(){
@@ -2770,19 +2868,67 @@ window.sendToGlobalChat=async()=>{
 };
 
 /* ---------- Leaderboard ---------- */
+window.__lb={game:'All Games',period:'weekly',games:[],rows:null};
+const lbEsc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LB_COIN='<svg viewBox="0 0 32 32"><use href="#coinSym"/></svg>';
+const LB_DEF='<svg viewBox="0 0 100 100"><defs><clipPath id="lbClip"><circle cx="50" cy="50" r="42"/></clipPath></defs><circle cx="50" cy="50" r="44" fill="#fff" stroke="#111" stroke-width="9"/><g clip-path="url(#lbClip)" fill="#a9a9a9"><circle cx="50" cy="40" r="13"/><path d="M22 86c2-17 13-27 28-27s26 10 28 27z"/></g></svg>';
+function lbAv(a){ a=a||''; if(String(a).startsWith('http')) return `<img src="${lbEsc(a)}" alt="">`; if(a) return lbEsc(a); return LB_DEF; }
+function lbKey(u){ return String(u.userDocId||u.ffUid||u.ffName||'').replace(/[.\/#$\[\]]/g,'_'); }
+function lbDate(v){ if(!v) return null; if(typeof v.toDate==='function') return v.toDate(); const d=new Date(v); return isNaN(d)?null:d; }
 async function loadLeaderboard(){
+  const L=window.__lb; if(!document.getElementById('lbxBody')) return;
+  if(!L.rows) setHtml('lbxBody','<div class="loader">Loading...</div>');
   try{
-    const snap=await db.collection("users").orderBy("wallets.winning","desc").limit(10).get(); let h='',rank=1;
-    snap.forEach(d=>{ const x=d.data(); const rt=getUserRankTag(x.currentMonthWinnings||0);
-      const vip=x.vipExpiry&&new Date()<new Date(x.vipExpiry); let cwn=false,tk=false;
-      if(x.purchasedItems&&x.purchasedItemExpiries){ if(x.purchasedItems.includes('gold_crown')&&new Date()<new Date(x.purchasedItemExpiries['gold_crown'])) cwn=true; if(x.purchasedItems.includes('blue_tick')&&new Date()<new Date(x.purchasedItemExpiries['blue_tick'])) tk=true; }
-      let v=(vip||cwn)?`<i class="fa-solid fa-crown" style="color:#e0a800;font-size:12px;margin-left:5px"></i>`:''; if(tk||vip) v+=` <span class="insta-tick" style="transform:scale(.8);margin-left:2px"></span>`;
-      const gold=(vip||cwn)?'border:2px solid #e0a800;box-shadow:0 0 5px #e0a800;':'';
-      const av=x.avatar&&x.avatar.startsWith('http')?`<img src="${x.avatar}" style="width:35px;height:35px;object-fit:cover;border-radius:50%;${gold}">`:`<div style="width:35px;height:35px;display:flex;justify-content:center;align-items:center;font-size:24px;border-radius:50%;${gold}">${x.avatar||'👦'}</div>`;
-      h+=`<div class="bal-row" style="padding:15px 20px"><div style="display:flex;gap:15px;align-items:center"><div style="font-size:16px;font-weight:900;color:var(--text-sub);width:20px;text-align:center">${rank}</div>${av}<div><div style="font-weight:700;font-size:14px;display:flex;align-items:center">${x.ffName||'Player'} ${v}</div><div style="font-size:10px;color:var(--text-sub);display:flex;align-items:center;gap:3px">${rt.iconHtml} ${rt.name}</div></div></div><div style="font-weight:900;color:#c77c00;font-size:16px">₹${x.wallets?.winning||0}</div></div>`;
-      rank++; });
-    setHtml('lbContainer',h||"<div style='text-align:center;padding:20px;color:var(--text-sub)'>No data</div>");
-  }catch(e){ setHtml('lbContainer',"<div class='loader'>Error loading leaderboard</div>"); }
+    const [gs,ts]=await Promise.all([db.collection("admin_games").get(),db.collection("tournaments").get()]);
+    L.games=gs.docs.map(d=>d.data()).sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority)).map(x=>x.name).filter(Boolean);
+    const rows=[];
+    ts.forEach(d=>{ const t=d.data(); const res=t.results;
+      if(!res||typeof res!=='object'||Array.isArray(res)||!(t.resultPublished||t.status==='Results')) return;
+      const when=lbDate(t.resultUpdatedAt)||lbDate(t.updatedAt)||lbDate(t.createdAt);
+      const avMap={}; (t.joinedUsers||[]).forEach(u=>{ if(u&&u.avatar) avMap[lbKey(u)]=u.avatar; });
+      Object.keys(res).forEach(k=>{ const r=res[k]||{}; const amt=Number(r.total)||0; if(amt<=0) return;
+        rows.push({key:k,name:r.username||r.ffName||'Player',av:avMap[k]||'',amt,cat:t.category||'',time:when}); });
+    });
+    L.rows=rows;
+    if(L.game!=='All Games'&&!L.games.includes(L.game)) L.game='All Games';
+    lbRenderChips(); lbRender();
+  }catch(e){ console.error(e); setHtml('lbxBody',"<div class='loader'>Error loading leaderboard</div>"); }
+}
+function lbRenderChips(){
+  const L=window.__lb, el=document.getElementById('lbxChips'); if(!el) return;
+  el.innerHTML=['All Games',...L.games].map(g=>`<div class="lbx-chip${g===L.game?' on':''}" data-g="${lbEsc(g)}">${lbEsc(g)}</div>`).join('');
+  el.querySelectorAll('.lbx-chip').forEach(c=>c.onclick=()=>{ L.game=c.dataset.g; el.querySelectorAll('.lbx-chip').forEach(x=>x.classList.toggle('on',x===c)); lbRender(); });
+}
+window.lbSetPeriod=(p)=>{ window.__lb.period=p; document.querySelectorAll('#lbxSeg div').forEach(d=>d.classList.toggle('on',d.dataset.p===p)); lbRender(); };
+function lbRender(){
+  const L=window.__lb; if(!L.rows) return;
+  const now=new Date(); let from=null;
+  if(L.period==='weekly'){ from=new Date(now.getFullYear(),now.getMonth(),now.getDate()); from.setDate(from.getDate()-((from.getDay()+6)%7)); }
+  else if(L.period==='monthly'){ from=new Date(now.getFullYear(),now.getMonth(),1); }
+  const agg={};
+  L.rows.forEach(r=>{
+    if(L.game!=='All Games'&&r.cat!==L.game) return;
+    if(from&&(!r.time||r.time<from)) return;
+    const a=agg[r.key]||(agg[r.key]={key:r.key,name:r.name,av:r.av,amt:0}); a.amt+=r.amt; if(r.av) a.av=r.av; if(r.name) a.name=r.name;
+  });
+  const list=Object.values(agg).sort((x,y)=>y.amt-x.amt);
+  const uid=window.currentUser?.uid, my=window.userData||{};
+  const pod=(p,i)=>{ if(!p) return `<div class="lbx-pc"></div>`; const n=i+1;
+    return `<div class="lbx-pc p${n}">${n===1?'<div class="cr"><i class="fa-solid fa-crown"></i></div>':'<div class="sp"></div>'}<div class="lbx-pa"><div class="im">${lbAv(p.av)}</div><div class="bd">${n}</div></div><div class="nm">${lbEsc(p.name)}</div><div class="cp">${LB_COIN}${Math.round(p.amt)}</div></div>`; };
+  let h='';
+  if(!list.length) h="<div style='text-align:center;padding:60px 20px;color:var(--text-sub)'>No data</div>";
+  else {
+    h=`<div class="lbx-pod">${pod(list[1],1)}${pod(list[0],0)}${pod(list[2],2)}</div>`;
+    h+=`<div class="lbx-th"><span class="r">RANK</span><span class="p">PLAYER</span><span>WINNINGS</span></div><div class="lbx-list">`;
+    list.slice(3,50).forEach((p,i)=>{ h+=`<div class="lbx-row"><span class="r">#${i+4}</span><div class="av">${lbAv(p.av)}</div><span class="n">${lbEsc(p.name)}</span><span class="w">${LB_COIN}${Math.round(p.amt)}</span></div>`; });
+    h+='</div>';
+  }
+  setHtml('lbxBody',h);
+  const idx=list.findIndex(p=>p.key===uid||(my.ffName&&p.name===my.ffName));
+  const rank=idx>=0?idx+1:list.length+1, amt=idx>=0?Math.round(list[idx].amt):0;
+  const me=document.getElementById('lbxMe');
+  if(me&&window.currentUser){ me.style.display='flex';
+    me.innerHTML=`<div class="rk">${rank}</div><div class="av">${lbAv(my.avatar)}</div><div class="tx"><small>Your Rank</small><b>You (${lbEsc(my.ffName||'Player')})&nbsp;&middot;</b></div><div class="w">${LB_COIN}${amt}</div>`; }
 }
 
 /* ---------- Referral ---------- */
