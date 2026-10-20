@@ -2354,7 +2354,7 @@ function renderMorePage(){
 /* ===== Matches: Supabase (Vercel API) se padho, Firestore sirf fallback ===== */
 window.MATCH_API = "https://matches8.vercel.app/api";   // example: https://tournament-sync-api.vercel.app/api
 window.USE_SUPABASE_MATCHES = true;                // dikkat aaye to false karo = purana Firestore tareeka
-const TOURNEY_TTL = 180000;                        // 3 minute cache
+const TOURNEY_TTL = 5000;                          // LIVE: status turant dikhe (pehle 3 minute cache tha)
 let _tourneyAt = 0, _tourneyUid = null, _tourneyP = null;
 window.__localJoins = window.__localJoins || {};   // matchId -> {t, players}
 function apiOn(){ return window.USE_SUPABASE_MATCHES && !/PASTE_/.test(window.MATCH_API||''); }
@@ -2373,11 +2373,11 @@ async function syncMatchNow(matchId){
   }catch(e){ console.warn('match sync failed', e); }
 }
 async function fetchMatchesFromApi(force){
-  const q = force ? ('?_='+Date.now()) : '';
+  const q = '?_='+Date.now();
   const user = auth.currentUser;
-  const listP = fetch(apiBase()+'/matches'+q).then(r=>{ if(!r.ok) throw new Error('matches HTTP '+r.status); return r.json(); });
+  const listP = fetch(apiBase()+'/matches'+q,{cache:'no-store'}).then(r=>{ if(!r.ok) throw new Error('matches HTTP '+r.status); return r.json(); });
   const myP = user
-    ? user.getIdToken().then(tok=>fetch(apiBase()+'/my-matches'+q,{headers:{Authorization:'Bearer '+tok}}).then(r=>r.ok?r.json():{matches:[]})).catch(()=>({matches:[]}))
+    ? user.getIdToken().then(tok=>fetch(apiBase()+'/my-matches'+q,{cache:'no-store',headers:{Authorization:'Bearer '+tok}}).then(r=>r.ok?r.json():{matches:[]})).catch(()=>({matches:[]}))
     : Promise.resolve({matches:[]});
   const [list,my] = await Promise.all([listP,myP]);
   if(!list || !Array.isArray(list.matches)) throw new Error('bad matches response');
