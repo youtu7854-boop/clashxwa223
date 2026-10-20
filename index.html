@@ -2113,7 +2113,7 @@ async function loadUserProfile(uid){
       if(isBlockedUser(window.userData)){ window.__blockedNow=true; await auth.signOut(); window.userData=null; showBlockedToast(); setTimeout(showBlockedToast,600); return; }
       await checkAndResetMonthlyRank(uid,window.userData);
       const win=Number(window.userData.wallets?.winning||0), dep=Number(window.userData.wallets?.deposit||0), bon=Number(window.userData.wallets?.bonus||0);
-      setTxt('topWalletBal',(win+dep+bon).toFixed(2)); setTxt('wWin',win); setTxt('wDep',dep); setTxt('wBon',bon); setTxt('w2Total',(win+dep+bon).toFixed(1));
+      setTxt('topWalletBal',(win+dep+bon).toFixed(2)); setTxt('wWin',+win.toFixed(2)); setTxt('wDep',+dep.toFixed(2)); setTxt('wBon',+bon.toFixed(2)); setTxt('w2Total',(win+dep+bon).toFixed(1));
       setTxt('pEmail',window.userData.email); setTxt('pUid',uid.substring(0,8).toUpperCase()); setTxt('referTabCode',window.userData.myReferralCode||"N/A");
       const av=window.userData.avatar;
       if(av && av.startsWith('http')) setHtml('pAvatarIcon',`<img src="${av}">`);
@@ -2402,7 +2402,7 @@ async function fetchAllTournaments(force){
   _tourneyP = (async()=>{
     try{
       let arr = null;
-      if(apiOn()){ try{ arr = await fetchMatchesFromApi(!!force); }catch(e){ console.warn('Matches API fail, Firestore fallback', e); } }
+      if(apiOn()){ for(let _i=0;_i<2&&!arr;_i++){ try{ arr = await fetchMatchesFromApi(!!force||_i>0); }catch(e){ console.warn('Matches API fail (try '+(_i+1)+')', e); if(_i<1) await new Promise(r=>setTimeout(r,800)); } } }
       if(!arr){ const ts = await db.collection("tournaments").get(); arr=[]; ts.forEach(d=>arr.push({id:d.id,...d.data()})); }
       window.allTournaments = arr; _tourneyAt = Date.now(); _tourneyUid = uid;
       return arr;
