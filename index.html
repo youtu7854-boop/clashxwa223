@@ -1993,7 +1993,6 @@ if(!auth){
     if(window.__userDocUnsub){ try{window.__userDocUnsub();}catch(e){} window.__userDocUnsub=null; }
     if(window.__appRefreshTimer){ clearInterval(window.__appRefreshTimer); window.__appRefreshTimer=null; }
     if(window.__txnStop){ try{window.__txnStop();}catch(e){} }
-    try{ Object.keys(localStorage).filter(k=>k.indexOf('cx_txn_v1_')===0).forEach(k=>localStorage.removeItem(k)); }catch(e){}
     try{ localStorage.removeItem('msz_session'); }catch(e){}
     window.currentUser=null; window.userData=null; window.finishSplash('');
     document.getElementById('mainApp').style.display='none';
@@ -2113,7 +2112,7 @@ async function loadUserProfile(uid){
       if(isBlockedUser(window.userData)){ window.__blockedNow=true; await auth.signOut(); window.userData=null; showBlockedToast(); setTimeout(showBlockedToast,600); return; }
       await checkAndResetMonthlyRank(uid,window.userData);
       const win=Number(window.userData.wallets?.winning||0), dep=Number(window.userData.wallets?.deposit||0), bon=Number(window.userData.wallets?.bonus||0);
-      setTxt('topWalletBal',(win+dep+bon).toFixed(2)); setTxt('wWin',+win.toFixed(2)); setTxt('wDep',+dep.toFixed(2)); setTxt('wBon',+bon.toFixed(2)); setTxt('w2Total',(win+dep+bon).toFixed(1));
+      setTxt('topWalletBal',(win+dep+bon).toFixed(2)); setTxt('wWin',win); setTxt('wDep',dep); setTxt('wBon',bon); setTxt('w2Total',(win+dep+bon).toFixed(1));
       setTxt('pEmail',window.userData.email); setTxt('pUid',uid.substring(0,8).toUpperCase()); setTxt('referTabCode',window.userData.myReferralCode||"N/A");
       const av=window.userData.avatar;
       if(av && av.startsWith('http')) setHtml('pAvatarIcon',`<img src="${av}">`);
@@ -2355,7 +2354,7 @@ function renderMorePage(){
 /* ===== Matches: Supabase (Vercel API) se padho, Firestore sirf fallback ===== */
 window.MATCH_API = "https://matches8.vercel.app/api";   // example: https://tournament-sync-api.vercel.app/api
 window.USE_SUPABASE_MATCHES = true;                // dikkat aaye to false karo = purana Firestore tareeka
-const TOURNEY_TTL = 20000;                         // 20 second cache
+const TOURNEY_TTL = 180000;                        // 3 minute cache
 let _tourneyAt = 0, _tourneyUid = null, _tourneyP = null;
 window.__localJoins = window.__localJoins || {};   // matchId -> {t, players}
 function apiOn(){ return window.USE_SUPABASE_MATCHES && !/PASTE_/.test(window.MATCH_API||''); }
@@ -2374,11 +2373,11 @@ async function syncMatchNow(matchId){
   }catch(e){ console.warn('match sync failed', e); }
 }
 async function fetchMatchesFromApi(force){
-  const q = '?_='+Date.now();
+  const q = force ? ('?_='+Date.now()) : '';
   const user = auth.currentUser;
-  const listP = fetch(apiBase()+'/matches'+q,{cache:'no-store'}).then(r=>{ if(!r.ok) throw new Error('matches HTTP '+r.status); return r.json(); });
+  const listP = fetch(apiBase()+'/matches'+q).then(r=>{ if(!r.ok) throw new Error('matches HTTP '+r.status); return r.json(); });
   const myP = user
-    ? user.getIdToken().then(tok=>fetch(apiBase()+'/my-matches'+q,{headers:{Authorization:'Bearer '+tok},cache:'no-store'}).then(r=>r.ok?r.json():{matches:[]})).catch(()=>({matches:[]}))
+    ? user.getIdToken().then(tok=>fetch(apiBase()+'/my-matches'+q,{headers:{Authorization:'Bearer '+tok}}).then(r=>r.ok?r.json():{matches:[]})).catch(()=>({matches:[]}))
     : Promise.resolve({matches:[]});
   const [list,my] = await Promise.all([listP,myP]);
   if(!list || !Array.isArray(list.matches)) throw new Error('bad matches response');
@@ -2402,7 +2401,7 @@ async function fetchAllTournaments(force){
   _tourneyP = (async()=>{
     try{
       let arr = null;
-      if(apiOn()){ for(let _i=0;_i<2&&!arr;_i++){ try{ arr = await fetchMatchesFromApi(!!force||_i>0); }catch(e){ console.warn('Matches API fail (try '+(_i+1)+')', e); if(_i<1) await new Promise(r=>setTimeout(r,800)); } } }
+      if(apiOn()){ try{ arr = await fetchMatchesFromApi(!!force); }catch(e){ console.warn('Matches API fail, Firestore fallback', e); } }
       if(!arr){ const ts = await db.collection("tournaments").get(); arr=[]; ts.forEach(d=>arr.push({id:d.id,...d.data()})); }
       window.allTournaments = arr; _tourneyAt = Date.now(); _tourneyUid = uid;
       return arr;
@@ -3112,34 +3111,16 @@ window.sendChatMessage=async()=>{
   try{ await db.collection("tournaments").doc(window.selectedMatch.id).collection("chat").add({uid:window.currentUser.uid,name:window.userData?.ffName||'Player',text:t,avatar:window.userData?.avatar||'👦',vip:isVipNow(),crown:ownsItem('gold_crown'),tick:ownsItem('blue_tick'),level:lr.level,rank:lr.rank,timestamp:new Date()}); inp.value=''; }catch(e){}
 };
 window.openGlobalChat=()=>{
-  openModal('globalChatModal'); const box=document.getElementById('globalChatMsgContainer'); if(gChatUnsub){ gChatUnsub(); gChatUnsub=null; }
-  /* Purane messages Firestore se nahi padhte. Local cache dikhta hai, aur sirf naye (max 5) messages padhe jaate hain. */
-  const KEY='cx_gchat_v1'; let list=[];
-  try{ const c=window.__lsGet(KEY); if(Array.isArray(c)) list=c.filter(m=>m&&m.id&&m.d); }catch(e){}
-  list.sort((a,b)=>(a.t||0)-(b.t||0));
-  const render=()=>{
-    let h=''; list.forEach(m=>{ const c=m.d||{}; let icon='',sName=c.senderName||'User',cl='other';
+  openModal('globalChatModal'); const box=document.getElementById('globalChatMsgContainer'); if(gChatUnsub) gChatUnsub();
+  gChatUnsub=db.collection("global_chat").orderBy("timestamp","desc").limit(60).onSnapshot((snap)=>{
+    let h=''; [...snap.docs].reverse().forEach(d=>{ const c=d.data(); let icon='',sName=c.senderName||'User',cl='other';
       if(c.senderType==='admin'){icon='🌐 ';sName='ADMIN';} else if(c.senderType==='staff'){icon='🎧 ';} else if(window.currentUser&&c.uid===window.currentUser.uid){cl='mine';}
       let v=''; if(c.isVip||c.hasCrown) v+=` <i class="fa-solid fa-crown" style="color:#e0a800;font-size:10px"></i>`; if(c.hasTick||c.isVip) v+=` <span class="insta-tick" style="transform:scale(.6);margin-left:2px"></span>`;
       const r=c.level?` <span style="font-size:8px;border:1px solid var(--warning);padding:1px 3px;border-radius:3px;background:#111;color:#fff;margin-left:5px">Lv.${c.level} | ${c.rank}</span>`:'';
       const av=(c.senderType==='admin'||c.senderType==='staff')?'':avatarSmall(c.avatar);
       h+=`<div class="chat-msg ${cl}"><div class="sender">${icon}${av}${sName}${v}${r}</div><div>${c.text}</div></div>`; });
-    setHtml('globalChatMsgContainer',h||`<div style="text-align:center;color:var(--text-sub);font-size:11px;margin-top:20px">Welcome to Global Chat!</div>`); if(box) box.scrollTop=box.scrollHeight;
-  };
-  render();
-  const since=list.length?(list[list.length-1].t||Date.now()):Date.now();
-  gChatUnsub=db.collection("global_chat").where("timestamp",">",firebase.firestore.Timestamp.fromMillis(since)).orderBy("timestamp","desc").limit(5).onSnapshot((snap)=>{
-    let changed=false;
-    snap.docChanges().forEach(x=>{
-      if(x.type==='removed') return;
-      const d=x.doc.data(); const ts=(d.timestamp&&d.timestamp.toMillis)?d.timestamp.toMillis():Date.now();
-      const item={id:x.doc.id,t:ts,d:Object.assign({},d,{timestamp:ts})};
-      const i=list.findIndex(m=>m.id===item.id); if(i>=0) list[i]=item; else list.push(item); changed=true;
-    });
-    if(!changed) return;
-    list.sort((a,b)=>(a.t||0)-(b.t||0)); if(list.length>30) list=list.slice(-30);
-    window.__lsSet(KEY,list); render();
-  },err=>console.warn('global chat',err));
+    setHtml('globalChatMsgContainer',h||`<div style="text-align:center;color:var(--text-sub);font-size:11px;margin-top:20px">Welcome to Global Chat!</div>`); box.scrollTop=box.scrollHeight;
+  });
 };
 window.sendToGlobalChat=async()=>{
   const inp=document.getElementById('gChatInput'); const t=inp.value.trim(); if(!t) return; const vip=isVipNow();
@@ -3158,27 +3139,13 @@ function lbKey(u){ return String(u.userDocId||u.ffUid||u.ffName||'').replace(/[.
 function lbDate(v){ if(!v) return null; if(typeof v.toDate==='function') return v.toDate(); const d=new Date(v); return isNaN(d)?null:d; }
 async function loadLeaderboard(){
   const L=window.__lb; if(!document.getElementById('lbxBody')) return;
-  const TTL=21600000, LKEY='cx_lb_v1'; /* 6 ghante ka cache: app dobara kholne par bhi Firestore nahi padhta */
   if(!L.rows) setHtml('lbxBody','<div class="loader">Loading...</div>');
-  if(L.rows && L.__at && (Date.now()-L.__at)<TTL){ lbRenderChips(); lbRender(); return; }
+  if(L.rows && L.__at && (Date.now()-L.__at)<900000){ lbRenderChips(); lbRender(); return; }
   try{
-    const c=window.__lsGet(LKEY);
-    if(c&&c.t&&(Date.now()-c.t)<TTL&&Array.isArray(c.rows)&&Array.isArray(c.games)){
-      L.games=c.games; L.rows=c.rows.map(r=>Object.assign({},r,{time:r.time?new Date(r.time):null})); L.__at=c.t;
-      if(L.game!=='All Games'&&!L.games.includes(L.game)) L.game='All Games';
-      lbRenderChips(); lbRender(); return;
-    }
-  }catch(e){}
-  try{
-    let gdocs; const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1'));
-    if(gc&&gc.a&&Date.now()-gc.t<TTL){ gdocs=gc.a; }
-    else{ const gs=await db.collection("admin_games").get(); gdocs=gs.docs.map(d=>d.data()); window.__gamesCache={t:Date.now(),a:gdocs}; window.__lsSet('cx_games_v1',window.__gamesCache); }
-    /* Poora tournaments collection nahi, sirf result-published wale matches */
-    const [q1,q2]=await Promise.all([db.collection("tournaments").where("resultPublished","==",true).get(),db.collection("tournaments").where("status","==","Results").get()]);
-    const seen={}, tdocs=[]; [q1,q2].forEach(q=>q.forEach(d=>{ if(seen[d.id]) return; seen[d.id]=1; tdocs.push(d); }));
-    L.games=gdocs.slice().sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority)).map(x=>x.name).filter(Boolean);
+    const [gs,ts]=await Promise.all([db.collection("admin_games").get(),db.collection("tournaments").get()]);
+    L.games=gs.docs.map(d=>d.data()).sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority)).map(x=>x.name).filter(Boolean);
     const rows=[];
-    tdocs.forEach(d=>{ const t=d.data(); const res=t.results;
+    ts.forEach(d=>{ const t=d.data(); const res=t.results;
       if(!res||typeof res!=='object'||Array.isArray(res)||!(t.resultPublished||t.status==='Results')) return;
       const when=lbDate(t.resultUpdatedAt)||lbDate(t.updatedAt)||lbDate(t.createdAt);
       const avMap={}; (t.joinedUsers||[]).forEach(u=>{ if(u&&u.avatar) avMap[lbKey(u)]=u.avatar; });
@@ -3186,7 +3153,6 @@ async function loadLeaderboard(){
         rows.push({key:k,name:r.username||r.ffName||'Player',av:avMap[k]||'',amt,cat:t.category||'',time:when}); });
     });
     L.rows=rows; L.__at=Date.now();
-    window.__lsSet(LKEY,{t:L.__at,games:L.games,rows:rows.map(r=>Object.assign({},r,{time:r.time?r.time.getTime():null}))});
     if(L.game!=='All Games'&&!L.games.includes(L.game)) L.game='All Games';
     lbRenderChips(); lbRender();
   }catch(e){ console.error(e); setHtml('lbxBody',"<div class='loader'>Error loading leaderboard</div>"); }
@@ -3484,77 +3450,30 @@ function txnNotif(force){
   if(!force && Date.now()-S.nAt<120000) return;
   S.nAt=Date.now(); loadNotifications();
 }
-function txnSer(v){
-  if(v==null) return v;
-  if(typeof v.toMillis==='function') return {__ms:v.toMillis()};
-  if(v instanceof Date) return {__ms:v.getTime()};
-  if(Array.isArray(v)) return v.map(txnSer);
-  if(typeof v==='object'){ const o={}; Object.keys(v).forEach(k=>{ o[k]=txnSer(v[k]); }); return o; }
-  return v;
-}
-function txnRev(v){
-  if(v==null) return v;
-  if(Array.isArray(v)) return v.map(txnRev);
-  if(typeof v==='object'){
-    if(typeof v.__ms==='number'){ const ms=v.__ms; return {seconds:Math.floor(ms/1000),nanoseconds:(ms%1000)*1e6,toMillis:()=>ms,toDate:()=>new Date(ms)}; }
-    const o={}; Object.keys(v).forEach(k=>{ o[k]=txnRev(v[k]); }); return o;
-  }
-  return v;
-}
-/* History: local cache se turant dikhti hai. Server se sirf NAYE docs (aur Pending/Created wale jinka status badal sakta hai) padhe jaate hain.
-   Har 24 ghante mein ek baar poori history dobara sync hoti hai. Agar Firestore index na ho to purane tarike (poora read) par wapas chala jaata hai. */
 function txnStart(uid){
   const S=window.__txn;
   if(S.uid===uid && S.p) return S.p;
-  window.__txnStop(); S.uid=uid; S.exp={}; S.fb={};
-  const CK='cx_txn_v1_'+uid, DAY=86400000, PEND=['Pending','Created','Processing'];
-  const kinds=[
-    {k:'ts',col:'transactions',uf:'userId',tf:'date'},
-    {k:'ds',col:'deposits',uf:'userId',tf:'createdAt'},
-    {k:'ws',col:'withdrawals',uf:'userId',tf:'createdAt'},
-    {k:'rs',col:'referrals',uf:'referrerUid',tf:'createdAt'}
+  window.__txnStop(); S.uid=uid;
+  const defs=[
+    ['ts',db.collection("transactions").where("userId","==",uid)],
+    ['ds',db.collection("deposits").where("userId","==",uid)],
+    ['ws',db.collection("withdrawals").where("userId","==",uid)],
+    ['rs',db.collection("referrals").where("referrerUid","==",uid)]
   ];
-  let fresh=false, cache=null;
-  try{ cache=window.__lsGet(CK); fresh=!!(cache&&cache.t&&cache.m&&(Date.now()-cache.t)<DAY&&cache.t<=Date.now()+60000); }catch(e){ fresh=false; }
-  if(fresh){
-    try{ kinds.forEach(o=>{ (cache.m[o.k]||[]).forEach(p=>{ S.maps[o.k].set(p[0],txnRev(p[1])); }); }); }
-    catch(e){ fresh=false; S.maps={ts:new Map(),ds:new Map(),ws:new Map(),rs:new Map()}; }
-  }
-  S.syncT=fresh?cache.t:Date.now();
-  const save=()=>{ try{ const m={}; kinds.forEach(o=>{ const a=[]; S.maps[o.k].forEach((v,id)=>a.push([id,txnSer(v)])); m[o.k]=a; }); window.__lsSet(CK,{t:S.syncT,m:m}); }catch(e){} };
   S.p=new Promise(resolve=>{
-    const allReady=()=>Object.keys(S.exp).every(x=>S.ready[x]);
-    const schedule=(first)=>{ if(S.t) clearTimeout(S.t); S.t=setTimeout(()=>{ S.t=null; if(S.uid!==uid) return; txnBuild(); renderTxnHistory(); save(); txnNotif(!first); },first?0:150); };
-    const base=o=>db.collection(o.col).where(o.uf,'==',uid);
-    const attach=(key,q,o,mode)=>{
-      S.exp[key]=1;
+    const allReady=()=>defs.every(d=>S.ready[d[0]]);
+    defs.forEach(([k,q])=>{
       const un=q.onSnapshot(snap=>{
-        snap.docChanges().forEach(ch=>{
-          const id=ch.doc.id;
-          if(ch.type==='removed'){
-            if(mode==='full') S.maps[o.k].delete(id);
-            else if(mode==='pend'){ db.collection(o.col).doc(id).get().then(d=>{ if(S.uid!==uid) return; if(d.exists) S.maps[o.k].set(d.id,d.data()); else S.maps[o.k].delete(d.id); if(allReady()) schedule(false); }).catch(()=>{}); }
-          } else S.maps[o.k].set(id,ch.doc.data());
-        });
-        const first=!S.ready[key]; S.ready[key]=true;
-        if(allReady()){ schedule(first); resolve(); }
-      },err=>{
-        console.warn('txn listener',key,err&&err.code,err&&err.message);
-        if(mode!=='full' && !S.fb[o.k]){ S.fb[o.k]=1; S.maps[o.k].clear(); attach(o.k+'f',base(o),o,'full'); }
-        else if(mode==='full'){ setHtml('txnScreenList',"Error loading history"); }
-        S.ready[key]=true;
-        if(allReady()){ schedule(false); resolve(); }
-      });
+        snap.docChanges().forEach(ch=>{ if(ch.type==='removed') S.maps[k].delete(ch.doc.id); else S.maps[k].set(ch.doc.id,ch.doc.data()); });
+        const first=!S.ready[k]; S.ready[k]=true;
+        if(allReady()){
+          if(S.t) clearTimeout(S.t);
+          S.t=setTimeout(()=>{ S.t=null; if(S.uid!==uid) return; txnBuild(); renderTxnHistory(); txnNotif(!first); },first?0:150);
+          resolve();
+        }
+      },err=>{ console.error('txn listener',k,err); S.ready[k]=true; setHtml('txnScreenList',"Error loading history"); if(allReady()) resolve(); });
       S.unsubs.push(un);
-    };
-    kinds.forEach(o=>{
-      if(!fresh){ attach(o.k,base(o),o,'full'); return; }
-      let mx=0; S.maps[o.k].forEach(v=>{ const t=v&&v[o.tf]; const ms=(t&&typeof t.toMillis==='function')?t.toMillis():0; if(ms>mx) mx=ms; });
-      const since=mx?Math.max(0,mx-600000):Math.max(0,S.syncT-3600000);
-      attach(o.k+'n',base(o).where(o.tf,'>',firebase.firestore.Timestamp.fromMillis(since)),o,'new');
-      attach(o.k+'p',base(o).where('status','in',PEND),o,'pend');
     });
-    if(fresh){ txnBuild(); resolve(); }
   });
   return S.p;
 }
