@@ -1962,6 +1962,7 @@ function startBackgroundRefresh(){
   window.__appRefreshTimer = setInterval(async()=>{
     if(document.visibilityState !== 'visible' || !window.currentUser || !document.getElementById('mainApp') || document.getElementById('mainApp').style.display === 'none') return;
     try { await loadHomeData(); } catch(e) {}
+    try { window.__catRefreshIfChanged&&window.__catRefreshIfChanged(); } catch(e) {}
   }, 30000);
 }
 
@@ -2635,6 +2636,23 @@ window.openCategory=(catName,keepTab)=>{
   const idle=window.requestIdleCallback||(f=>setTimeout(f,120));
   idle(()=>{ if(window.__catBusy) return; const i=CAT_TABS.indexOf(window.__catTab); [i-1,i+1].forEach(k=>{ if(k>=0&&k<CAT_TABS.length){ const p=__catPane(CAT_TABS[k]); if(p&&!p.classList.contains('act')) __catFill(p); } }); });
 };
+
+/* ===== LIVE status: category/match screen khulte hi aur har 30s par ताज़ा data se dobara draw (sirf tab jab kuch badla ho) ===== */
+(function(){
+  const _open0 = window.openCategory;
+  const sig = ()=>(window.allTournaments||[]).map(m=>m.id+'|'+m.status+'|'+((m.joinedUsers||[]).length)+'|'+(m.time||'')).join(',');
+  window.__catRefreshIfChanged = (catName)=>{
+    if(!window.__catMode || !window.__catName || window.__catBusy) return;
+    if(catName && window.__catName!==catName) return;
+    const s=sig(); if(s===window.__catSig) return;
+    _open0(window.__catName,true); window.__catSig=s;
+  };
+  window.openCategory = (catName,keepTab,noFetch)=>{
+    _open0(catName,keepTab); window.__catSig=sig();
+    if(noFetch) return;
+    fetchAllTournaments(false).then(()=>window.__catRefreshIfChanged(catName)).catch(()=>{});
+  };
+})();
 
 window.switchMatchModalTab=(tab)=>{
   const m=window.selectedMatch;
