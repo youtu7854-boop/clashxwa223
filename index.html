@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>/* ZapUPI return inside in-app payment frame: tell parent, don't load the whole app again */
+(function(){try{ if(window.self!==window.top){ try{window.parent.postMessage({zapReturn:1},'*');}catch(e){} try{window.stop();}catch(e){} document.open(); document.write('<!doctype html><html><body style="margin:0;background:#fff"></body></html>'); document.close(); } }catch(e){}})();
+</script>
 <meta name="referrer" content="no-referrer">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1367,6 +1370,73 @@ window.setSplashLogo(window.SPLASH_LOGO);
   </div></div>
 </div>
 
+<style id="addcoins-css">
+#acScreen{display:none;position:fixed;inset:0;background:#f3f4fb;z-index:10000;overflow-y:auto;animation:slideInRight .25s;padding-bottom:24px}
+#acScreen .ac-top{position:sticky;top:0;background:#fff;display:flex;align-items:center;gap:16px;height:56px;padding:0 20px 0 22px;box-shadow:0 1px 6px rgba(0,0,0,.08);z-index:2}
+#acScreen .ac-top i{font-size:15px;width:14px;text-align:center;cursor:pointer;color:#222}
+#acScreen .ac-top h2{font-size:17.6px;font-weight:500;color:#1b1f3b}
+.ac-h{display:flex;align-items:center;margin:18px 14px 14px;font-size:14.5px;font-weight:500;color:#1b1f3b}
+.ac-h::before{content:'';width:3px;height:16px;background:#222;margin-right:8px}
+.ac-meth{display:flex;gap:12px;padding:0 14px;overflow-x:auto}
+.ac-m{flex:none;width:160px;height:94px;background:#fff;border:1.5px solid #c9ccd6;border-radius:10px;padding:12px 14px;position:relative;cursor:pointer}
+.ac-m.on{border:2px solid #111}
+.ac-m .t{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:#1b1f3b}
+.ac-m .t svg{width:30px;height:30px;flex:none}
+.ac-m small{display:block;margin-top:9px;font-size:11px;line-height:16px;color:#7a7f94}
+.ac-m .ck{display:none;position:absolute;right:14px;top:18px;width:16px;height:16px;border-radius:50%;background:#c4121f;color:#fff;font-size:8px;align-items:center;justify-content:center}
+.ac-m.on .ck{display:flex}
+.ac-ban{margin:18px 14px 14px;background:#ecedfb;border-radius:14px;height:79px;padding:0 14px;display:flex;align-items:center;gap:12px}
+.ac-ban .ci{width:32px;height:32px;flex:none}
+.ac-ban .tx{flex:1;min-width:0}.ac-ban b{display:block;font-size:15px;font-weight:500;color:#1b1f3b}.ac-ban span{display:block;font-size:11.5px;color:#7a7f94;margin-top:4px;white-space:nowrap}
+.ac-ban .em{font-size:38px;line-height:1}
+.ac-chips{display:flex;gap:10px;overflow-x:auto;padding:0 14px 4px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.ac-chip{flex:none;width:70px;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;border:1.5px solid #ccd0da;border-radius:12px;font-size:14px;font-weight:600;color:#222;cursor:pointer}
+.ac-chip.on{border-color:#111}
+.ac-amt{margin:0 14px;height:66px;background:#fff;border:1.5px solid #dfe2ea;border-radius:14px;display:flex;align-items:center;gap:12px;padding:0 14px 0 14px}
+.ac-amt .ic{width:36px;height:36px;border-radius:10px;background:#ecebff;color:#6c63ff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex:none}
+.ac-amt .bx{flex:1;min-width:0}.ac-amt small{display:block;font-size:11px;color:#8a8fa5;line-height:14px}
+.ac-amt .ln{display:flex;align-items:center;gap:4px;font-size:17px;font-weight:600;color:#222}
+.ac-amt input{border:none;outline:none;background:transparent;font-size:17px;font-weight:600;color:#222;width:100%;min-width:0;padding:0}
+.ac-amt>i{color:#666;font-size:15px}
+.ac-pay{display:flex;align-items:center;justify-content:center;gap:12px;position:relative;width:calc(100% - 28px);height:54px;margin:22px 14px 8px;border:none;border-radius:16px;background:linear-gradient(90deg,#1a3a9f,#2b6be6);color:#fff;font-size:16px;font-weight:500;letter-spacing:2px;cursor:pointer}
+.ac-pay>i.sh{color:#b9b4ff;font-size:17px}.ac-pay>i.ch{position:absolute;right:18px;font-size:12px}
+.ac-pay:disabled{opacity:.75}
+.ac-pay .ld{display:none;flex-direction:column;align-items:center;line-height:1.25;letter-spacing:0}
+.ac-pay .ld b{font-size:16px;font-weight:600}.ac-pay .ld small{font-size:12px;font-weight:400;opacity:.85}
+.ac-pay.busy>span,.ac-pay.busy>i{display:none}.ac-pay.busy .ld{display:flex}
+.ac-sp{text-align:center;font-size:12px;color:#7a7f94;display:flex;justify-content:center;align-items:center;gap:6px}.ac-sp i{color:#6c63ff;font-size:13px}
+.ac-sec{margin:20px 14px 0;height:52px;border-radius:14px;background:linear-gradient(90deg,#0a6f52,#17a673);display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff}
+.ac-sec .l{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:#3dffa5}.ac-sec .l i{color:#b9b4ff;font-size:20px}
+.ac-sec .r{display:flex;align-items:center;gap:8px;font-size:11px}.ac-sec .r i{font-size:15px;color:#3dffa5}
+.ac-how{margin:18px 14px 0;background:#fff;border-radius:18px;padding:16px}
+.ac-how h4{font-size:15px;font-weight:500;color:#1b1f3b;margin-bottom:16px}
+.ac-how .g{display:grid;grid-template-columns:1fr 1fr;gap:16px 14px}
+.ac-how .it{display:flex;gap:8px;font-size:12.5px;line-height:18px;color:#3b3f55}
+.ac-how .it i{font-size:16px;width:18px;text-align:center;flex:none;margin-top:1px}
+#payFrameWrap{display:none;position:fixed;inset:0;background:#fff;z-index:30000}
+#payFrameWrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+</style>
+<div id="acScreen">
+  <div class="ac-top"><i class="fa-solid fa-arrow-left" onclick="closeAddCoins()"></i><h2>Add Coins</h2></div>
+  <div class="ac-h">Select Payment Method</div>
+  <div class="ac-meth"><div class="ac-m on"><div class="t"><svg viewBox="0 0 32 32"><rect x="2" y="7" width="26" height="20" rx="4" fill="#f5a623"/><rect x="2" y="7" width="26" height="6" rx="3" fill="#3ec9a0"/><rect x="19" y="15" width="11" height="8" rx="3" fill="#e08e0b"/><circle cx="23" cy="19" r="1.6" fill="#c4121f"/></svg>ZapUPI</div><small>Safe • Smooth • Instant UPI Service</small><span class="ck"><i class="fa-solid fa-check"></i></span></div></div>
+  <div class="ac-ban"><svg class="ci" viewBox="0 0 32 32"><use href="#coinSym"/></svg><div class="tx"><b>Select the amount</b><span>Choose any amount to add coins</span></div><div class="em">👛</div></div>
+  <div class="ac-chips" id="acChips"></div>
+  <div class="ac-amt"><div class="ic">₹</div><div class="bx"><small>Amount</small><div class="ln">₹<input type="number" inputmode="numeric" id="acAmt" placeholder="0" oninput="acUpdate()"></div></div><i class="fa-solid fa-pen"></i></div>
+  <button class="ac-pay" id="acPayBtn" onclick="acPay()"><i class="fa-solid fa-shield-halved sh"></i><span>PAY NOW</span><i class="fa-solid fa-chevron-right ch"></i><div class="ld"><b>Initiating Payment</b><small>Using ZapUPI...</small></div></button>
+  <div class="ac-sp"><i class="fa-solid fa-shield-halved"></i>100% Secure Payment</div>
+  <div class="ac-sec"><div class="l"><i class="fa-solid fa-shield-halved"></i>100% SECURE</div><div class="r">Safe • Fast • Reliable <i class="fa-solid fa-circle-check"></i></div></div>
+  <div class="ac-how"><h4>How To Add Coins with Us?</h4><div class="g">
+    <div class="it"><i class="fa-solid fa-shield-halved" style="color:#6c63ff"></i><span>Do not press back during payment.</span></div>
+    <div class="it"><i class="fa-solid fa-circle-xmark" style="color:#6c63ff"></i><span>No hidden charges.</span></div>
+    <div class="it"><i class="fa-regular fa-clock" style="color:#222"></i><span>Wait till the payment gets confirmed.</span></div>
+    <div class="it"><i class="fa-solid fa-tower-broadcast" style="color:#e53935"></i><span>Instant confirmation on successful payment.</span></div>
+    <div class="it"><i class="fa-solid fa-shield-halved" style="color:#6c63ff"></i><span>Payment is 100% secure.</span></div>
+    <div class="it"><i class="fa-solid fa-headset" style="color:#17a673"></i><span>Contact support for any issues with payment.</span></div>
+  </div></div>
+</div>
+<div id="payFrameWrap"><iframe id="payFrame" title="Payment" allow="payment *"></iframe></div>
+
 <!-- Withdraw -->
 <div id="withdrawModal" class="modal-overlay"><div class="modal-content">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h3>Withdraw Winnings</h3><i class="fa-solid fa-xmark" style="font-size:20px;cursor:pointer" onclick="closeModal('withdrawModal')"></i></div>
@@ -1549,7 +1619,7 @@ window.switchTab=(tabId)=>{
   const vis=id=>{const e=byId(id); if(!e) return false; const c=getComputedStyle(e); return c.display!=='none'&&c.visibility!=='hidden';};
   const blocked=()=>{
     if(!vis('mainApp')) return true;
-    if(vis('payReturn')||vis('categoryMatchesScreen')||vis('wdScreen')) return true;
+    if(vis('payReturn')||vis('categoryMatchesScreen')||vis('wdScreen')||vis('acScreen')||vis('payFrameWrap')) return true;
     if([...document.querySelectorAll('.modal-overlay')].some(m=>vis(m.id)||getComputedStyle(m).display!=='none')) return true;
     return ['jdOverlay','jmScreen','jpScreen','resultScreen','ongoingScreen','txnScreen'].some(id=>{const e=byId(id); return e&&e.classList.contains('show');});
   };
@@ -1653,6 +1723,8 @@ window.handleBack=function(){
     const vis=el=>{ if(!el) return false; const cs=getComputedStyle(el); return cs.display!=='none'&&cs.visibility!=='hidden'; };
     const sh=id=>{ const e=byId(id); return !!(e&&e.classList.contains('show')); };
     if(vis(byId('payReturn'))){ if(window.payRetBack) window.payRetBack(); return true; }
+    if(window.__zapActive){ if(window.__zapGiveUp) window.__zapGiveUp(); return true; }
+    if(vis(byId('acScreen'))){ window.closeAddCoins(); return true; }
     const mods=[...document.querySelectorAll('.modal-overlay')].filter(m=>m.id!=='forceUpdateModal'&&vis(m));
     if(mods.length){ const m=mods[mods.length-1]; if(m.id==='depositModal'&&window.closeDepositModal) window.closeDepositModal(); else window.closeModal(m.id); return true; }
     if(sh('jdOverlay')){ window.jdClose(); return true; }
@@ -3270,7 +3342,13 @@ async function loadMyReferrals(){
 
 /* ---------- Deposit / Withdraw ---------- */
 function minDeposit(){ let m=window.appSettings?.minDeposit||10; if(isVipNow()) m=Math.max(1,Math.floor(m/2)); return m; }
-window.openDepositFlow=()=>{ setTxt('depMinAmt',minDeposit()); document.getElementById('depStep1').style.display='block'; document.getElementById('depStep2').style.display='none'; document.getElementById('depAmtInput').value=''; openModal('depositModal'); };
+/* ---------- Add Coins page (ZapUPI only) ---------- */
+const acEl=id=>document.getElementById(id);
+const AC_AMTS=[10,20,50,100,200,500,1000];
+function acUpdate(){ const a=Math.floor(Number(acEl('acAmt').value)||0); document.querySelectorAll('#acChips .ac-chip').forEach(c=>c.classList.toggle('on',Number(c.dataset.n)===a)); }
+window.acChip=n=>{ acEl('acAmt').value=n; acUpdate(); };
+window.openDepositFlow=()=>{ acEl('acChips').innerHTML=AC_AMTS.map(n=>'<div class="ac-chip" data-n="'+n+'" onclick="acChip('+n+')">₹'+n+'</div>').join(''); acEl('acAmt').value=''; acUpdate(); const b=acEl('acPayBtn'); b.classList.remove('busy'); b.disabled=false; const sc=acEl('acScreen'); sc.style.display='block'; sc.scrollTop=0; };
+window.closeAddCoins=()=>{ acEl('acScreen').style.display='none'; };
 window.closeDepositModal=()=>closeModal('depositModal');
 window.setDepAmt=a=>{document.getElementById('depAmtInput').value=a;};
 /* ---- ZapUPI auto deposit (sirf HTML me, koi backend nahi) ---- */
@@ -3294,12 +3372,14 @@ async function zapPost(path,fields){
   const txt=await r.text();
   try{ return JSON.parse(txt); }catch(e){ return {status:'error',message:'ZapUPI: '+txt.slice(0,120)}; }
 }
-window.goToDepositStep2=async()=>{
-  const amt=Math.floor(Number(document.getElementById('depAmtInput').value)||0); const min=minDeposit();
+window.acPay=async()=>{
+  if(window.__zapActive) return;
+  const amt=Math.floor(Number(acEl('acAmt').value)||0); const min=minDeposit();
   if(!amt||amt<min) return showToast(`Minimum deposit is ₹${min}`,true);
   if(!window.currentUser) return showToast("Please login first",true);
-  const btn=document.getElementById('depPayBtn'); const old=btn.innerHTML; btn.innerHTML="Creating order..."; btn.disabled=true;
+  const btn=acEl('acPayBtn'); btn.classList.add('busy'); btn.disabled=true;
   const uid=window.currentUser.uid; const orderId=('ORD'+Date.now()+uid.slice(0,6)).replace(/[^A-Za-z0-9]/g,'');
+  let opened=false;
   try{
     await db.collection('deposits').doc(orderId).set({userId:uid,userEmail:window.userData?.email||'',amount:amt,type:'ZapUPI',proofUrl:'',orderId:orderId,status:'Created',createdAt:new Date()});
     if(SITE_URL.indexOf('YOUR-PROJECT')>-1) throw new Error('Site URL is not configured');
@@ -3312,17 +3392,60 @@ window.goToDepositStep2=async()=>{
       throw new Error(z.message||"Could not create order. Please try again.");
     }
     try{ localStorage.setItem('pendingZapOrder',orderId); }catch(e){}
-    showToast("Order created! Opening payment page...");
-    window.location.href=payUrl;
-  }catch(e){ showToast(e.message||"Error",true); btn.innerHTML=old; btn.disabled=false; }
+    zapOpenFrame(orderId,payUrl); opened=true;
+  }catch(e){ showToast(e.message||"Error",true); }
+  { btn.classList.remove('busy'); btn.disabled=false; }
 };
+window.goToDepositStep2=window.acPay;
+/* Payment gateway app ke ANDAR (full-screen frame) khulta hai, isliye app restart nahi hota.
+   Status yahin poll hota hai; cancel / fail / success par seedha Wallet page par wapas aate hain. */
+const ZAP_FINAL=/^(success|failed|fail|cancel|canceled|cancelled|expired|expire|timeout|timed_out)/;
+function zapCloseFrame(){ const w=document.getElementById('payFrameWrap'), f=document.getElementById('payFrame'); try{ f.src='about:blank'; }catch(e){} w.style.display='none'; }
+function zapOpenFrame(orderId,payUrl){
+  window.__zapActive=orderId;
+  const w=document.getElementById('payFrameWrap'), f=document.getElementById('payFrame');
+  f.src=payUrl; w.style.display='block';
+  let busy=false, done=false, returned=0, timer=null; const t0=Date.now();
+  const end=()=>{ done=true; clearInterval(timer); window.__zapTick=null; window.__zapGiveUp=null; window.removeEventListener('message',onMsg); window.__zapActive=null; zapCloseFrame(); };
+  const finish=async()=>{
+    end(); closeAddCoins();
+    try{ switchTab('Wallet'); }catch(e){}
+    let j={status:'Pending'};
+    try{ j=await zapSettle(orderId); }catch(e){}
+    if(j.status==='Approved'){
+      try{localStorage.removeItem('pendingZapOrder');}catch(e){}
+      showToast('₹'+j.amount+' added successfully!');
+      try{ if(typeof loadUserProfile==='function') await loadUserProfile(window.currentUser.uid); if(typeof loadUserTransactions==='function') await loadUserTransactions(); }catch(e){}
+    }else if(j.status==='Failed'||j.status==='NotFound'||j.status==='AmountMismatch'){
+      try{localStorage.removeItem('pendingZapOrder');}catch(e){}
+      showToast('Payment failed',true);
+    }else{ showToast('Payment is processing. Wallet will update once confirmed.',true); }
+  };
+  const tick=async()=>{
+    if(done||busy) return; busy=true;
+    try{
+      const st=await zapPost('order-status',{order_id:orderId}); const d=st.data||st; const x=String(d.status||'').toLowerCase();
+      if(ZAP_FINAL.test(x)){ busy=false; return finish(); }
+    }catch(e){}
+    busy=false;
+    if(returned&&++returned>7){ end(); closeAddCoins(); try{switchTab('Wallet');}catch(e){} showToast('Payment is processing. Wallet will update once confirmed.',true); return; }
+    if(Date.now()-t0>12*60*1000){ end(); closeAddCoins(); try{switchTab('Wallet');}catch(e){} showToast('Payment not confirmed yet.',true); }
+  };
+  const onMsg=ev=>{ if(ev&&ev.data&&ev.data.zapReturn){ returned=1; tick(); } };
+  window.addEventListener('message',onMsg);
+  window.__zapTick=tick;
+  /* Back button: frame band karo, ek baar status check karke Wallet par aao */
+  window.__zapGiveUp=async()=>{ if(done) return; await tick(); if(done) return; end(); closeAddCoins(); try{switchTab('Wallet');}catch(e){} showToast('Payment not completed yet.',true); };
+  timer=setInterval(tick,3000);
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&window.__zapTick) window.__zapTick(); });
 // Payment check + wallet credit (har order sirf ek baar credit hota hai)
 async function zapSettle(orderId){
   const uid=window.currentUser.uid; const ref=db.collection('deposits').doc(orderId); const snap=await ref.get();
   if(!snap.exists||snap.data().userId!==uid) return {status:'NotFound'};
   if(snap.data().status==='Approved') return {status:'Approved',amount:snap.data().amount};
   const st=await zapPost('order-status',{order_id:orderId}); const d=st.data||st; const s=String(d.status||'').toLowerCase();
-  if(s==='failed'||s==='cancelled'||s==='expired'){ await ref.update({status:'Rejected',rejectReason:'Payment failed'}); return {status:'Failed'}; }
+  if(/^(failed|fail|cancel|canceled|cancelled|expired|expire|timeout|timed_out)/.test(s)){ await ref.update({status:'Rejected',rejectReason:'Payment failed'}); return {status:'Failed'}; }
   if(s!=='success') return {status:'Pending'};
   let out={status:'Approved',amount:snap.data().amount};
   await db.runTransaction(async tx=>{
@@ -3560,7 +3683,7 @@ async function loadNotifications(){
 (function(){
   var running=false;
   async function check(){
-    if(running||!window.currentUser) return;
+    if(running||!window.currentUser||window.__zapActive) return;
     var oid=null;
     try{
       var sp=new URLSearchParams(location.search); var q=sp.get('zap_order')||sp.get('order_id');
