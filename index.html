@@ -1413,6 +1413,10 @@ window.setSplashLogo(window.SPLASH_LOGO);
 .ac-how .g{display:grid;grid-template-columns:1fr 1fr;gap:16px 14px}
 .ac-how .it{display:flex;gap:8px;font-size:12.5px;line-height:18px;color:#3b3f55}
 .ac-how .it i{font-size:16px;width:18px;text-align:center;flex:none;margin-top:1px}
+#acLoad{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:10001;align-items:center;justify-content:center;padding-bottom:40px}
+#acLoad .cc{width:80px;height:80px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.25);animation:acPulse 1.1s ease-in-out infinite}
+#acLoad .cc img{width:52px;height:52px;object-fit:contain;border-radius:50%}
+@keyframes acPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 #payFrameWrap{display:none;position:fixed;inset:0;background:#fff;z-index:30000}
 #payFrameWrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
 </style>
@@ -1423,7 +1427,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
   <div class="ac-ban"><svg class="ci" viewBox="0 0 32 32"><use href="#coinSym"/></svg><div class="tx"><b>Select the amount</b><span>Choose any amount to add coins</span></div><div class="em">👛</div></div>
   <div class="ac-chips" id="acChips"></div>
   <div class="ac-amt"><div class="ic">₹</div><div class="bx"><small>Amount</small><div class="ln">₹<input type="number" inputmode="numeric" id="acAmt" placeholder="0" oninput="acUpdate()"></div></div><i class="fa-solid fa-pen"></i></div>
-  <button class="ac-pay" id="acPayBtn" onclick="acPay()"><i class="fa-solid fa-shield-halved sh"></i><span>PAY NOW</span><i class="fa-solid fa-chevron-right ch"></i><div class="ld"><b>Initiating Payment</b><small>Using ZapUPI...</small></div></button>
+  <button class="ac-pay" id="acPayBtn" onclick="acPay()"><i class="fa-solid fa-shield-halved sh"></i><span>PAY NOW</span><i class="fa-solid fa-chevron-right ch"></i><div class="ld"><b id="acLdT">Initiating Payment</b><small id="acLdS">Using ZapUPI...</small></div></button>
   <div class="ac-sp"><i class="fa-solid fa-shield-halved"></i>100% Secure Payment</div>
   <div class="ac-sec"><div class="l"><i class="fa-solid fa-shield-halved"></i>100% SECURE</div><div class="r">Safe • Fast • Reliable <i class="fa-solid fa-circle-check"></i></div></div>
   <div class="ac-how"><h4>How To Add Coins with Us?</h4><div class="g">
@@ -1435,6 +1439,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
     <div class="it"><i class="fa-solid fa-headset" style="color:#17a673"></i><span>Contact support for any issues with payment.</span></div>
   </div></div>
 </div>
+<div id="acLoad"><div class="cc"><img id="acLoadLogo" alt=""></div></div>
 <div id="payFrameWrap"><iframe id="payFrame" title="Payment" allow="payment *"></iframe></div>
 
 <!-- Withdraw -->
@@ -3377,7 +3382,8 @@ window.acPay=async()=>{
   const amt=Math.floor(Number(acEl('acAmt').value)||0); const min=minDeposit();
   if(!amt||amt<min) return showToast(`Minimum deposit is ₹${min}`,true);
   if(!window.currentUser) return showToast("Please login first",true);
-  const btn=acEl('acPayBtn'); btn.classList.add('busy'); btn.disabled=true;
+  const btn=acEl('acPayBtn'); acEl('acLdT').textContent='Initiating Payment'; acEl('acLdS').textContent='Using ZapUPI...'; btn.classList.add('busy'); btn.disabled=true;
+  { const lg=acEl('acLoadLogo'); if(window.SPLASH_LOGO){ lg.src=window.SPLASH_LOGO; lg.style.display=''; } else lg.style.display='none'; acEl('acLoad').style.display='flex'; }
   const uid=window.currentUser.uid; const orderId=('ORD'+Date.now()+uid.slice(0,6)).replace(/[^A-Za-z0-9]/g,'');
   let opened=false;
   try{
@@ -3392,9 +3398,11 @@ window.acPay=async()=>{
       throw new Error(z.message||"Could not create order. Please try again.");
     }
     try{ localStorage.setItem('pendingZapOrder',orderId); }catch(e){}
+    acEl('acLdT').textContent='Opening Payment Gateway'; acEl('acLdS').textContent='Redirecting to ZapUPI...';
+    await new Promise(r=>setTimeout(r,900));
     zapOpenFrame(orderId,payUrl); opened=true;
   }catch(e){ showToast(e.message||"Error",true); }
-  { btn.classList.remove('busy'); btn.disabled=false; }
+  { acEl('acLoad').style.display='none'; btn.classList.remove('busy'); btn.disabled=false; }
 };
 window.goToDepositStep2=window.acPay;
 /* Payment gateway app ke ANDAR (full-screen frame) khulta hai, isliye app restart nahi hota.
