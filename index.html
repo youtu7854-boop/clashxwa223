@@ -3157,20 +3157,11 @@ function lbKey(u){ return String(u.userDocId||u.ffUid||u.ffName||'').replace(/[.
 function lbDate(v){ if(!v) return null; if(typeof v.toDate==='function') return v.toDate(); const d=new Date(v); return isNaN(d)?null:d; }
 async function loadLeaderboard(){
   const L=window.__lb; if(!document.getElementById('lbxBody')) return;
-  if(!L.rows) setHtml('lbxBody','<div class="loader">Loading...</div>');
-  if(L.rows && L.__at && (Date.now()-L.__at)<900000){ lbRenderChips(); lbRender(); return; }
   try{
-    const [gs,ts]=await Promise.all([db.collection("admin_games").get(),db.collection("tournaments").get()]);
-    L.games=gs.docs.map(d=>d.data()).sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority)).map(x=>x.name).filter(Boolean);
-    const rows=[];
-    ts.forEach(d=>{ const t=d.data(); const res=t.results;
-      if(!res||typeof res!=='object'||Array.isArray(res)||!(t.resultPublished||t.status==='Results')) return;
-      const when=lbDate(t.resultUpdatedAt)||lbDate(t.updatedAt)||lbDate(t.createdAt);
-      const avMap={}; (t.joinedUsers||[]).forEach(u=>{ if(u&&u.avatar) avMap[lbKey(u)]=u.avatar; });
-      Object.keys(res).forEach(k=>{ const r=res[k]||{}; const amt=Number(r.total)||0; if(amt<=0) return;
-        rows.push({key:k,name:r.username||r.ffName||'Player',av:avMap[k]||'',amt,cat:t.category||'',time:when}); });
-    });
-    L.rows=rows; L.__at=Date.now();
+    if(!L.games.length){
+      let gs; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(gc&&Date.now()-gc.t<3600000){ gs=gc.a; } else { const snap=await db.collection("admin_games").get(); gs=snap.docs.map(d=>d.data()); window.__gamesCache={t:Date.now(),a:gs}; window.__lsSet('cx_games_v1',window.__gamesCache); } }
+      L.games=gs.slice().sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority)).map(x=>x.name).filter(Boolean);
+    }
     if(L.game!=='All Games'&&!L.games.includes(L.game)) L.game='All Games';
     lbRenderChips(); lbRender();
   }catch(e){ console.error(e); setHtml('lbxBody',"<div class='loader'>Error loading leaderboard</div>"); }
@@ -3182,18 +3173,47 @@ function lbRenderChips(){
 }
 window.lbSetPeriod=(p)=>{ window.__lb.period=p; document.querySelectorAll('#lbxSeg div').forEach(d=>d.classList.toggle('on',d.dataset.p===p)); lbRender(); };
 function lbRender(){
-  const L=window.__lb; if(!L.rows) return;
+  const L=window.__lb; L.cache=L.cache||{}; L.busy=L.busy||{};
+  const key=L.game+'|'+L.period, c=L.cache[key];
+  if(c) lbDraw(c); else setHtml('lbxBody','<div class="loader">Loading...</div>');
+  if(c && Date.now()-c.at<300000) return;
+  if(L.busy[key]) return; L.busy[key]=1;
+  lbFetch(L.game,L.period).then(n=>{ L.cache[key]=n; if(window.__lb.game+'|'+window.__lb.period===key) lbDraw(n); })
+    .catch(e=>{ console.error(e); if(!c) setHtml('lbxBody',"<div class='loader'>Error loading leaderboard</div>"); })
+    .finally(()=>{ delete L.busy[key]; });
+}
+function lbFromRows(rows,game,period,uid){
   const now=new Date(); let from=null;
-  if(L.period==='weekly'){ from=new Date(now.getFullYear(),now.getMonth(),now.getDate()); from.setDate(from.getDate()-((from.getDay()+6)%7)); }
-  else if(L.period==='monthly'){ from=new Date(now.getFullYear(),now.getMonth(),1); }
+  if(period==='weekly'){ from=new Date(now.getFullYear(),now.getMonth(),now.getDate()); from.setDate(from.getDate()-((from.getDay()+6)%7)); }
+  else if(period==='monthly'){ from=new Date(now.getFullYear(),now.getMonth(),1); }
   const agg={};
-  L.rows.forEach(r=>{
-    if(L.game!=='All Games'&&r.cat!==L.game) return;
-    if(from&&(!r.time||r.time<from)) return;
-    const a=agg[r.key]||(agg[r.key]={key:r.key,name:r.name,av:r.av,amt:0}); a.amt+=r.amt; if(r.av) a.av=r.av; if(r.name) a.name=r.name;
+  rows.forEach(r=>{
+    if(game!=='All Games'&&r.cat!==game) return;
+    const tm=r.time?new Date(r.time):null;
+    if(from&&(!tm||isNaN(tm)||tm<from)) return;
+    const a=agg[r.key]||(agg[r.key]={key:r.key,name:r.name,av:r.av,amt:0}); a.amt+=Number(r.amt)||0; if(r.av) a.av=r.av; if(r.name) a.name=r.name;
   });
-  const list=Object.values(agg).sort((x,y)=>y.amt-x.amt);
-  const uid=window.currentUser?.uid, my=window.userData||{};
+  const list=Object.values(agg).sort((x,y)=>y.amt-x.amt), my=window.userData||{};
+  const idx=list.findIndex(p=>p.key===uid||(my.ffName&&p.name===my.ffName));
+  const me=uid?{rank:idx>=0?idx+1:list.length+1,amt:idx>=0?list[idx].amt:0}:null;
+  return {at:Date.now(),top:list.slice(0,50),me};
+}
+async function lbFetch(game,period){
+  const L=window.__lb, uid=window.currentUser&&window.currentUser.uid;
+  /* purana API (rows) ho to ek baar mangakar 5 min yaad rakho; naya API (top) ho to server hi jod deta hai */
+  if(L.raw&&Date.now()-L.raw.at<300000) return lbFromRows(L.raw.rows,game,period,uid);
+  const q='game='+encodeURIComponent(game)+'&period='+period;
+  const t=await fetch(apiBase()+'/leaderboard?'+q).then(r=>r.json());
+  if(t&&Array.isArray(t.top)){
+    let m=null;
+    if(uid){ try{ m=await fetch(apiBase()+'/leaderboard?'+q+'&me=1&uid='+encodeURIComponent(uid)).then(r=>r.json()); }catch(e){} }
+    return {at:Date.now(),top:t.top,me:(m&&m.me)?m.me:null};
+  }
+  if(t&&Array.isArray(t.rows)){ L.raw={at:Date.now(),rows:t.rows}; return lbFromRows(t.rows,game,period,uid); }
+  throw new Error((t&&t.error)||'bad response');
+}
+function lbDraw(c){
+  const list=c.top||[];
   const pod=(p,i)=>{ if(!p) return `<div class="lbx-pc"></div>`; const n=i+1;
     return `<div class="lbx-pc p${n}">${n===1?'<div class="cr"><i class="fa-solid fa-crown"></i></div>':'<div class="sp"></div>'}<div class="lbx-pa"><div class="im">${lbAv(p.av)}</div><div class="bd">${n}</div></div><div class="nm">${lbEsc(p.name)}</div><div class="cp">${LB_COIN}${Math.round(p.amt)}</div></div>`; };
   let h='';
@@ -3205,11 +3225,10 @@ function lbRender(){
     h+='</div>';
   }
   setHtml('lbxBody',h);
-  const idx=list.findIndex(p=>p.key===uid||(my.ffName&&p.name===my.ffName));
-  const rank=idx>=0?idx+1:list.length+1, amt=idx>=0?Math.round(list[idx].amt):0;
-  const me=document.getElementById('lbxMe');
-  if(me&&window.currentUser){ me.style.display='flex';
-    me.innerHTML=`<div class="rk">${rank}</div><div class="av">${lbAv(my.avatar)}</div><div class="tx"><small>Your Rank</small><b>You (${lbEsc(my.ffName||'Player')})&nbsp;&middot;</b></div><div class="w">${LB_COIN}${amt}</div>`; }
+  const me=document.getElementById('lbxMe'), my=window.userData||{};
+  if(me&&window.currentUser&&c.me){ me.style.display='flex';
+    me.innerHTML=`<div class="rk">${c.me.rank}</div><div class="av">${lbAv(my.avatar)}</div><div class="tx"><small>Your Rank</small><b>You (${lbEsc(my.ffName||'Player')})&nbsp;&middot;</b></div><div class="w">${LB_COIN}${Math.round(c.me.amt)}</div>`; }
+  else if(me) me.style.display='none';
 }
 
 /* ---------- Referral ---------- */
