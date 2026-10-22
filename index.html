@@ -306,6 +306,9 @@ img{max-width:100%}
 .mc2.upc .mc2-bar{height:4px;background:#c5e5fa;border-radius:0;margin-top:10px}
 .mc2.upc .mc2-btn{background:#8378ee;border-radius:5px;height:38.5px;padding:0 13px;font-size:13px;font-weight:500;gap:7px}
 .mc2.upc .mc2-btn.gray{background:#8a8d94}
+.mc2.upc .mc2-btn.joined{background:#5be597}
+.mc2.upc .mc2-btn.full{background:#000}
+.mc2.upc .mc2-bar i.part{background:#000}
 .mc2.upc .mc2-btn .coin-ic{width:16px;height:16px}
 /* Join flow screens */
 .flow-screen{display:none;position:fixed;inset:0;background:#fafafa;z-index:10000;flex-direction:column;animation:slideInRight .25s}
@@ -2121,7 +2124,38 @@ function startLiveUserSync(uid){
     applyLiveUserData(data, uid);
   }, err=>console.warn('Live wallet sync error:', err));
 }
+/* LIVE match status: staff Firestore me status badle to turant app me aaye (API/Supabase sync ka intezaar nahi) */
+function startLiveStatusListener(){
+  if(window.__statusUnsub || !db) return;
+  window.__fsOverlay = window.__fsOverlay || {};
+  let first = true;
+  const apply = (id,d)=>{
+    window.__fsOverlay[id] = {status:d.status, time:d.time};
+    const m=(window.allTournaments||[]).find(x=>x.id===id);
+    if(m){ if(d.status) m.status=d.status; if(d.time!==undefined) m.time=d.time; return true; }
+    return false;
+  };
+  let t=null; const refresh=()=>{ clearTimeout(t); t=setTimeout(async()=>{
+    if(!window.currentUser || !document.getElementById('mainApp') || document.getElementById('mainApp').style.display==='none') return;
+    try{ _tourneyAt=0; await loadHomeData(); }catch(e){}
+    try{ window.__catRefreshIfChanged&&window.__catRefreshIfChanged(); }catch(e){}
+  },400); };
+  try{
+    window.__statusUnsub = db.collection('tournaments').where('status','in',['Upcoming','Ongoing']).onSnapshot(snap=>{
+      if(first){ first=false; return; }   // pehla snapshot sirf baseline hai
+      let changed=false;
+      snap.docChanges().forEach(ch=>{
+        const d=ch.doc.data();
+        if(ch.type==='removed'){   // Upcoming/Ongoing se bahar gaya (jaise Results) -> naya status ek baar padho
+          db.collection('tournaments').doc(ch.doc.id).get().then(s=>{ if(s.exists){ apply(s.id,s.data()); refresh(); } }).catch(()=>{});
+        } else { apply(ch.doc.id,d); changed=true; }
+      });
+      if(changed) refresh();
+    }, err=>{ console.warn('Live status listener error:', err); window.__statusUnsub=null; });
+  }catch(e){ window.__statusUnsub=null; }
+}
 function startBackgroundRefresh(){
+  startLiveStatusListener();
   if(window.__appRefreshTimer) clearInterval(window.__appRefreshTimer);
   window.__appRefreshTimer = setInterval(async()=>{
     if(document.visibilityState !== 'visible' || !window.currentUser || !document.getElementById('mainApp') || document.getElementById('mainApp').style.display === 'none') return;
@@ -2568,6 +2602,7 @@ async function fetchAllTournaments(force){
       let arr = null;
       if(apiOn()){ try{ arr = await fetchMatchesFromApi(!!force); }catch(e){ console.warn('Matches API fail, Firestore fallback', e); } }
       if(!arr){ const ts = await db.collection("tournaments").get(); arr=[]; ts.forEach(d=>arr.push({id:d.id,...d.data()})); }
+      { const ov=window.__fsOverlay||{}; arr.forEach(m=>{ const o=ov[m.id]; if(o){ if(o.status) m.status=o.status; if(o.time!==undefined) m.time=o.time; } }); }   // Firestore (asli source) ka live status API ke purane data par bhari
       window.allTournaments = arr; _tourneyAt = Date.now(); _tourneyUid = uid;
       return arr;
     } finally { _tourneyP = null; }
@@ -2749,7 +2784,7 @@ window.renderCatList=(catName,tab)=>{
   list.forEach(m=>{
     const joinedN=m.joinedUsers?m.joinedUsers.length:0; const left=m.max-joinedN; const pct=m.max?Math.min(100,(joinedN/m.max)*100):0;
     const isJoined=m.joinedUsers?m.joinedUsers.some(u=>u.userDocId===window.currentUser.uid):false;
-    let bt='JOIN',gray=false,showFee=true; if(tab==='Results'){bt='VIEW RESULT';gray=true;showFee=false;} else if(isJoined){bt='JOINED';gray=true;showFee=false;} else if(left<=0){bt='MATCH FULL';}
+    let bt='JOIN',gray=false,showFee=true,stCls=''; if(tab==='Results'){bt='VIEW RESULT';gray=true;showFee=false;} else if(isJoined){bt='JOINED';stCls='joined';showFee=false;} else if(left<=0){bt='MATCH FULL';stCls='full';}
     const fee=Number(m.fee)||0; const feeTxt=fee>0?fee:'FREE';
     const d=new Date(m.time); let dt='--',tm='';
     if(!isNaN(d)){ const p=n=>String(n).padStart(2,'0'); dt=`${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`; let hh=d.getHours(); const ap=hh>=12?'pm':'am'; hh=hh%12||12; tm=`${hh}:${p(d.getMinutes())} ${ap}`; }
@@ -2760,7 +2795,7 @@ window.renderCatList=(catName,tab)=>{
     const coinSvg='<svg class="coin-ic" viewBox="0 0 32 32"><use href="#coinSym"/></svg>';
     const canJoin=(tab==='Upcoming')&&!isJoined&&left>0&&!(m.isVipOnly&&!isVipNow());
     const btnFn=canJoin?`event.stopPropagation();openJoinFlow('${m.id}')`:openFn;
-    const upFoot=`<div class="mc2-foot"><div class="mc2-spots">${joinedN}/${m.max||0}<div class="mc2-bar"><i style="width:${pct}%"></i></div></div><button class="mc2-btn ${gray?'gray':''}" onclick="${btnFn}">${showFee?coinSvg+feeTxt+' ':''}${bt} <i class="fa-solid fa-chevron-right" style="font-size:12px"></i></button></div>`;
+    const upFoot=`<div class="mc2-foot"><div class="mc2-spots">${joinedN}/${m.max||0}<div class="mc2-bar"><i class="${(joinedN>0&&joinedN<(m.max||0))?'part':''}" style="width:${pct}%"></i></div></div><button class="mc2-btn ${gray?'gray':''} ${stCls}" onclick="${btnFn}">${showFee?coinSvg+feeTxt+' ':''}${bt} <i class="fa-solid fa-chevron-right" style="font-size:12px"></i></button></div>`;
     let footHtml=upFoot;
     if(tab==='Ongoing'){
       footHtml=`<div class="mc2-foot2"><button class="mc2-btn2" onclick="${openFn}">SPECTATE</button></div>`;
