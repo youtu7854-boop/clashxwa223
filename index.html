@@ -2140,9 +2140,30 @@ function startLiveStatusListener(){
     try{ _tourneyAt=0; await loadHomeData(); }catch(e){}
     try{ window.__catRefreshIfChanged&&window.__catRefreshIfChanged(); }catch(e){}
   },400); };
+  /* STALE FIX: Supabase me purana (Firestore se delete ho chuka) match reh gaya ho to app use khud hata de + Supabase se bhi purge karwa de */
+  window.__goneIds = window.__goneIds || new Set();
+  window.__reconcileStale = function(arr){
+    try{
+      const live = window.__fsLiveIds; if(!live || !Array.isArray(arr)) return;
+      const chk = window.__recChecked = window.__recChecked || new Set();
+      arr.filter(m=>/^(upcoming|ongoing)$/i.test(String(m.status||'')) && !live.has(m.id) && !chk.has(m.id) && !window.__goneIds.has(m.id)).slice(0,10).forEach(m=>{
+        chk.add(m.id);
+        db.collection('tournaments').doc(m.id).get().then(s=>{
+          if(s.exists){ apply(s.id,s.data()); refresh(); }          // match hai, bas status purana tha
+          else {                                                    // Firestore me nahi hai = delete ho chuka
+            window.__goneIds.add(m.id);
+            window.allTournaments=(window.allTournaments||[]).filter(x=>x.id!==m.id);
+            try{ syncMatchNow(m.id); }catch(e){}                    // server Supabase se bhi hata dega
+            refresh();
+          }
+        }).catch(()=>{});
+      });
+    }catch(e){}
+  };
   try{
     window.__statusUnsub = db.collection('tournaments').where('status','in',['Upcoming','Ongoing']).onSnapshot(snap=>{
-      if(first){ first=false; return; }   // pehla snapshot sirf baseline hai
+      window.__fsLiveIds = new Set(snap.docs.map(d=>d.id));
+      if(first){ first=false; window.__reconcileStale(window.allTournaments); return; }   // pehla snapshot sirf baseline hai
       let changed=false;
       snap.docChanges().forEach(ch=>{
         const d=ch.doc.data();
@@ -2603,7 +2624,9 @@ async function fetchAllTournaments(force){
       if(apiOn()){ try{ arr = await fetchMatchesFromApi(!!force); }catch(e){ console.warn('Matches API fail, Firestore fallback', e); } }
       if(!arr){ const ts = await db.collection("tournaments").get(); arr=[]; ts.forEach(d=>arr.push({id:d.id,...d.data()})); }
       { const ov=window.__fsOverlay||{}; arr.forEach(m=>{ const o=ov[m.id]; if(o){ if(o.status) m.status=o.status; if(o.time!==undefined) m.time=o.time; } }); }   // Firestore (asli source) ka live status API ke purane data par bhari
+      if(window.__goneIds && window.__goneIds.size) arr = arr.filter(m=>!window.__goneIds.has(m.id));   // delete ho chuke match wapas na aayein
       window.allTournaments = arr; _tourneyAt = Date.now(); _tourneyUid = uid;
+      try{ window.__reconcileStale && window.__reconcileStale(arr); }catch(e){}
       return arr;
     } finally { _tourneyP = null; }
   })();
