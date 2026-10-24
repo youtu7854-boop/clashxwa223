@@ -3016,7 +3016,7 @@ window.jmJoin=async()=>{
   const total=(Number(m.fee)||0)*slots.length;
   const wWin=Number(window.userData.wallets?.winning||0), wDep=Number(window.userData.wallets?.deposit||0), wBon=Number(window.userData.wallets?.bonus||0);
   const bonusUse=Math.min(wBon,total*0.40); const remaining=total-bonusUse;
-  if(wDep<remaining){ showToast(`Insufficient balance. You need at least ₹${remaining} in Deposit wallet (Winning wallet can't be used to join).`,true); setTimeout(()=>{ closeJoinFlow(); closeCategoryScreen(); switchTab('Wallet'); },1800); return; }
+  if((wWin+wDep)<remaining){ showToast(`Insufficient balance. You need at least ₹${remaining} in Deposit/Winning wallets.`,true); setTimeout(()=>{ closeJoinFlow(); closeCategoryScreen(); switchTab('Wallet'); },1800); return; }
   const btn=document.getElementById('jmJoinBtn'); btn.disabled=true; btn.innerText='Joining...';
   try{
     const fresh=await db.collection('tournaments').doc(m.id).get(); const fd=fresh.exists?fresh.data():m; const cur=fd.joinedUsers||[];
@@ -3026,7 +3026,8 @@ window.jmJoin=async()=>{
     const vip=isVipNow(), cwn=ownsItem('gold_crown'), tk=ownsItem('blue_tick'); const lr=getMyLevelRank();
     const newPlayers=slots.map(slot=>({userDocId:window.currentUser.uid,ffName:J.info[slot].name,ffUid:J.info[slot].uid,slot,avatar:window.userData.avatar||'👦',joinedAt:new Date().toISOString(),vip,crown:cwn,tick:tk,level:lr.level,rank:lr.rank}));
     let nd=wDep,nw=wWin,nb=wBon-bonusUse,rem=remaining;
-    nd-=rem; rem=0;
+    if(nd>=rem){nd-=rem;rem=0;}else{rem-=nd;nd=0;}
+    if(rem>0){ if(nw>=rem){nw-=rem;rem=0;} else {rem-=nw;nw=0;} }
     await db.collection('users').doc(window.currentUser.uid).update({'wallets.deposit':Math.round(nd*100)/100,'wallets.winning':Math.round(nw*100)/100,'wallets.bonus':Math.round(nb*100)/100});
     await db.collection('tournaments').doc(m.id).update({joinedUsers:[...cur,...newPlayers]}); window.__noteLocalJoin(m.id,newPlayers); await syncMatchNow(m.id);
     const sTxt=m.serial?` [#${m.serial}]`:'';
@@ -3311,11 +3312,12 @@ window.confirmJoinMatch=async()=>{
   const total=Number(m.fee)*window.selectedSlots.length;
   const wWin=Number(window.userData.wallets?.winning||0), wDep=Number(window.userData.wallets?.deposit||0), wBon=Number(window.userData.wallets?.bonus||0);
   const bonusUse=Math.min(wBon,total*0.40); const remaining=total-bonusUse;
-  if(wDep<remaining){ setTxt('joinErrorMsg',`Error: Insufficient Balance. You need at least ₹${remaining} in Deposit wallet (Winning wallet can't be used to join, max 40% bonus allowed).`); setTimeout(()=>{closeModal('matchModal'); closeCategoryScreen(); switchTab('Wallet');},3500); return; }
+  if((wWin+wDep)<remaining){ setTxt('joinErrorMsg',`Error: Insufficient Balance. You need at least ₹${remaining} in Deposit/Winning wallets (Max 40% bonus allowed).`); setTimeout(()=>{closeModal('matchModal'); closeCategoryScreen(); switchTab('Wallet');},3500); return; }
   const btn=document.getElementById('mJoinBtn'); btn.innerText="Joining..."; btn.disabled=true; setTxt('joinErrorMsg',"");
   try{
     let nd=wDep,nw=wWin,nb=wBon-bonusUse,rem=remaining;
-    nd-=rem; rem=0;
+    if(nd>=rem){nd-=rem;rem=0;}else{rem-=nd;nd=0;}
+    if(rem>0){ if(nw>=rem){nw-=rem;rem=0;} else {rem-=nw;nw=0;} }
     await db.collection("users").doc(window.currentUser.uid).update({"wallets.deposit":Math.round(nd*100)/100,"wallets.winning":Math.round(nw*100)/100,"wallets.bonus":Math.round(nb*100)/100});
     await db.collection("tournaments").doc(m.id).update({joinedUsers:m.joinedUsers?[...m.joinedUsers,...newPlayers]:[...newPlayers]}); window.__noteLocalJoin(m.id,newPlayers); await syncMatchNow(m.id);
     const sTxt=m.serial?` [#${m.serial}]`:'';
