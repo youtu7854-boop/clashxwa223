@@ -12,6 +12,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -2117,6 +2118,7 @@ function applyLiveUserData(data, uid){
 function startLiveUserSync(uid){
   if(window.__userDocUnsub){ try{window.__userDocUnsub();}catch(e){} window.__userDocUnsub=null; }
   if(!db || !uid) return;
+  if(window.USE_SUPABASE_USER && window.sbx){ startSbUserSync(uid); return; }
   window.__userDocUnsub = db.collection('users').doc(uid).onSnapshot(snap=>{
     if(!snap.exists) return;
     const data = snap.data() || {};
@@ -2130,13 +2132,9 @@ function startLiveStatusListener(){
   window.__fsOverlay = window.__fsOverlay || {};
   let first = true;
   const apply = (id,d)=>{
-    window.__fsOverlay[id] = {status:d.status, time:d.time, joinedUsers:Array.isArray(d.joinedUsers)?d.joinedUsers:undefined};
+    window.__fsOverlay[id] = {status:d.status, time:d.time};
     const m=(window.allTournaments||[]).find(x=>x.id===id);
-    if(m){
-      if(d.status) m.status=d.status; if(d.time!==undefined) m.time=d.time;
-      if(Array.isArray(d.joinedUsers)){ if((m.joinedUsers||[]).length!==d.joinedUsers.length) window.__joinFixed=true; m.joinedUsers=d.joinedUsers; }   // slots (1/2 vs full) Firestore ke hisaab se
-      return true;
-    }
+    if(m){ if(d.status) m.status=d.status; if(d.time!==undefined) m.time=d.time; return true; }
     return false;
   };
   let t=null; const refresh=()=>{ clearTimeout(t); t=setTimeout(async()=>{
@@ -2144,30 +2142,9 @@ function startLiveStatusListener(){
     try{ _tourneyAt=0; await loadHomeData(); }catch(e){}
     try{ window.__catRefreshIfChanged&&window.__catRefreshIfChanged(); }catch(e){}
   },400); };
-  /* STALE FIX: Supabase me purana (Firestore se delete ho chuka) match reh gaya ho to app use khud hata de + Supabase se bhi purge karwa de */
-  window.__goneIds = window.__goneIds || new Set();
-  window.__reconcileStale = function(arr){
-    try{
-      const live = window.__fsLiveIds; if(!live || !Array.isArray(arr)) return;
-      const chk = window.__recChecked = window.__recChecked || new Set();
-      arr.filter(m=>/^(upcoming|ongoing)$/i.test(String(m.status||'')) && !live.has(m.id) && !chk.has(m.id) && !window.__goneIds.has(m.id)).slice(0,10).forEach(m=>{
-        chk.add(m.id);
-        db.collection('tournaments').doc(m.id).get().then(s=>{
-          if(s.exists){ apply(s.id,s.data()); refresh(); }          // match hai, bas status purana tha
-          else {                                                    // Firestore me nahi hai = delete ho chuka
-            window.__goneIds.add(m.id);
-            window.allTournaments=(window.allTournaments||[]).filter(x=>x.id!==m.id);
-            try{ syncMatchNow(m.id); }catch(e){}                    // server Supabase se bhi hata dega
-            refresh();
-          }
-        }).catch(()=>{});
-      });
-    }catch(e){}
-  };
   try{
     window.__statusUnsub = db.collection('tournaments').where('status','in',['Upcoming','Ongoing']).onSnapshot(snap=>{
-      window.__fsLiveIds = new Set(snap.docs.map(d=>d.id));
-      if(first){ first=false; window.__joinFixed=false; snap.docs.forEach(x=>apply(x.id,x.data())); window.__reconcileStale(window.allTournaments); if(window.__joinFixed){ window.__joinFixed=false; refresh(); } return; }   // pehla snapshot sirf baseline hai
+      if(first){ first=false; return; }   // pehla snapshot sirf baseline hai
       let changed=false;
       snap.docChanges().forEach(ch=>{
         const d=ch.doc.data();
@@ -2189,6 +2166,22 @@ function startBackgroundRefresh(){
   }, 30000);
 }
 
+/* ---------- App wapas khulte hi / net aate hi matches turant taaza (purana Upcoming dikhna band) ---------- */
+(function(){
+  let busy=false;
+  const nowRefresh=async()=>{
+    if(busy||document.hidden||!window.currentUser) return;
+    const m=document.getElementById('mainApp'); if(!m||m.style.display==='none') return;
+    busy=true;
+    try{ _tourneyAt=0; await loadHomeData(); }catch(e){}
+    try{ window.__catRefreshIfChanged&&window.__catRefreshIfChanged(); }catch(e){}
+    busy=false;
+  };
+  document.addEventListener('visibilitychange',nowRefresh);
+  window.addEventListener('online',nowRefresh);
+  window.addEventListener('pageshow',nowRefresh);
+})();
+
 /* ---------- Auth state ---------- */
 window.__registering=false; window.__regResolve=null; window.__regPromise=Promise.resolve();
 if(!auth){
@@ -2199,6 +2192,7 @@ if(!auth){
   if(user && window.__registering){ try{ await window.__regPromise; }catch(e){} }
   if(user){
     window.currentUser=user;
+    ensureSupabaseClaim(user);
     try{ localStorage.setItem('msz_session','1'); }catch(e){}
     try{ const dev=await getDeviceInfo(); const chk=await deviceCheck(dev,user.uid,false);
       if(chk==='banned'){ await auth.signOut(); showToast('Your device is banned. Please contact admin.',true); return; }
@@ -2330,7 +2324,8 @@ async function checkAndResetMonthlyRank(uid,data){
 
 async function loadUserProfile(uid){
   try{
-    const s=await db.collection("users").doc(uid).get();
+    let sbd=null; if(window.USE_SUPABASE_USER && window.sbx){ sbd=await sbFetchUser(uid); }
+    const s = sbd ? {exists:true, data:()=>sbd} : await db.collection("users").doc(uid).get();
     if(s.exists){
       window.userData=s.data();
       if(isBlockedUser(window.userData)){ window.__blockedNow=true; await auth.signOut(); window.userData=null; showBlockedToast(); setTimeout(showBlockedToast,600); return; }
@@ -2377,7 +2372,9 @@ function calculateProfileStats(){
 
 window.claimLevelBonus=async(lv)=>{
   try{
-    const reward=lv*5; const claimed=window.userData.claimedLevels||[]; claimed.push(lv);
+    const reward=lv*5;
+    if(sbOn()){ await sbRpc('rpc_level_bonus',{p_lv:lv}); showToast(`₹${reward} Level Bonus Claimed!`); closeModal('levelModal'); await loadUserProfile(window.currentUser.uid); return; }
+    const claimed=window.userData.claimedLevels||[]; claimed.push(lv);
     await db.collection("users").doc(window.currentUser.uid).update({"wallets.bonus":firebase.firestore.FieldValue.increment(reward),claimedLevels:claimed});
     await db.collection("transactions").add({userId:window.currentUser.uid,type:"Level Bonus",desc:`Reached Level ${lv+1}`,amount:reward,status:"Success",date:new Date()});
     showToast(`₹${reward} Level Bonus Claimed!`); closeModal('levelModal'); await loadUserProfile(window.currentUser.uid);
@@ -2408,6 +2405,7 @@ window.buyStoreItem=async(key)=>{
   if((wWin+wDep)<price) return showToast("Insufficient Wallet Balance!",true);
   if(confirm(`Buy ${name} for ₹${price}?`)){
     try{
+      if(sbOn()){ await sbRpc('rpc_buy_store',{p_key:key}); showToast(`${name} Activated!`); closeModal('vipModal'); await loadUserProfile(window.currentUser.uid); return; }
       let nd=wDep,nw=wWin,rem=price; if(nd>=rem){nd-=rem;rem=0;}else{rem-=nd;nd=0;} if(rem>0) nw-=rem;
       const up={"wallets.deposit":nd,"wallets.winning":nw};
       if(vip){const days=key==='vip_weekly'?7:30; const e=new Date(); e.setDate(e.getDate()+days); up.vipExpiry=e.toISOString();}
@@ -2543,9 +2541,12 @@ window.saveNewPassword=async()=>{
   if((wDep+wWin)<10) return showToast("Insufficient balance for ₹10 fee",true);
   try{
     await window.currentUser.updatePassword(np);
+    if(sbOn()){ await sbRpc('rpc_password_fee'); }
+    else{
     let nd=wDep,nw=wWin,rem=10; if(nd>=rem){nd-=rem;}else{rem-=nd;nd=0;nw-=rem;}
     await db.collection("users").doc(window.currentUser.uid).update({"wallets.deposit":nd,"wallets.winning":nw});
     await db.collection("transactions").add({userId:window.currentUser.uid,type:"Password Change Fee",desc:"Security update",amount:10,status:"Success",date:new Date()});
+    }
     showToast("Password Updated (₹10 deducted)!"); closeModal('passwordModal'); document.getElementById('newPassInput').value=''; await loadUserProfile(window.currentUser.uid); await loadUserTransactions();
   }catch(e){showToast("Error: Please Logout and Login again to change password.",true);}
 };
@@ -2583,6 +2584,97 @@ let _tourneyAt = 0, _tourneyUid = null, _tourneyP = null;
 window.__localJoins = window.__localJoins || {};   // matchId -> {t, players}
 function apiOn(){ return window.USE_SUPABASE_MATCHES && !/PASTE_/.test(window.MATCH_API||''); }
 function apiBase(){ return String(window.MATCH_API).replace(/\/$/,''); }
+/* ===== Supabase direct client (login Firebase se, data Supabase se). anon key public hoti hai; suraksha RLS se ===== */
+window.SUPABASE_URL = "https://ajpavrhczyzvjltvouxf.supabase.co";
+window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqcGF2cmhjenl6dmpsdHZvdXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MDAwMDcsImV4cCI6MjEwNzk3NjAwN30._pv6uWwsRVxSwveDQTKcGdRvsmG47lDr0R1v1GRmQgk";
+try{
+  if(window.supabase && window.supabase.createClient){
+    window.sbx = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+      accessToken: async()=>{ try{ return (auth && auth.currentUser) ? await auth.currentUser.getIdToken(false) : null; }catch(e){ return null; } }
+    });
+  }
+}catch(e){ console.warn('Supabase init fail', e); }
+async function ensureSupabaseClaim(user){        // Supabase ko role='authenticated' claim chahiye; na ho to ek baar lagwao
+  try{
+    const r = await user.getIdTokenResult();
+    if(r.claims && r.claims.role==='authenticated') return true;
+    const res = await fetch(apiBase()+'/ensure-claim',{method:'POST',headers:{Authorization:'Bearer '+r.token}});
+    if(!res.ok) return false;
+    await user.getIdToken(true);                  // naya token (claim ke saath)
+    return true;
+  }catch(e){ console.warn('ensure-claim fail', e); return false; }
+}
+
+/* ===== Supabase se user/wallet/history PADHNA (Step 4A). Master switch: false = sab kuch pehle jaisa (Firestore) ===== */
+window.USE_SUPABASE_USER = false;                  // cutover ke din hi true karenge (jab likhna bhi Supabase par ho jaye)
+function sbRevive(v){                              // {"__type":"timestamp","ms":..} -> Firestore Timestamp jaisa object
+  if(v===null||v===undefined) return v;
+  if(Array.isArray(v)) return v.map(sbRevive);
+  if(typeof v==='object'){
+    if(v.__type==='timestamp' && typeof v.ms==='number'){ const ms=v.ms; return { toMillis:()=>ms, toDate:()=>new Date(ms), seconds:Math.floor(ms/1000), nanoseconds:(ms%1000)*1e6 }; }
+    const o={}; for(const k of Object.keys(v)) o[k]=sbRevive(v[k]); return o;
+  }
+  return v;
+}
+const sbOn=()=>!!(window.USE_SUPABASE_USER && window.sbx);
+async function sbRpc(name,args){ const {data,error}=await window.sbx.rpc(name,args||{}); if(error) throw new Error(error.message||'rpc failed'); return data; }
+function sbUserToData(row){                        // Supabase users row -> purane Firestore user doc jaisa object
+  const d = sbRevive(row.data)||{};
+  d.wallets = { winning:Number(row.wallet_winning)||0, deposit:Number(row.wallet_deposit)||0, bonus:Number(row.wallet_bonus)||0 };
+  if(row.status) d.status = row.status;
+  return d;
+}
+async function sbFetchUser(uid){                   // null = nahi mila / error (tab Firestore wala rasta chalega)
+  try{
+    const { data, error } = await window.sbx.from('users').select('*').eq('id', uid).maybeSingle();
+    if(error || !data) return null;
+    return sbUserToData(data);
+  }catch(e){ console.warn('sbFetchUser fail', e); return null; }
+}
+function startSbUserSync(uid){
+  const handle = (d)=>{
+    if(!d) return;
+    if(isBlockedUser(d) && auth?.currentUser?.uid === uid){ auth.signOut().catch(()=>{}); setTimeout(showBlockedToast,500); return; }
+    applyLiveUserData(d, uid);
+  };
+  const pull = async()=>{ handle(await sbFetchUser(uid)); };
+  pull();
+  try{
+    if(window.__sbUserCh){ try{ window.sbx.removeChannel(window.__sbUserCh); }catch(e){} }
+    window.__sbUserCh = window.sbx.channel('user-'+uid)
+      .on('postgres_changes',{ event:'*', schema:'public', table:'users', filter:'id=eq.'+uid }, p=>{ if(p.new && p.new.data) handle(sbUserToData(p.new)); })
+      .subscribe();
+  }catch(e){ console.warn('user realtime fail', e); }
+  if(window.__sbUserPoll) clearInterval(window.__sbUserPoll);
+  window.__sbUserPoll = setInterval(()=>{ if(document.visibilityState==='visible') pull(); }, 20000);   // realtime chhoote to bhi 20s me taaza
+  window.__userDocUnsub = ()=>{ try{ window.sbx.removeChannel(window.__sbUserCh); }catch(e){} if(window.__sbUserPoll){ clearInterval(window.__sbUserPoll); window.__sbUserPoll=null; } };
+}
+function txnStartSb(uid){                          // history: Supabase se, sabse naye N + realtime
+  const S=window.__txn;
+  if(S.uid===uid && S.p) return S.p;
+  window.__txnStop(); S.uid=uid;
+  const defs=[['ts','transactions','user_id',100],['ds','deposits','user_id',50],['ws','withdrawals','user_id',50],['rs','referrals','referrer_uid',50]];
+  S.p=(async()=>{
+    for(const [k,tbl,col,lim] of defs){
+      const { data, error } = await window.sbx.from(tbl).select('id,data').eq(col, uid).order('created_at',{ascending:false}).limit(lim);
+      if(error) throw error;
+      (data||[]).forEach(r=>S.maps[k].set(r.id, sbRevive(r.data)));
+      S.ready[k]=true;
+    }
+    let t=null; const rebuild=()=>{ if(t) clearTimeout(t); t=setTimeout(()=>{ t=null; if(S.uid!==uid) return; txnBuild(); renderTxnHistory(); txnNotif(true); },150); };
+    const ch = window.sbx.channel('txn-'+uid);
+    defs.forEach(([k,tbl,col])=>{
+      ch.on('postgres_changes',{ event:'*', schema:'public', table:tbl, filter:col+'=eq.'+uid }, p=>{
+        if(p.eventType==='DELETE'){ if(p.old && p.old.id) S.maps[k].delete(p.old.id); }
+        else if(p.new && p.new.id && p.new.data) S.maps[k].set(p.new.id, sbRevive(p.new.data));
+        rebuild();
+      });
+    });
+    ch.subscribe();
+    S.unsubs.push(()=>{ try{ window.sbx.removeChannel(ch); }catch(e){} });
+  })();
+  return S.p;
+}
 window.__noteLocalJoin = (matchId, players)=>{
   window.__localJoins[matchId] = { t: Date.now(), players };
   const uid = window.currentUser && window.currentUser.uid;
@@ -2627,10 +2719,8 @@ async function fetchAllTournaments(force){
       let arr = null;
       if(apiOn()){ try{ arr = await fetchMatchesFromApi(!!force); }catch(e){ console.warn('Matches API fail, Firestore fallback', e); } }
       if(!arr){ const ts = await db.collection("tournaments").get(); arr=[]; ts.forEach(d=>arr.push({id:d.id,...d.data()})); }
-      { const ov=window.__fsOverlay||{}; arr.forEach(m=>{ const o=ov[m.id]; if(o){ if(o.status) m.status=o.status; if(o.time!==undefined) m.time=o.time; if(o.joinedUsers) m.joinedUsers=o.joinedUsers; } }); }   // Firestore (asli source) ka live status API ke purane data par bhari
-      if(window.__goneIds && window.__goneIds.size) arr = arr.filter(m=>!window.__goneIds.has(m.id));   // delete ho chuke match wapas na aayein
+      { const ov=window.__fsOverlay||{}; arr.forEach(m=>{ const o=ov[m.id]; if(o){ if(o.status) m.status=o.status; if(o.time!==undefined) m.time=o.time; } }); }   // Firestore (asli source) ka live status API ke purane data par bhari
       window.allTournaments = arr; _tourneyAt = Date.now(); _tourneyUid = uid;
-      try{ window.__reconcileStale && window.__reconcileStale(arr); }catch(e){}
       return arr;
     } finally { _tourneyP = null; }
   })();
@@ -3746,29 +3836,44 @@ function txnNotif(force){
   S.nAt=Date.now(); loadNotifications();
 }
 function txnStart(uid){
+  if(window.USE_SUPABASE_USER && window.sbx){
+    return txnStartSb(uid).catch(e=>{ console.warn('Supabase history fail, Firestore fallback', e); window.__txnStop(); return txnStartFs(uid); });
+  }
+  return txnStartFs(uid);
+}
+function txnStartFs(uid){
   const S=window.__txn;
   if(S.uid===uid && S.p) return S.p;
   window.__txnStop(); S.uid=uid;
+  /* LIVE + LIMIT: sirf sabse naye docs ka live listener (har listener ek baar window padhta hai, uske baad sirf badle docs).
+     Composite index na bana ho to us hisse ke liye apne aap purana (bina limit wala) listener chalta hai, history gayab nahi hogi. */
+  const TL=100, OL=50;
   const defs=[
-    ['ts',db.collection("transactions").where("userId","==",uid)],
-    ['ds',db.collection("deposits").where("userId","==",uid)],
-    ['ws',db.collection("withdrawals").where("userId","==",uid)],
-    ['rs',db.collection("referrals").where("referrerUid","==",uid)]
+    ['ts', db.collection("transactions").where("userId","==",uid).orderBy("date","desc").limit(TL), db.collection("transactions").where("userId","==",uid), 'ts'],
+    ['ts2',db.collection("transactions").where("userId","==",uid).orderBy("createdAt","desc").limit(TL), null, 'ts'],   // jin docs me 'date' nahi, sirf 'createdAt' hai
+    ['ds', db.collection("deposits").where("userId","==",uid).orderBy("createdAt","desc").limit(OL), db.collection("deposits").where("userId","==",uid), 'ds'],
+    ['ws', db.collection("withdrawals").where("userId","==",uid).orderBy("createdAt","desc").limit(OL), db.collection("withdrawals").where("userId","==",uid), 'ws'],
+    ['rs', db.collection("referrals").where("referrerUid","==",uid).orderBy("createdAt","desc").limit(OL), db.collection("referrals").where("referrerUid","==",uid), 'rs']
   ];
   S.p=new Promise(resolve=>{
     const allReady=()=>defs.every(d=>S.ready[d[0]]);
-    defs.forEach(([k,q])=>{
+    const attach=(k,q,fb,mk,limited)=>{
       const un=q.onSnapshot(snap=>{
-        snap.docChanges().forEach(ch=>{ if(ch.type==='removed') S.maps[k].delete(ch.doc.id); else S.maps[k].set(ch.doc.id,ch.doc.data()); });
+        snap.docChanges().forEach(ch=>{ if(ch.type==='removed'){ if(!limited) S.maps[mk].delete(ch.doc.id); } else S.maps[mk].set(ch.doc.id,ch.doc.data()); });
         const first=!S.ready[k]; S.ready[k]=true;
         if(allReady()){
           if(S.t) clearTimeout(S.t);
           S.t=setTimeout(()=>{ S.t=null; if(S.uid!==uid) return; txnBuild(); renderTxnHistory(); txnNotif(!first); },first?0:150);
           resolve();
         }
-      },err=>{ console.error('txn listener',k,err); S.ready[k]=true; setHtml('txnScreenList',"Error loading history"); if(allReady()) resolve(); });
+      },err=>{
+        console.error('txn listener',k,err);
+        if(limited && fb){ attach(k,fb,null,mk,false); return; }          // index missing -> purana tareeka
+        S.ready[k]=true; if(!limited && k!=='ts2') setHtml('txnScreenList',"Error loading history"); if(allReady()) resolve();
+      });
       S.unsubs.push(un);
-    });
+    };
+    defs.forEach(([k,q,fb,mk])=>attach(k,q,fb,mk,true));
   });
   return S.p;
 }
