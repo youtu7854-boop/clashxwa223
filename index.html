@@ -12,6 +12,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -438,7 +439,6 @@ img{max-width:100%}
 .og-rules h1{font-size:28px}.og-rules h2{font-size:24px}.og-rules h3{font-size:21px}.og-rules h4{font-size:18px}.og-rules h5{font-size:16px}.og-rules h6{font-size:14px}
 .og-rules img{max-width:100%;height:auto}
 .og-rules a{color:inherit;text-decoration:underline}
-.og-chatbtn{margin-top:10px;width:100%;background:#fff;border:1.5px solid #7f77ec;color:#7f77ec;border-radius:8px;padding:10px;font-size:15px;font-weight:600;cursor:pointer}
 .og-bottom{flex:none;background:#7f77ec;padding-bottom:env(safe-area-inset-bottom,0px)}
 .og-bottom.dark,.og-bottom.dark .og-spec{background:#33363b}
 .og-bottom.green,.og-bottom.green .og-spec{background:#1fa463}
@@ -484,8 +484,6 @@ img{max-width:100%}
 .nav-play span{display:none;position:absolute;left:0;right:0;top:calc(50% + 12px);text-align:center;font-size:12px;line-height:16px}
 
 .floating-wa{position:fixed;bottom:112px;right:16px;background:#25D366;width:52px;height:52px;border-radius:50%;display:none;justify-content:center;align-items:center;color:#fff;font-size:27px;box-shadow:0 5px 20px rgba(37,211,102,.5);z-index:9999;text-decoration:none}
-.floating-airdrop{position:fixed;bottom:112px;left:16px;background:linear-gradient(135deg,var(--primary-red),#ff5722);width:52px;height:52px;border-radius:50%;display:none;justify-content:center;align-items:center;color:#fff;font-size:22px;box-shadow:0 5px 20px rgba(220,53,69,.6);z-index:9998;cursor:pointer;animation:floatBounce 2s infinite;border:2px solid #fff}
-.floating-airdrop .ad-timer{position:absolute;bottom:-12px;background:#fff;color:var(--primary-red);font-size:9px;padding:2px 6px;border-radius:10px;font-weight:700;border:1px solid var(--primary-red);white-space:nowrap}
 @keyframes floatBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 
 /* Pages */
@@ -565,8 +563,6 @@ img{max-width:100%}
 .slot-btn.booked{background:rgba(220,53,69,.1);color:var(--primary-red);border-color:transparent;cursor:not-allowed;opacity:.5}
 #forceUpdateModal{z-index:999999;align-items:center;justify-content:center}
 #forceUpdateModal .modal-content{border-radius:20px;text-align:center;padding:30px}
-#airdropModal{align-items:center;justify-content:center;z-index:30000}
-#airdropModal .modal-content{border-radius:20px;text-align:center;max-width:90%;background:linear-gradient(135deg,var(--primary-red),#1a1a2e);color:#fff;border:2px solid var(--warning);padding:30px 20px}
 .store-item{background:rgba(255,255,255,.05);padding:15px;border-radius:12px;border:1px solid rgba(255,255,255,.2);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .store-item.owned{opacity:.6;border-color:var(--success)}
 .emoji-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;padding:15px 0;max-height:200px;overflow-y:auto}
@@ -1056,7 +1052,6 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <div class="settings-card"><div class="card-heading">Settings</div>
         <div class="list-row" onclick="switchTab('Profile')"><div class="list-row-left"><i class="fa-solid fa-circle-user"></i>My Profile</div><i class="fa-solid fa-chevron-right arrow"></i></div>
         <div class="list-row" onclick="openVipLounge()"><div class="list-row-left"><i class="fa-solid fa-crown" style="color:#e0a800"></i>VIP &amp; Store</div><i class="fa-solid fa-chevron-right arrow"></i></div>
-        <div class="list-row" onclick="openGlobalChat()"><div class="list-row-left"><i class="fa-solid fa-globe"></i>Global Chat</div><i class="fa-solid fa-chevron-right arrow"></i></div>
         <div class="list-row" onclick="openDirectMessage()"><div class="list-row-left"><i class="fa-solid fa-headset"></i>VIP Support Chat</div><i class="fa-solid fa-chevron-right arrow"></i></div>
         <div class="list-row" onclick="openModal('passwordModal')"><div class="list-row-left"><i class="fa-solid fa-key"></i>Change Password</div><i class="fa-solid fa-chevron-right arrow"></i></div>
       </div>
@@ -1091,30 +1086,8 @@ window.setSplashLogo(window.SPLASH_LOGO);
   </div>
 
   <a href="#" id="floatingWa" class="floating-wa" target="_blank" onclick="handleWaClick(event)"><i class="fa-brands fa-whatsapp"></i></a>
-  <div id="floatingAirdrop" class="floating-airdrop" onclick="openModal('airdropModal')"><i class="fa-solid fa-parachute-box"></i><div class="ad-timer" id="adFloatTimer">--:--:--</div></div>
 </div>
 
-<!-- Airdrop -->
-<div id="airdropModal" class="modal-overlay">
-  <div class="modal-content">
-    <h2 style="color:var(--warning);margin-bottom:5px"><i class="fa-solid fa-parachute-box"></i> SPECIAL AIRDROP</h2>
-    <div id="airdropTimer" style="font-size:18px;font-weight:700;color:var(--vip-gold);margin-bottom:15px;font-family:monospace">Expires in: --:--:--</div>
-    <div style="background:rgba(0,0,0,.3);padding:15px;border-radius:12px;margin-bottom:20px">
-      <h3 id="adOfferTitle" style="margin-bottom:5px">Exclusive Offer</h3>
-      <p id="adOfferDesc" style="font-size:13px;color:#ddd">Loading...</p>
-    </div>
-    <div id="adPaymentBox" style="display:none;background:#fff;padding:15px;border-radius:12px;margin-bottom:15px">
-      <div style="color:#111;font-size:12px;font-weight:700;margin-bottom:10px">Pay via UPI to Claim</div>
-      <img id="adQrImg" src="" style="width:120px;border-radius:10px;display:none;margin:0 auto 10px">
-      <div style="font-size:12px;font-family:monospace;font-weight:700;color:#111;margin-bottom:15px" id="adUpiText">UPI: -----</div>
-      <div style="font-size:11px;margin-bottom:5px;color:#c77c00;font-weight:700">Enter UTR OR Upload Screenshot</div>
-      <input type="text" id="adUtrInput" class="auth-input" placeholder="12-Digit UTR Number" style="background:#f0f0f0;margin-bottom:10px;color:#000;padding-left:15px">
-      <input type="file" id="adFileInput" class="auth-input" accept="image/*" style="background:#f0f0f0;margin-bottom:10px;color:#000;padding-top:10px;padding-left:15px">
-    </div>
-    <button class="btn-main" id="adSubmitBtn" style="margin-bottom:10px;background:var(--success)" onclick="submitAirdropPayment()">Claim Offer</button>
-    <button class="btn-outline" style="border-color:rgba(255,255,255,.3);color:#fff" onclick="closeModal('airdropModal')">Close</button>
-  </div>
-</div>
 
 <!-- Emoji / avatar -->
 <div id="emojiModal" class="modal-overlay">
@@ -1161,14 +1134,6 @@ window.setSplashLogo(window.SPLASH_LOGO);
   </div>
 </div>
 
-<!-- Global chat -->
-<div id="globalChatModal" class="modal-overlay">
-  <div class="modal-content" style="height:85vh;padding:0">
-    <div style="padding:15px 20px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center"><h3><i class="fa-solid fa-globe"></i> Global Chat</h3><i class="fa-solid fa-xmark" style="font-size:20px;cursor:pointer" onclick="closeModal('globalChatModal')"></i></div>
-    <div class="chat-messages" id="globalChatMsgContainer"></div>
-    <div class="chat-input-area"><input type="text" id="gChatInput" class="auth-input" placeholder="Type a message..." style="padding-left:15px;border-radius:20px 0 0 20px;border-right:none"><button class="btn-main" style="width:auto;padding:0 20px;border-radius:0 20px 20px 0" onclick="sendToGlobalChat()"><i class="fa-solid fa-paper-plane"></i></button></div>
-  </div>
-</div>
 
 <!-- DM -->
 <div id="dmModal" class="modal-overlay">
@@ -1284,7 +1249,6 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <div class="tab-btn active" id="mTabDetailsBtn" onclick="switchMatchModalTab('Details')" style="border-radius:0;padding:12px 0;font-size:11px">Details</div>
       <div class="tab-btn" id="mTabPlayersBtn" onclick="switchMatchModalTab('Players')" style="border-radius:0;padding:12px 0;font-size:11px">Players</div>
       <div class="tab-btn" id="mTabRulesBtn" onclick="switchMatchModalTab('Rules')" style="border-radius:0;padding:12px 0;font-size:11px">Rules</div>
-      <div class="tab-btn" id="mTabChatBtn" onclick="switchMatchModalTab('Chat')" style="border-radius:0;padding:12px 0;font-size:11px;display:none">Chat <i class="fa-solid fa-lock" style="font-size:9px;color:var(--primary-red)" id="chatLockIcon"></i></div>
     </div>
     <div id="mTabDetails" style="padding:20px;overflow-y:auto;flex:1">
       <h3 id="mModalName" style="margin-bottom:5px">Match Name</h3>
@@ -1310,7 +1274,6 @@ window.setSplashLogo(window.SPLASH_LOGO);
     </div>
     <div id="mTabPlayers" style="display:none;padding:20px;overflow-y:auto;flex:1"></div>
     <div id="mTabRules" style="display:none;padding:20px;overflow-y:auto;flex:1"><h3 style="margin-bottom:15px"><i class="fa-solid fa-scroll"></i> Match Rules</h3><div style="font-size:12px;color:var(--text-sub);line-height:1.6;white-space:pre-wrap" id="mModalRules">Rules here...</div></div>
-    <div id="mTabChat" style="display:none;flex:1;flex-direction:column;overflow:hidden;height:340px"><div class="chat-messages" id="chatMsgContainer"></div><div class="chat-input-area"><input type="text" id="chatInput" class="auth-input" placeholder="Type a message..." style="padding-left:15px;border-radius:20px 0 0 20px;border-right:none"><button class="btn-main" style="width:auto;padding:0 20px;border-radius:0 20px 20px 0" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button></div></div>
   </div>
 </div>
 
@@ -1571,7 +1534,7 @@ try {
 } catch(e) { const s=document.getElementById('splashStatus'); if(s) s.innerText='Unable to start Firebase'; }
 
 window.currentUser=null; window.userData=null; window.appSettings={pricing:{}}; window.appSocials={}; window.allTournaments=[]; window.selectedMatch=null; window.selectedSlots=[];
-let chatUnsubscribe=null, countdownInterval=null, gChatUnsub=null, scheduleInterval=null, adTimerInt=null, dmChatUnsub=null;
+let countdownInterval=null, scheduleInterval=null, dmChatUnsub=null;
 window.notifsEnabled=true; window.allUserTxns=[]; window.lastChatTime=0;
 
 const EMOJI_LIST=["👦","👧","👨","👩","🧔","👱‍♂️","🧑‍🦰","👮‍♂️","🕵️‍♂️","💂‍♂️","👷‍♂️","🤴","🧛‍♂️","🧟‍♂️","🦸‍♂️","🦹‍♂️","🧙‍♂️","🧚‍♂️","👼","👽","🤖","🤡","👹","👺","👻","💀","☠️","🐵","🦍","🐶","🐺","🦊","🦁","🐯","🐴"];
@@ -1592,14 +1555,15 @@ window.alert=function(m){showToast(m,false)};
 window.openModal=id=>{const e=document.getElementById(id); if(e) e.style.display='flex';};
 window.closeModal=id=>{
   const e=document.getElementById(id); if(e) e.style.display='none';
-  if(id==='matchModal'){ if(chatUnsubscribe){chatUnsubscribe();chatUnsubscribe=null;} if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null;} setTxt('joinErrorMsg',""); }
+  if(id==='matchModal'){ if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null;} setTxt('joinErrorMsg',""); }
   if(id==='dmModal' && dmChatUnsub){dmChatUnsub();dmChatUnsub=null;}
-  if(id==='globalChatModal' && gChatUnsub){gChatUnsub();gChatUnsub=null;}
 };
 window.copyToClipboard=t=>{navigator.clipboard.writeText(t).then(()=>showToast("Copied!")).catch(()=>showToast("Failed to copy",true));};
 /* ===== Cache: banners/games ka data (localStorage) + images (IndexedDB). Ek baar download, phir device se ===== */
 window.__lsGet=function(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } };
 window.__lsSet=function(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+window.__fetchGames=async function(){ if(sbOn()) return (await sbRpc('app_games')).map(x=>x.data); const s=await db.collection("admin_games").get(); return s.docs.map(d=>d.data()); };
+window.__fetchBanners=async function(){ if(sbOn()) return (await sbRpc('app_banners')).map(x=>x.data); const s=await db.collection("admin_banners").get(); const a=[]; s.forEach(d=>a.push(d.data())); return a; };
 (function(){
   const DBN='cx_imgcache_v1', ST='imgs', MAX_ITEMS=80, MAX_BYTES=1000000, MAX_AGE=30*864e5, FAIL_KEY='cx_imgfail_v1', FAIL_AGE=7*864e5;
   const mem=new Map(), pending=new Set(); let dbp=null;
@@ -1873,7 +1837,7 @@ window.refreshData=async function(){
         return;
       }
       const key=window.currentUser.uid+'|'+tk; if(key===lastKey) return;
-      await db.collection('users').doc(window.currentUser.uid).update({fcmToken:tk,fcmUpdatedAt:new Date()});
+      if(sbOn()) await db.collection('users').doc(window.currentUser.uid).set({fcmToken:tk,fcmUpdatedAt:new Date()},{merge:true}); else await db.collection('users').doc(window.currentUser.uid).update({fcmToken:tk,fcmUpdatedAt:new Date()});
       lastKey=key;
       try{ if(!localStorage.getItem('fcmShown')){ localStorage.setItem('fcmShown','1'); showToast('Notifications enabled'); } }catch(e){}
     }catch(e){
@@ -1902,7 +1866,7 @@ function updateHeaderAvatar(){
 
 /* ---------- Schedule ---------- */
 function listenToAppSchedule(){
-  db.collection("settings").doc("appStatus").onSnapshot((snap)=>{
+  const _onSnap=(snap)=>{
     const overlay=document.getElementById('appScheduleOverlay');
     if(!snap.exists){overlay.style.display='none';return;}
     const d=snap.data(); if(scheduleInterval) clearInterval(scheduleInterval);
@@ -1925,7 +1889,15 @@ function listenToAppSchedule(){
       };
       upd(); scheduleInterval=setInterval(upd,1000);
     }
-  },()=>{document.getElementById('appScheduleOverlay').style.display='none';});
+  };
+  const _onErr=()=>{document.getElementById('appScheduleOverlay').style.display='none';};
+  if(sbOn()){
+    const pull=async()=>{ try{ const v=await sbRpc('cfg_get',{p_key:'appStatus'}); _onSnap(v?{exists:true,data:()=>v}:{exists:false}); }catch(e){} };
+    pull();
+    try{ if(window.__statusCh) window.sbx.removeChannel(window.__statusCh); window.__statusCh=window.sbx.channel('app_status_ch').on('postgres_changes',{event:'*',schema:'public',table:'app_settings',filter:'key=eq.appStatus'},()=>{ pull(); }).subscribe(); }catch(e){}
+    return;
+  }
+  db.collection("settings").doc("appStatus").onSnapshot(_onSnap,_onErr);
 }
 
 /* ---------- Splash safety ---------- */
@@ -1956,7 +1928,9 @@ window.finishSplash=(status)=>{
 /* ---------- Config ---------- */
 async function fetchAppConfig(){
   try{
-    const g=await db.collection("settings").doc("general").get();
+    let _cfg=null; if(sbOn()){ try{ _cfg=await sbRpc('app_config'); }catch(e){ _cfg=null; } }
+    const gdoc=async n=>{ if(_cfg){ const v=_cfg[n]; return v?{exists:true,data:()=>v}:{exists:false,data:()=>undefined}; } return db.collection("settings").doc(n).get(); };
+    const g=await gdoc("general");
     if(g.exists){
       window.appSettings={...window.appSettings,...g.data()}; const d=window.appSettings;
       if(d.latestVersion && d.latestVersion>APP_VERSION) document.getElementById('forceUpdateModal').style.display='flex';
@@ -1969,13 +1943,13 @@ async function fetchAppConfig(){
         const fw=document.getElementById('floatingWa'); if(fw){fw.href=`https://wa.me/${wa}?text=${encodeURIComponent("Hi Sir, I am a player on "+(d.appName||"App")+". I need some support.")}`; fw.style.display='flex';}
       }
     }
-    const w=await db.collection("settings").doc("withdrawLimits").get(); if(w.exists){window.appSettings.widMin=w.data().min; window.appSettings.widMax=w.data().max;}
-    const s=await db.collection("settings").doc("socials").get(); if(s.exists){window.appSocials=s.data();}
-    const r=await db.collection("settings").doc("referral").get(); if(r.exists){window.appSettings.referralBonus=r.data().bonusAmount;}
-    const p=await db.collection("settings").doc("pricing").get(); window.appSettings.pricing=p.exists?p.data():{};
+    const w=await gdoc("withdrawLimits"); if(w.exists){window.appSettings.widMin=w.data().min; window.appSettings.widMax=w.data().max;}
+    const s=await gdoc("socials"); if(s.exists){window.appSocials=s.data();}
+    const r=await gdoc("referral"); if(r.exists){window.appSettings.referralBonus=r.data().bonusAmount;}
+    const p=await gdoc("pricing"); window.appSettings.pricing=p.exists?p.data():{};
   }catch(e){ const s=document.getElementById('splashStatus'); if(s) s.innerText='Offline mode — continuing…'; }
 }
-fetchAppConfig();
+setTimeout(fetchAppConfig,0);   // script ke end me chale (Supabase ka switch tab tak ban chuka hota hai)
 
 window.openAppTutorial=()=>{
   const link=window.appSettings?.tutorialLink||window.appSettings?.tutorialUrl;
@@ -1987,7 +1961,7 @@ window.openAllCategories=async()=>{
   setHtml('catMatchesContainer','<div class="cat-grid" id="allCategoryGrid">'+'<div class="sk-shim sk-tile"></div>'.repeat(9)+'</div>');
   const grid=document.getElementById('allCategoryGrid');
   try{
-    let snap; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(gc&&Date.now()-gc.t<3600000){ snap={docs:gc.a.map(x=>({data:()=>x}))}; } else { snap=await db.collection("admin_games").get(); window.__gamesCache={t:Date.now(),a:snap.docs.map(d=>d.data())}; window.__lsSet('cx_games_v1',window.__gamesCache); } } let h='';
+    let snap; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(gc&&Date.now()-gc.t<3600000){ snap={docs:gc.a.map(x=>({data:()=>x}))}; } else { const _ga=await window.__fetchGames(); snap={docs:_ga.map(x=>({data:()=>x}))}; window.__gamesCache={t:Date.now(),a:_ga}; window.__lsSet('cx_games_v1',window.__gamesCache); } } let h='';
     const gl=snap.docs.map(d=>d.data()).sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority));
     gl.forEach(x=>{h+=`<div class="cat-tile" onclick="openCategory('${String(x.name||'').replace(/'/g,"\\'")}')"><img src="${window.__imgSrc(x.url)}" alt="${x.name||''}"></div>`;});
     grid.innerHTML=h||'<div class="loader" style="grid-column:1/-1">No tournaments available.</div>';
@@ -2027,6 +2001,7 @@ window.getDeviceInfo=async()=>{
 };
 // returns '' | 'banned' | 'dup'
 window.deviceCheck=async(dev,uid,checkDup)=>{
+  if(typeof sbOn==='function' && sbOn() && !checkDup){ try{ return (await sbRpc('rpc_device_banned',{p_id:dev.deviceId,p_fp:dev.deviceFp}))?'banned':''; }catch(e){ console.warn('sb device check fail',e); return ''; } }
   try{
     for(const k of [dev.deviceId,dev.deviceFp]){ const d=await db.collection('bannedDevices').doc(k).get(); if(d.exists && d.data().banned!==false) return 'banned'; }
   }catch(e){}
@@ -2117,6 +2092,7 @@ function applyLiveUserData(data, uid){
 function startLiveUserSync(uid){
   if(window.__userDocUnsub){ try{window.__userDocUnsub();}catch(e){} window.__userDocUnsub=null; }
   if(!db || !uid) return;
+  if(window.USE_SUPABASE_USER && window.sbx){ startSbUserSync(uid); return; }
   window.__userDocUnsub = db.collection('users').doc(uid).onSnapshot(snap=>{
     if(!snap.exists) return;
     const data = snap.data() || {};
@@ -2130,13 +2106,9 @@ function startLiveStatusListener(){
   window.__fsOverlay = window.__fsOverlay || {};
   let first = true;
   const apply = (id,d)=>{
-    window.__fsOverlay[id] = {status:d.status, time:d.time, joinedUsers:Array.isArray(d.joinedUsers)?d.joinedUsers:undefined};
+    window.__fsOverlay[id] = {status:d.status, time:d.time};
     const m=(window.allTournaments||[]).find(x=>x.id===id);
-    if(m){
-      if(d.status) m.status=d.status; if(d.time!==undefined) m.time=d.time;
-      if(Array.isArray(d.joinedUsers)){ if((m.joinedUsers||[]).length!==d.joinedUsers.length) window.__joinFixed=true; m.joinedUsers=d.joinedUsers; }   // slots (1/2 vs full) Firestore ke hisaab se
-      return true;
-    }
+    if(m){ if(d.status) m.status=d.status; if(d.time!==undefined) m.time=d.time; return true; }
     return false;
   };
   let t=null; const refresh=()=>{ clearTimeout(t); t=setTimeout(async()=>{
@@ -2144,30 +2116,16 @@ function startLiveStatusListener(){
     try{ _tourneyAt=0; await loadHomeData(); }catch(e){}
     try{ window.__catRefreshIfChanged&&window.__catRefreshIfChanged(); }catch(e){}
   },400); };
-  /* STALE FIX: Supabase me purana (Firestore se delete ho chuka) match reh gaya ho to app use khud hata de + Supabase se bhi purge karwa de */
-  window.__goneIds = window.__goneIds || new Set();
-  window.__reconcileStale = function(arr){
+  if(sbOn()){          // Supabase mode: status badalte hi ek chhota signal (match_pulse) aata hai -> turant taaza lista
     try{
-      const live = window.__fsLiveIds; if(!live || !Array.isArray(arr)) return;
-      const chk = window.__recChecked = window.__recChecked || new Set();
-      arr.filter(m=>/^(upcoming|ongoing)$/i.test(String(m.status||'')) && !live.has(m.id) && !chk.has(m.id) && !window.__goneIds.has(m.id)).slice(0,10).forEach(m=>{
-        chk.add(m.id);
-        db.collection('tournaments').doc(m.id).get().then(s=>{
-          if(s.exists){ apply(s.id,s.data()); refresh(); }          // match hai, bas status purana tha
-          else {                                                    // Firestore me nahi hai = delete ho chuka
-            window.__goneIds.add(m.id);
-            window.allTournaments=(window.allTournaments||[]).filter(x=>x.id!==m.id);
-            try{ syncMatchNow(m.id); }catch(e){}                    // server Supabase se bhi hata dega
-            refresh();
-          }
-        }).catch(()=>{});
-      });
-    }catch(e){}
-  };
+      const ch=window.sbx.channel('match_pulse_ch').on('postgres_changes',{event:'*',schema:'public',table:'match_pulse'},()=>{ refresh(); }).subscribe();
+      window.__statusUnsub=()=>{ try{ window.sbx.removeChannel(ch); }catch(e){} };
+    }catch(e){ window.__statusUnsub=null; }
+    return;
+  }
   try{
     window.__statusUnsub = db.collection('tournaments').where('status','in',['Upcoming','Ongoing']).onSnapshot(snap=>{
-      window.__fsLiveIds = new Set(snap.docs.map(d=>d.id));
-      if(first){ first=false; window.__joinFixed=false; snap.docs.forEach(x=>apply(x.id,x.data())); window.__reconcileStale(window.allTournaments); if(window.__joinFixed){ window.__joinFixed=false; refresh(); } return; }   // pehla snapshot sirf baseline hai
+      if(first){ first=false; return; }   // pehla snapshot sirf baseline hai
       let changed=false;
       snap.docChanges().forEach(ch=>{
         const d=ch.doc.data();
@@ -2189,6 +2147,22 @@ function startBackgroundRefresh(){
   }, 30000);
 }
 
+/* ---------- App wapas khulte hi / net aate hi matches turant taaza (purana Upcoming dikhna band) ---------- */
+(function(){
+  let busy=false;
+  const nowRefresh=async()=>{
+    if(busy||document.hidden||!window.currentUser) return;
+    const m=document.getElementById('mainApp'); if(!m||m.style.display==='none') return;
+    busy=true;
+    try{ _tourneyAt=0; await loadHomeData(); }catch(e){}
+    try{ window.__catRefreshIfChanged&&window.__catRefreshIfChanged(); }catch(e){}
+    busy=false;
+  };
+  document.addEventListener('visibilitychange',nowRefresh);
+  window.addEventListener('online',nowRefresh);
+  window.addEventListener('pageshow',nowRefresh);
+})();
+
 /* ---------- Auth state ---------- */
 window.__registering=false; window.__regResolve=null; window.__regPromise=Promise.resolve();
 if(!auth){
@@ -2199,9 +2173,11 @@ if(!auth){
   if(user && window.__registering){ try{ await window.__regPromise; }catch(e){} }
   if(user){
     window.currentUser=user;
+    if(window.USE_SUPABASE_USER){ try{ await Promise.race([ensureSupabaseClaim(user), new Promise(r=>setTimeout(r,6000))]); }catch(e){} } else ensureSupabaseClaim(user);   // Supabase mode: pehle claim, tabhi data Supabase se
     try{ localStorage.setItem('msz_session','1'); }catch(e){}
     try{ const dev=await getDeviceInfo(); const chk=await deviceCheck(dev,user.uid,false);
       if(chk==='banned'){ await auth.signOut(); showToast('Your device is banned. Please contact admin.',true); return; }
+      if(sbOn()){ sbRpc('rpc_touch_login',{p_dev:{deviceId:dev.deviceId,deviceFp:dev.deviceFp,deviceInfo:dev.deviceInfo}}).catch(()=>{}); } else
       db.collection('users').doc(user.uid).set({deviceId:dev.deviceId,deviceFp:dev.deviceFp,deviceInfo:dev.deviceInfo,lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(()=>{});
     }catch(e){}
     try{ await Promise.race([loadUserProfile(user.uid), new Promise(r=>setTimeout(r,6500))]); }catch(e){}
@@ -2211,7 +2187,7 @@ if(!auth){
     window.finishSplash('');
     document.getElementById('authScreen').style.display='none'; document.querySelectorAll('#authScreen .au-pg').forEach(x=>x.classList.remove('on')); auStop();
     document.getElementById('mainApp').style.display='block';
-    listenToAppSchedule(); loadHomeData(); await loadUserTransactions(); loadReferralHistory(); renderSocials(); checkAirdrop();
+    listenToAppSchedule(); loadHomeData(); await loadUserTransactions(); loadReferralHistory(); renderSocials();
     if(window.appSettings?.whatsapp){ let wn=window.appSettings.whatsapp.toString().trim(); if(wn.length===10) wn="91"+wn; const fw=document.getElementById('floatingWa'); if(fw) fw.href=`https://wa.me/${wn}?text=${encodeURIComponent("Hi Sir, my UID is: "+user.uid.substring(0,8).toUpperCase())}`; }
   }else{
     if(window.__userDocUnsub){ try{window.__userDocUnsub();}catch(e){} window.__userDocUnsub=null; }
@@ -2222,7 +2198,6 @@ if(!auth){
     document.getElementById('mainApp').style.display='none';
     document.getElementById('appScheduleOverlay').style.display='none';
     showAuth();
-    if(adTimerInt) clearInterval(adTimerInt);
   }
 });
 window.logoutUser=async()=>{ if(confirm("Logout from App?")) await auth.signOut(); };
@@ -2246,14 +2221,23 @@ window.registerUser=async()=>{
   if(btn){btn.innerText='Creating...'; btn.disabled=true;}
   let createdUser=null;
   try{
-    const uq=await db.collection('users').where('usernameLower','==',ffName.toLowerCase()).limit(1).get();
-    if(!uq.empty){ showLogoToast('Username already exists'); if(btn){btn.innerText='SIGNUP'; btn.disabled=false;} return; }
+    const uTaken=(typeof sbOn==='function'&&sbOn()) ? !!(await sbRpc('rpc_username_taken',{p_name:ffName})) : !(await db.collection('users').where('usernameLower','==',ffName.toLowerCase()).limit(1).get()).empty;
+    if(uTaken){ showLogoToast('Username already exists'); if(btn){btn.innerText='SIGNUP'; btn.disabled=false;} return; }
   }catch(e){ console.warn('username check skipped',e); }
   window.__registering=true; window.__regPromise=new Promise(r=>{window.__regResolve=r;});
   try{
     const cred=await auth.createUserWithEmailAndPassword(email,pass); createdUser=cred.user; const uid=createdUser.uid;
     const dev=await getDeviceInfo(); const dchk=await deviceCheck(dev,uid,false);
     if(dchk){ try{ await createdUser.delete(); }catch(e){ try{ await auth.signOut(); }catch(e2){} } createdUser=null; const er=new Error(dchk==='banned'?'This device is banned. Please contact admin.':'Account registration is restricted only if this device is banned.'); er.code='msz/device'; throw er; }
+    if(sbOn()){
+      await ensureSupabaseClaim(createdUser);
+      try{ await sbRpc('rpc_register',{p:{ffName,email,firstName:first,lastName:last,mobile:mobile?(code+mobile):'',synthetic:!!synthetic,deviceId:dev.deviceId,deviceFp:dev.deviceFp,deviceInfo:dev.deviceInfo,refCode:refCode||'',refCodeRaw:refCodeRaw||''}}); }
+      catch(e){
+        if(/username exists/i.test(e.message||'')){ try{ await createdUser.delete(); }catch(e2){ try{ await auth.signOut(); }catch(e3){} } createdUser=null; showLogoToast('Username already exists'); return; }
+        if(/device banned/i.test(e.message||'')){ try{ await createdUser.delete(); }catch(e2){ try{ await auth.signOut(); }catch(e3){} } createdUser=null; const er=new Error('This device is banned. Please contact admin.'); er.code='msz/device'; throw er; }
+        throw e;
+      }
+    }else{
     let signupBonus=Number(window.appSettings?.signupBonus||0); if(!Number.isFinite(signupBonus)||signupBonus<0) signupBonus=0;
     let prefix='APP'; if(window.appSettings?.appName){const c=String(window.appSettings.appName).replace(/\s+/g,'').toUpperCase(); if(c) prefix=c.substring(0,4);}
     const myRef=prefix+Math.floor(Math.random()*9000+1000);
@@ -2270,6 +2254,7 @@ window.registerUser=async()=>{
           await db.collection('referrals').add({referrerUid:r.id,referrerName:r.data().ffName||'',referrerEmail:r.data().email||'',refereeUid:uid,refereeName:ffName,refereeEmail:email,code:refCodeRaw,status:'Pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         }
       }catch(e){ console.error('referral create failed',e); }
+    }
     }
     showToast('Account created successfully!');
   }catch(e){
@@ -2296,7 +2281,7 @@ window.loginUser=async()=>{
     catch(e1){
       const c1=e1?.code||'';
       if(!id.includes('@') && (c1==='auth/user-not-found'||c1==='auth/invalid-credential'||c1==='auth/invalid-login-credentials')){
-        let real=''; try{ const q=await db.collection('users').where('usernameLower','==',id.toLowerCase()).limit(1).get(); if(!q.empty) real=q.docs[0].data().email||''; }catch(e2){}
+        let real=''; try{ if(sbOn()){ real=(await sbRpc('rpc_login_email',{p_name:id}))||''; } else { const q=await db.collection('users').where('usernameLower','==',id.toLowerCase()).limit(1).get(); if(!q.empty) real=q.docs[0].data().email||''; } }catch(e2){}
         if(real&&real!==email){ await auth.signInWithEmailAndPassword(real,pass); } else throw e1;
       } else throw e1;
     }
@@ -2325,12 +2310,14 @@ function getMyLevelRank(){
 }
 async function checkAndResetMonthlyRank(uid,data){
   const cm=new Date().getMonth();
+  if(data.lastRankMonth!==cm && sbOn()){ try{ await sbRpc('rpc_rank_reset'); }catch(e){} data.currentMonthWinnings=0; data.lastRankMonth=cm; return; }
   if(data.lastRankMonth!==cm){ await db.collection("users").doc(uid).update({currentMonthWinnings:0,lastRankMonth:cm}); data.currentMonthWinnings=0; data.lastRankMonth=cm; }
 }
 
 async function loadUserProfile(uid){
   try{
-    const s=await db.collection("users").doc(uid).get();
+    let sbd=null; if(window.USE_SUPABASE_USER && window.sbx){ sbd=await sbFetchUser(uid); }
+    const s = sbd ? {exists:true, data:()=>sbd} : await db.collection("users").doc(uid).get();
     if(s.exists){
       window.userData=s.data();
       if(isBlockedUser(window.userData)){ window.__blockedNow=true; await auth.signOut(); window.userData=null; showBlockedToast(); setTimeout(showBlockedToast,600); return; }
@@ -2351,7 +2338,7 @@ async function loadUserProfile(uid){
       const email=(u.email||'').toLowerCase(); const ffName=(email.split('@')[0]||'Player');
       let prefix='APP'; if(window.appSettings?.appName){const c=String(window.appSettings.appName).replace(/\s+/g,'').toUpperCase(); if(c) prefix=c.substring(0,4);}
       const profile={ffName,email,wallets:{winning:0,deposit:0,bonus:0},purchasedItems:[],purchasedItemExpiries:{},status:'Active',myReferralCode:prefix+Math.floor(Math.random()*9000+1000),avatar:'',notifOn:true,createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastRankMonth:new Date().getMonth(),currentMonthWinnings:0};
-      try{ await db.collection("users").doc(uid).set(profile); return loadUserProfile(uid); }
+      try{ if(sbOn()){ await ensureSupabaseClaim(u); await sbRpc('rpc_register',{p:{email}}); } else await db.collection("users").doc(uid).set(profile); return loadUserProfile(uid); }
       catch(e){ showToast('Profile setup failed. Please try again.',true); await auth.signOut(); }
     }
   }catch(e){}
@@ -2377,7 +2364,9 @@ function calculateProfileStats(){
 
 window.claimLevelBonus=async(lv)=>{
   try{
-    const reward=lv*5; const claimed=window.userData.claimedLevels||[]; claimed.push(lv);
+    const reward=lv*5;
+    if(sbOn()){ await sbRpc('rpc_level_bonus',{p_lv:lv}); showToast(`₹${reward} Level Bonus Claimed!`); closeModal('levelModal'); await loadUserProfile(window.currentUser.uid); return; }
+    const claimed=window.userData.claimedLevels||[]; claimed.push(lv);
     await db.collection("users").doc(window.currentUser.uid).update({"wallets.bonus":firebase.firestore.FieldValue.increment(reward),claimedLevels:claimed});
     await db.collection("transactions").add({userId:window.currentUser.uid,type:"Level Bonus",desc:`Reached Level ${lv+1}`,amount:reward,status:"Success",date:new Date()});
     showToast(`₹${reward} Level Bonus Claimed!`); closeModal('levelModal'); await loadUserProfile(window.currentUser.uid);
@@ -2405,9 +2394,11 @@ window.buyStoreItem=async(key)=>{
   else if(key==='blue_tick'){price=p.itemTick||20;name="Blue Tick";}
   else if(key==='avatar_upload'){price=p.itemAvatar||15;name="Avatar Upload";}
   const wWin=Number(window.userData.wallets?.winning||0), wDep=Number(window.userData.wallets?.deposit||0);
-  if((wWin+wDep)<price) return showToast("Insufficient Wallet Balance!",true);
+  if(sbOn() && wDep<0) return showToast(SB_DUES_MSG,true);
+  if((sbOn()?sbSpend(wDep,wWin):(wWin+wDep))<price) return showToast("Insufficient Wallet Balance!",true);
   if(confirm(`Buy ${name} for ₹${price}?`)){
     try{
+      if(sbOn()){ await sbRpc('rpc_buy_store',{p_key:key}); showToast(`${name} Activated!`); closeModal('vipModal'); await loadUserProfile(window.currentUser.uid); return; }
       let nd=wDep,nw=wWin,rem=price; if(nd>=rem){nd-=rem;rem=0;}else{rem-=nd;nd=0;} if(rem>0) nw-=rem;
       const up={"wallets.deposit":nd,"wallets.winning":nw};
       if(vip){const days=key==='vip_weekly'?7:30; const e=new Date(); e.setDate(e.getDate()+days); up.vipExpiry=e.toISOString();}
@@ -2415,7 +2406,7 @@ window.buyStoreItem=async(key)=>{
       await db.collection("users").doc(window.currentUser.uid).update(up);
       await db.collection("transactions").add({userId:window.currentUser.uid,type:"Store Purchase",desc:`Purchased ${name}`,amount:price,status:"Success",date:new Date()});
       showToast(`${name} Activated!`); closeModal('vipModal'); await loadUserProfile(window.currentUser.uid);
-    }catch(e){showToast("Purchase Failed",true);}
+    }catch(e){showToast(sbOn()&&/dues/.test(String(e&&e.message))?SB_DUES_MSG:"Purchase Failed",true);}
   }
 };
 
@@ -2429,7 +2420,7 @@ window.uploadAvatar=async()=>{
   try{
     const fd=new FormData(); fd.append('image',file); const KEY="4d3486df57ed390c7ca337185635b11d";
     const res=await fetch(`https://api.imgbb.com/1/upload?key=${KEY}`,{method:'POST',body:fd}); const data=await res.json();
-    if(data.success){ const url=data.data.url; await db.collection("users").doc(window.currentUser.uid).update({avatar:url}); window.userData.avatar=url; setHtml('pAvatarIcon',`<img src="${url}">`); updateHeaderAvatar(); showToast("Profile Picture Updated!"); closeModal('emojiModal'); } else throw new Error();
+    if(data.success){ const url=data.data.url; if(sbOn()) await sbRpc('rpc_set_avatar',{p_url:url}); else await db.collection("users").doc(window.currentUser.uid).update({avatar:url}); window.userData.avatar=url; setHtml('pAvatarIcon',`<img src="${url}">`); updateHeaderAvatar(); showToast("Profile Picture Updated!"); closeModal('emojiModal'); } else throw new Error();
   }catch(e){showToast("Upload Failed!",true);}
   btn.innerHTML=`<i class="fa-solid fa-cloud-arrow-up"></i> Upload`; btn.disabled=false;
 };
@@ -2450,102 +2441,21 @@ window.sendDmMessage=async()=>{
   try{ await db.collection("direct_messages").add({uid:window.currentUser.uid,userEmail:window.userData.email,senderName:window.userData.ffName,senderType:'user',text:t,timestamp:new Date()}); inp.value=''; }catch(e){}
 };
 
-/* ---------- Airdrop ---------- */
-async function checkAirdrop(){
-  const btn=document.getElementById('floatingAirdrop'); if(!window.userData) return;
-  if(window.userData.activeAirdrop){
-    const exp=new Date(window.userData.activeAirdrop.expiresAt);
-    if(new Date()<exp){
-      try{
-        const s=await db.collection("airdrops").where("userId","==",window.currentUser.uid).where("offerType","==",window.userData.activeAirdrop.type).orderBy("createdAt","desc").limit(1).get();
-        if(!s.empty){
-          const st=s.docs[0].data().status;
-          if(st==='Pending'){btn.style.display='none';return;}
-          if(st==='Success'){ db.collection("users").doc(window.currentUser.uid).update({activeAirdrop:firebase.firestore.FieldValue.delete(),lastAirdropClaimed:new Date().toISOString()}); window.userData.activeAirdrop=null; btn.style.display='none'; return; }
-        }
-      }catch(e){}
-      startAirdropTimer(exp); btn.style.display='flex'; return;
-    }else{ db.collection("users").doc(window.currentUser.uid).update({activeAirdrop:firebase.firestore.FieldValue.delete()}); window.userData.activeAirdrop=null; }
-  }
-  btn.style.display='none';
-  const last=window.userData.lastAirdropClaimed?new Date(window.userData.lastAirdropClaimed):null;
-  if(!last||(Date.now()-last.getTime())>7*24*60*60*1000) generateAirdropOffer();
-}
-async function generateAirdropOffer(){
-  const r=Math.random()*100; let type='',title='',desc='',price=0,pay=false;
-  if(r<20){type='Deposit30';title='Deposit Offer';desc='Pay ₹30 and get ₹35 in Wallet!';price=30;pay=true;}
-  else if(r<30){type='Deposit50';title='Mega Deposit Offer';desc='Pay ₹50 and get ₹60 in Wallet!';price=50;pay=true;}
-  else if(r<60){
-    const items=[]; const pr=window.appSettings?.pricing||{};
-    if(!ownsItem('gold_crown')) items.push({key:'CrownDiscount',title:'Exclusive Crown (30% Off)',p:pr.itemCrown||20});
-    if(!ownsItem('blue_tick')) items.push({key:'TickDiscount',title:'Verified Tick (30% Off)',p:pr.itemTick||20});
-    if(!ownsItem('avatar_upload')) items.push({key:'AvatarDiscount',title:'Custom Avatar Unlock (30% Off)',p:pr.itemAvatar||15});
-    if(items.length){const s=items[Math.floor(Math.random()*items.length)]; type=s.key;title=s.title;price=Math.floor(s.p*.7);desc=`Get 1 Month access for just ₹${price}`;pay=true;}
-    else{type='FreeBonus';title='Lucky Bonus';desc='Claim ₹2 Free Bonus directly to wallet!';}
-  }
-  else if(r<80){type='FreeBonus';title='Lucky Bonus';desc='Claim ₹2 Free Bonus directly to wallet!';}
-  else{type='TryNext';title='Empty Drop';desc='Better luck next time. Check again later.';}
-  const expiry=new Date(Date.now()+3*24*60*60*1000);
-  const drop={type,title,desc,price,requirePay:pay,expiresAt:expiry.toISOString()};
-  try{
-    await db.collection("users").doc(window.currentUser.uid).update({activeAirdrop:drop});
-    window.userData.activeAirdrop=drop; document.getElementById('floatingAirdrop').style.display='flex';
-    startAirdropTimer(expiry); setupAirdropModal(drop); openModal('airdropModal');
-  }catch(e){}
-}
-function setupAirdropModal(d){
-  setTxt('adOfferTitle',d.title); setTxt('adOfferDesc',d.desc);
-  const pb=document.getElementById('adPaymentBox'); const sb=document.getElementById('adSubmitBtn');
-  if(d.requirePay){
-    pb.style.display='block'; if(sb) sb.innerText='Submit Payment Details';
-    setTxt('adUpiText',"UPI: "+(window.appSettings.upiId||"Not Set"));
-    const q=document.getElementById('adQrImg');
-    if(q&&window.appSettings.upiId){ const u=`upi://pay?pa=${window.appSettings.upiId}&pn=${encodeURIComponent(window.appSettings.appName||"App")}&am=${d.price}&cu=INR`; q.src=`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(u)}`; q.style.display='block'; }
-  }else{ pb.style.display='none'; if(sb) sb.innerText=d.type==='TryNext'?'OK':'Claim Offer'; }
-}
-function startAirdropTimer(exp){
-  if(adTimerInt) clearInterval(adTimerInt);
-  adTimerInt=setInterval(()=>{
-    const diff=exp-new Date();
-    if(diff<=0){ setTxt('airdropTimer',"EXPIRED"); setTxt('adFloatTimer',"EXPIRED"); document.getElementById('floatingAirdrop').style.display='none'; clearInterval(adTimerInt); if(window.currentUser) db.collection("users").doc(window.currentUser.uid).update({activeAirdrop:firebase.firestore.FieldValue.delete()}); }
-    else{ const h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000); const t=`${h}h ${m}m ${s}s`; setTxt('airdropTimer',`Expires in: ${t}`); setTxt('adFloatTimer',t); }
-  },1000);
-  if(window.userData.activeAirdrop) setupAirdropModal(window.userData.activeAirdrop);
-}
-window.submitAirdropPayment=async()=>{
-  const drop=window.userData.activeAirdrop; if(!drop) return;
-  const file=document.getElementById('adFileInput')?.files[0]; const utr=(document.getElementById('adUtrInput')?.value||"").trim();
-  if(drop.type==='FreeBonus'){
-    await db.collection("users").doc(window.currentUser.uid).update({"wallets.bonus":firebase.firestore.FieldValue.increment(2),activeAirdrop:firebase.firestore.FieldValue.delete(),lastAirdropClaimed:new Date().toISOString()});
-    await db.collection("transactions").add({userId:window.currentUser.uid,type:"Airdrop",desc:"Lucky Free Bonus",amount:2,status:"Success",date:new Date()});
-    showToast("₹2 Bonus Added!"); document.getElementById('floatingAirdrop').style.display='none'; clearInterval(adTimerInt); closeModal('airdropModal'); await loadUserProfile(window.currentUser.uid); return;
-  }
-  if(drop.type==='TryNext'){
-    await db.collection("users").doc(window.currentUser.uid).update({activeAirdrop:firebase.firestore.FieldValue.delete(),lastAirdropClaimed:new Date().toISOString()});
-    document.getElementById('floatingAirdrop').style.display='none'; clearInterval(adTimerInt); closeModal('airdropModal'); return;
-  }
-  if(!file&&!utr) return showToast("Provide Screenshot OR UTR number.",true);
-  const btn=document.getElementById('adSubmitBtn'); btn.innerText="Verifying..."; btn.disabled=true;
-  try{
-    let proof=utr,type='UTR';
-    if(file){ const fd=new FormData(); fd.append('image',file); const KEY="4d3486df57ed390c7ca337185635b11d"; const res=await fetch(`https://api.imgbb.com/1/upload?key=${KEY}`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){proof=data.data.url;type='Screenshot';} else throw new Error(); }
-    await db.collection("airdrops").add({userId:window.currentUser.uid,userEmail:window.userData.email,offerType:drop.type,amountPaid:drop.price,utr:proof,proofType:type,status:"Pending",createdAt:new Date()});
-    showToast("Airdrop Request Sent to Admin!"); document.getElementById('floatingAirdrop').style.display='none'; closeModal('airdropModal');
-  }catch(e){showToast("Error submitting request",true);}
-  btn.innerText="Submit Payment Details"; btn.disabled=false;
-};
-
 /* ---------- Profile edits ---------- */
 window.saveNewName=async()=>{ showToast("Profile details cannot be edited after registration.",true); };
 window.saveNewPassword=async()=>{
   const np=document.getElementById('newPassInput').value; if(np.length<6) return showToast("Password must be 6+ chars",true);
   const wDep=Number(window.userData.wallets?.deposit||0), wWin=Number(window.userData.wallets?.winning||0);
-  if((wDep+wWin)<10) return showToast("Insufficient balance for ₹10 fee",true);
+  if(sbOn() && wDep<0) return showToast(SB_DUES_MSG,true);
+  if((sbOn()?sbSpend(wDep,wWin):(wDep+wWin))<10) return showToast("Insufficient balance for ₹10 fee",true);
   try{
     await window.currentUser.updatePassword(np);
+    if(sbOn()){ await sbRpc('rpc_password_fee'); }
+    else{
     let nd=wDep,nw=wWin,rem=10; if(nd>=rem){nd-=rem;}else{rem-=nd;nd=0;nw-=rem;}
     await db.collection("users").doc(window.currentUser.uid).update({"wallets.deposit":nd,"wallets.winning":nw});
     await db.collection("transactions").add({userId:window.currentUser.uid,type:"Password Change Fee",desc:"Security update",amount:10,status:"Success",date:new Date()});
+    }
     showToast("Password Updated (₹10 deducted)!"); closeModal('passwordModal'); document.getElementById('newPassInput').value=''; await loadUserProfile(window.currentUser.uid); await loadUserTransactions();
   }catch(e){showToast("Error: Please Logout and Login again to change password.",true);}
 };
@@ -2583,6 +2493,101 @@ let _tourneyAt = 0, _tourneyUid = null, _tourneyP = null;
 window.__localJoins = window.__localJoins || {};   // matchId -> {t, players}
 function apiOn(){ return window.USE_SUPABASE_MATCHES && !/PASTE_/.test(window.MATCH_API||''); }
 function apiBase(){ return String(window.MATCH_API).replace(/\/$/,''); }
+/* ===== Supabase direct client (login Firebase se, data Supabase se). anon key public hoti hai; suraksha RLS se ===== */
+window.SUPABASE_URL = "https://ajpavrhczyzvjltvouxf.supabase.co";
+window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqcGF2cmhjenl6dmpsdHZvdXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MDAwMDcsImV4cCI6MjEwNzk3NjAwN30._pv6uWwsRVxSwveDQTKcGdRvsmG47lDr0R1v1GRmQgk";
+try{
+  if(window.supabase && window.supabase.createClient){
+    window.sbx = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+      accessToken: async()=>{ try{ return (auth && auth.currentUser) ? await auth.currentUser.getIdToken(false) : null; }catch(e){ return null; } }
+    });
+  }
+}catch(e){ console.warn('Supabase init fail', e); }
+async function ensureSupabaseClaim(user){        // Supabase ko role='authenticated' claim chahiye; na ho to ek baar lagwao
+  try{
+    const r = await user.getIdTokenResult();
+    if(r.claims && r.claims.role==='authenticated') return true;
+    const res = await fetch(apiBase()+'/ensure-claim',{method:'POST',headers:{Authorization:'Bearer '+r.token}});
+    if(!res.ok) return false;
+    await user.getIdToken(true);                  // naya token (claim ke saath)
+    return true;
+  }catch(e){ console.warn('ensure-claim fail', e); return false; }
+}
+
+/* ===== Supabase se user/wallet/history PADHNA (Step 4A). Master switch: false = sab kuch pehle jaisa (Firestore) ===== */
+window.USE_SUPABASE_USER = true;                  // cutover ke din hi true karenge (jab likhna bhi Supabase par ho jaye)
+function sbRevive(v){                              // {"__type":"timestamp","ms":..} -> Firestore Timestamp jaisa object
+  if(v===null||v===undefined) return v;
+  if(Array.isArray(v)) return v.map(sbRevive);
+  if(typeof v==='object'){
+    if(v.__type==='timestamp' && typeof v.ms==='number'){ const ms=v.ms; return { toMillis:()=>ms, toDate:()=>new Date(ms), seconds:Math.floor(ms/1000), nanoseconds:(ms%1000)*1e6 }; }
+    const o={}; for(const k of Object.keys(v)) o[k]=sbRevive(v[k]); return o;
+  }
+  return v;
+}
+const sbOn=()=>!!(window.USE_SUPABASE_USER && window.sbx);
+const SB_DUES_MSG="Pehle wallet ka minus (penalty) bharo - Deposit me paisa add karo.";
+const sbSpend=(wDep,wWin)=>wDep+Math.max(wWin,0);          // Supabase mode: winning ka minus deposit se nahi bharta
+async function sbRpc(name,args){ const {data,error}=await window.sbx.rpc(name,args||{}); if(error) throw new Error(error.message||'rpc failed'); return data; }
+function sbJoinMsg(e){ const t=String((e&&e.message)||''); const mp=[[/already started/,'This match has already started'],[/slot booked/,'Some positions were just booked. Please select again.'],[/slot limit/,'Slot limit per player reached in this match'],[/match full/,'Match is full'],[/dues/,SB_DUES_MSG],[/insufficient/,'Insufficient balance'],[/vip only/,'This is a VIP-only match'],[/not found/,'Match not found']]; for(const [r,m] of mp) if(r.test(t)) return m; return 'Network Error! Failed to join.'; }
+function sbJoinPlayers(slotInfo){ const vip=isVipNow(), cwn=ownsItem('gold_crown'), tk=ownsItem('blue_tick'); const lr=getMyLevelRank(); return slotInfo.map(x=>({userDocId:window.currentUser.uid,ffName:x.name,ffUid:x.uid,slot:x.slot,avatar:window.userData.avatar||'👦',joinedAt:new Date().toISOString(),vip,crown:cwn,tick:tk,level:lr.level,rank:lr.rank})); }
+function sbUserToData(row){                        // Supabase users row -> purane Firestore user doc jaisa object
+  const d = sbRevive(row.data)||{};
+  d.wallets = { winning:Number(row.wallet_winning)||0, deposit:Number(row.wallet_deposit)||0, bonus:Number(row.wallet_bonus)||0 };
+  if(row.status) d.status = row.status;
+  return d;
+}
+async function sbFetchUser(uid){                   // null = nahi mila / error (tab Firestore wala rasta chalega)
+  try{
+    const { data, error } = await window.sbx.from('users').select('*').eq('id', uid).maybeSingle();
+    if(error || !data) return null;
+    return sbUserToData(data);
+  }catch(e){ console.warn('sbFetchUser fail', e); return null; }
+}
+function startSbUserSync(uid){
+  const handle = (d)=>{
+    if(!d) return;
+    if(isBlockedUser(d) && auth?.currentUser?.uid === uid){ auth.signOut().catch(()=>{}); setTimeout(showBlockedToast,500); return; }
+    applyLiveUserData(d, uid);
+  };
+  const pull = async()=>{ handle(await sbFetchUser(uid)); };
+  pull();
+  try{
+    if(window.__sbUserCh){ try{ window.sbx.removeChannel(window.__sbUserCh); }catch(e){} }
+    window.__sbUserCh = window.sbx.channel('user-'+uid)
+      .on('postgres_changes',{ event:'*', schema:'public', table:'users', filter:'id=eq.'+uid }, p=>{ if(p.new && p.new.data) handle(sbUserToData(p.new)); })
+      .subscribe();
+  }catch(e){ console.warn('user realtime fail', e); }
+  if(window.__sbUserPoll) clearInterval(window.__sbUserPoll);
+  window.__sbUserPoll = setInterval(()=>{ if(document.visibilityState==='visible') pull(); }, 20000);   // realtime chhoote to bhi 20s me taaza
+  window.__userDocUnsub = ()=>{ try{ window.sbx.removeChannel(window.__sbUserCh); }catch(e){} if(window.__sbUserPoll){ clearInterval(window.__sbUserPoll); window.__sbUserPoll=null; } };
+}
+function txnStartSb(uid){                          // history: Supabase se, sabse naye N + realtime
+  const S=window.__txn;
+  if(S.uid===uid && S.p) return S.p;
+  window.__txnStop(); S.uid=uid;
+  const defs=[['ts','transactions','user_id',100],['ds','deposits','user_id',50],['ws','withdrawals','user_id',50],['rs','referrals','referrer_uid',50]];
+  S.p=(async()=>{
+    for(const [k,tbl,col,lim] of defs){
+      const { data, error } = await window.sbx.from(tbl).select('id,data').eq(col, uid).order('created_at',{ascending:false}).limit(lim);
+      if(error) throw error;
+      (data||[]).forEach(r=>S.maps[k].set(r.id, sbRevive(r.data)));
+      S.ready[k]=true;
+    }
+    let t=null; const rebuild=()=>{ if(t) clearTimeout(t); t=setTimeout(()=>{ t=null; if(S.uid!==uid) return; txnBuild(); renderTxnHistory(); txnNotif(true); },150); };
+    const ch = window.sbx.channel('txn-'+uid);
+    defs.forEach(([k,tbl,col])=>{
+      ch.on('postgres_changes',{ event:'*', schema:'public', table:tbl, filter:col+'=eq.'+uid }, p=>{
+        if(p.eventType==='DELETE'){ if(p.old && p.old.id) S.maps[k].delete(p.old.id); }
+        else if(p.new && p.new.id && p.new.data) S.maps[k].set(p.new.id, sbRevive(p.new.data));
+        rebuild();
+      });
+    });
+    ch.subscribe();
+    S.unsubs.push(()=>{ try{ window.sbx.removeChannel(ch); }catch(e){} });
+  })();
+  return S.p;
+}
 window.__noteLocalJoin = (matchId, players)=>{
   window.__localJoins[matchId] = { t: Date.now(), players };
   const uid = window.currentUser && window.currentUser.uid;
@@ -2591,6 +2596,7 @@ window.__noteLocalJoin = (matchId, players)=>{
 };
 async function syncMatchNow(matchId){
   try{
+    if(sbOn()) return;                    // Supabase mode: match seedha Supabase me hai, purani sync se overwrite nahi karni
     if(!apiOn() || !auth.currentUser) return;
     const tok = await auth.currentUser.getIdToken();
     await fetch(apiBase()+'/sync-match',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify({matchId})});
@@ -2627,10 +2633,8 @@ async function fetchAllTournaments(force){
       let arr = null;
       if(apiOn()){ try{ arr = await fetchMatchesFromApi(!!force); }catch(e){ console.warn('Matches API fail, Firestore fallback', e); } }
       if(!arr){ const ts = await db.collection("tournaments").get(); arr=[]; ts.forEach(d=>arr.push({id:d.id,...d.data()})); }
-      { const ov=window.__fsOverlay||{}; arr.forEach(m=>{ const o=ov[m.id]; if(o){ if(o.status) m.status=o.status; if(o.time!==undefined) m.time=o.time; if(o.joinedUsers) m.joinedUsers=o.joinedUsers; } }); }   // Firestore (asli source) ka live status API ke purane data par bhari
-      if(window.__goneIds && window.__goneIds.size) arr = arr.filter(m=>!window.__goneIds.has(m.id));   // delete ho chuke match wapas na aayein
+      { const ov=window.__fsOverlay||{}; arr.forEach(m=>{ const o=ov[m.id]; if(o){ if(o.status) m.status=o.status; if(o.time!==undefined) m.time=o.time; } }); }   // Firestore (asli source) ka live status API ke purane data par bhari
       window.allTournaments = arr; _tourneyAt = Date.now(); _tourneyUid = uid;
-      try{ window.__reconcileStale && window.__reconcileStale(arr); }catch(e){}
       return arr;
     } finally { _tourneyP = null; }
   })();
@@ -2639,7 +2643,7 @@ async function fetchAllTournaments(force){
 async function loadHomeData(force){
   try{
     try{ await window.__imgReady; }catch(e){}
-    let bs; { const bc=(window.__bannerCache=window.__bannerCache||window.__lsGet('cx_banners_v1')); if(bc&&Date.now()-bc.t<3600000){ bs={forEach:fn=>bc.a.forEach(x=>fn({data:()=>x}))}; } else { const _s=await db.collection("admin_banners").get(); const _a=[]; _s.forEach(d=>_a.push(d.data())); window.__bannerCache={t:Date.now(),a:_a}; window.__lsSet('cx_banners_v1',window.__bannerCache); bs=_s; } } let bh='',hb='';
+    let bs; { const bc=(window.__bannerCache=window.__bannerCache||window.__lsGet('cx_banners_v1')); if(bc&&Date.now()-bc.t<3600000){ bs={forEach:fn=>bc.a.forEach(x=>fn({data:()=>x}))}; } else { const _a=await window.__fetchBanners(); window.__bannerCache={t:Date.now(),a:_a}; window.__lsSet('cx_banners_v1',window.__bannerCache); bs={forEach:fn=>_a.forEach(x=>fn({data:()=>x}))}; } } let bh='',hb='';
     bs.forEach(d=>{ const x=d.data(); const c=x.link?`onclick="window.open('${x.link}','_blank')"`:'';
       bh+=`<div class="banner-card" style="background-image:url('${window.__imgSrc(x.url)}')" ${c}></div>`;
       hb+=`<div class="mr-card" ${c}><img src="${window.__imgSrc(x.url)}" alt=""></div>`; });
@@ -2882,11 +2886,9 @@ window.openCategory=(catName,keepTab)=>{
 
 window.switchMatchModalTab=(tab)=>{
   const m=window.selectedMatch;
-  if(tab==='Chat'&&m){ const j=m.joinedUsers?m.joinedUsers.some(u=>u.userDocId===window.currentUser.uid):false; if(!j) return showToast("Only players who joined can access Chat!",true); }
-  ['Details','Players','Rules','Chat'].forEach(t=>{ const b=document.getElementById(`mTab${t}Btn`); if(b) b.classList.remove('active'); const d=document.getElementById(`mTab${t}`); if(d) d.style.display='none'; });
+  ['Details','Players','Rules'].forEach(t=>{ const b=document.getElementById(`mTab${t}Btn`); if(b) b.classList.remove('active'); const d=document.getElementById(`mTab${t}`); if(d) d.style.display='none'; });
   const ab=document.getElementById(`mTab${tab}Btn`); if(ab) ab.classList.add('active');
-  const ad=document.getElementById(`mTab${tab}`); if(ad) ad.style.display=tab==='Chat'?'flex':'block';
-  if(tab==='Chat') loadMatchChat(m.id);
+  const ad=document.getElementById(`mTab${tab}`); if(ad) ad.style.display='block';
 };
 
 window.openMatchDetails=(mId,force)=>{
@@ -2894,7 +2896,7 @@ window.openMatchDetails=(mId,force)=>{
   if((m.status==='Ongoing'||m.status==='Upcoming')&&!force) return openOngoingScreen(mId);
   if(m.status==='Results'&&!force) return openResultScreen(mId);
   window.selectedMatch=m; window.selectedSlots=[]; setHtml('dynamicPlayerInputs',''); setTxt('mBtnFee','0'); setTxt('joinErrorMsg',"");
-  ['Details','Players','Rules','Chat'].forEach(t=>{ const b=document.getElementById(`mTab${t}Btn`); if(b) b.classList.remove('active'); const d=document.getElementById(`mTab${t}`); if(d) d.style.display='none'; });
+  ['Details','Players','Rules'].forEach(t=>{ const b=document.getElementById(`mTab${t}Btn`); if(b) b.classList.remove('active'); const d=document.getElementById(`mTab${t}`); if(d) d.style.display='none'; });
   document.getElementById('mTabDetailsBtn').classList.add('active'); document.getElementById('mTabDetails').style.display='block';
   setTxt('mModalName',m.name+(m.serial?` [#${m.serial}]`:'')); setTxt('mModalTime',new Date(m.time).toLocaleString());
   setTxt('mModalFee',"₹"+m.fee); setTxt('mModalPool',"₹"+m.pool); setTxt('mModalKill',"₹"+(m.perKill||0)); setTxt('mModalType',`${m.map} | ${m.type}`); setTxt('mModalRules',m.rules||"No specific rules provided by Admin.");
@@ -2911,7 +2913,7 @@ window.openMatchDetails=(mId,force)=>{
     });
   }else ph='<div style="padding:30px;text-align:center;color:var(--text-sub);font-size:12px">No players joined yet.</div>';
   setHtml('mTabPlayers',ph);
-  const joinSec=document.getElementById('mModalJoinSection'), roomSec=document.getElementById('mModalRoomSection'), chatBtn=document.getElementById('mTabChatBtn'), cd=document.getElementById('mModalCountdown');
+  const joinSec=document.getElementById('mModalJoinSection'), roomSec=document.getElementById('mModalRoomSection'), cd=document.getElementById('mModalCountdown');
   if(countdownInterval) clearInterval(countdownInterval);
   if(m.status==='Upcoming'){
     cd.style.display='block'; const mt=new Date(m.time).getTime();
@@ -2923,20 +2925,19 @@ window.openMatchDetails=(mId,force)=>{
     if(left<=0||!hasAccess){
       joinSec.style.display='none'; roomSec.style.display='block';
       roomSec.innerHTML=!hasAccess?`<div style="font-weight:700;color:#c9a100;font-size:14px"><i class="fa-solid fa-crown"></i> VIP ONLY MATCH</div>`:`<div style="font-weight:700;color:var(--primary-red);font-size:16px">MATCH IS FULL</div>`;
-      chatBtn.style.display='none';
     }else{
-      joinSec.style.display='block'; roomSec.style.display='none'; chatBtn.style.display='block'; document.getElementById('chatLockIcon').style.display='inline-block';
+      joinSec.style.display='block'; roomSec.style.display='none';
       let sh=''; for(let i=1;i<=m.max;i++){ const t=m.joinedUsers?m.joinedUsers.some(u=>Number(u.slot)===i):false; sh+=`<div class="slot-btn ${t?'booked':''}" onclick="selectSlot(${i},this)">${i}</div>`; }
       setHtml('mSlotGrid',sh);
     }
   }else{
     joinSec.style.display='none';
     if(isJoined){
-      chatBtn.style.display='block'; document.getElementById('chatLockIcon').style.display='none'; roomSec.style.display='block';
+      roomSec.style.display='block';
       roomSec.innerHTML=`<div style="font-size:11px;color:var(--success);margin-bottom:5px;font-weight:700">ROOM ID &amp; PASSWORD</div><div style="font-size:18px;font-family:monospace;font-weight:700;letter-spacing:2px;display:flex;justify-content:center;align-items:center;gap:10px" id="mShowRoomId"></div><div style="font-size:14px;font-family:monospace;color:#c77c00;margin-top:5px;display:flex;justify-content:center;align-items:center;gap:10px" id="mShowRoomPass"></div>`;
       if(m.publishRoom&&m.roomId){ setHtml('mShowRoomId',`ID: ${m.roomId} <i class="fa-solid fa-copy" style="cursor:pointer" onclick="copyToClipboard('${m.roomId}')"></i>`); setHtml('mShowRoomPass',`Pass: ${m.roomPass} <i class="fa-solid fa-copy" style="cursor:pointer" onclick="copyToClipboard('${m.roomPass}')"></i>`); }
       else{ setTxt('mShowRoomId',`You joined Slot(s) #${mySlots}`); setTxt('mShowRoomPass',"ID & Pass will be updated here."); }
-    }else{ chatBtn.style.display='none'; roomSec.style.display='none'; }
+    }else{ roomSec.style.display='none'; }
     if(m.status==='Results'){ roomSec.style.display='block'; setTxt('mShowRoomId',"Match Finished!"); setTxt('mShowRoomPass',"Check your Winning Wallet for prizes."); }
   }
   openModal('matchModal');
@@ -3015,10 +3016,21 @@ window.jmJoin=async()=>{
   for(const s of slots){ if(!J.info[s]) return showToast('Please add info for all selected positions',true); }
   const total=(Number(m.fee)||0)*slots.length;
   const wWin=Number(window.userData.wallets?.winning||0), wDep=Number(window.userData.wallets?.deposit||0), wBon=Number(window.userData.wallets?.bonus||0);
-  const bonusUse=Math.min(wBon,total*0.40); const remaining=total-bonusUse;
-  if((wWin+wDep)<remaining){ showToast(`Insufficient balance. You need at least ₹${remaining} in Deposit/Winning wallets.`,true); setTimeout(()=>{ closeJoinFlow(); closeCategoryScreen(); switchTab('Wallet'); },1800); return; }
+  const bonusUse=Math.min(sbOn()?Math.max(wBon,0):wBon,total*0.40); const remaining=total-bonusUse;
+  if(sbOn() && wDep<0){ showToast(SB_DUES_MSG,true); return; }
+  if((sbOn()?sbSpend(wDep,wWin):(wWin+wDep))<remaining){ showToast(`Insufficient balance. You need at least ₹${remaining} in Deposit/Winning wallets.`,true); setTimeout(()=>{ closeJoinFlow(); closeCategoryScreen(); switchTab('Wallet'); },1800); return; }
   const btn=document.getElementById('jmJoinBtn'); btn.disabled=true; btn.innerText='Joining...';
   try{
+    if(sbOn()){
+      const infoList=slots.map(slot=>({slot,name:J.info[slot].name,uid:J.info[slot].uid}));
+      try{ await sbRpc('rpc_join_match',{p_match:m.id,p_players:infoList.map(x=>({slot:x.slot,ffName:x.name,ffUid:x.uid}))}); }
+      catch(e){ showToast(sbJoinMsg(e),true); if(/already started|slot booked|match full/.test(String(e.message||''))){ closeJoinFlow(); await loadHomeData(true); if(window.__catMode) openCategory(window.__catName,true); } const b0=document.getElementById('jmJoinBtn'); if(b0){ b0.disabled=false; b0.innerText='Join'; } return; }
+      window.__noteLocalJoin(m.id,sbJoinPlayers(infoList));
+      showToast('Successfully Joined!'); closeJoinFlow();
+      await loadUserProfile(window.currentUser.uid); await loadHomeData(true); await loadUserTransactions();
+      if(window.__catMode) openCategory(window.__catName,true);
+      const b1=document.getElementById('jmJoinBtn'); if(b1){ b1.disabled=false; b1.innerText='Join'; } return;
+    }
     const fresh=await db.collection('tournaments').doc(m.id).get(); const fd=fresh.exists?fresh.data():m; const cur=fd.joinedUsers||[];
     if(fd.status&&fd.status!=='Upcoming'){ showToast('This match has already started',true); closeJoinFlow(); await loadHomeData(true); if(window.__catMode) openCategory(window.__catName,true); return; }
     if(slots.length>spLeft(fd,cur)){ showToast(`Max ${spLimit(fd)} slot per player allowed in this match`,true); closeJoinFlow(); return; }
@@ -3111,6 +3123,14 @@ window.__renderResultScreen=(m)=>{
 window.openResultScreen=async(mId)=>{
   if(window.__rsUnsub){ try{window.__rsUnsub();}catch(e){} window.__rsUnsub=null; }
   try{
+    if(sbOn()){
+      const {data:row,error:e0}=await window.sbx.from('matches').select('id,data').eq('id',mId).maybeSingle();
+      if(e0||!row) throw new Error('not found');
+      window.__renderResultScreen({id:row.id,...row.data});
+      const ch=window.sbx.channel('rs_'+mId).on('postgres_changes',{event:'UPDATE',schema:'public',table:'matches',filter:'id=eq.'+mId},p=>{ if(p.new&&p.new.data&&document.getElementById('resultScreen')?.classList.contains('show')) window.__renderResultScreen({id:p.new.id,...p.new.data}); }).subscribe();
+      window.__rsUnsub=()=>{ try{ window.sbx.removeChannel(ch); }catch(e){} };
+      return;
+    }
     const ref=db.collection('tournaments').doc(mId);
     const first=await ref.get(); if(!first.exists) return;
     window.__renderResultScreen({id:first.id,...first.data()});
@@ -3190,6 +3210,20 @@ window.openOngoingScreen=(mId)=>{
   ogTab('desc'); ogRender(m);
   const sc=document.getElementById('ongoingScreen'); sc.classList.add('show'); document.getElementById('ogScroll').scrollTop=0;
   if(window.__ogUnsub){ try{window.__ogUnsub();}catch(e){} window.__ogUnsub=null; }
+  if(sbOn()){
+    try{
+      const ch=window.sbx.channel('og_'+mId).on('postgres_changes',{event:'UPDATE',schema:'public',table:'matches',filter:'id=eq.'+mId},p=>{
+        if(!p.new||!p.new.data||window.__ogId!==mId) return;
+        const nd={id:p.new.id,...p.new.data}; const i=window.allTournaments.findIndex(x=>x.id===mId);
+        if(i>=0) window.allTournaments[i]=nd; else window.allTournaments.push(nd);
+        window.selectedMatch=nd;
+        if(nd.status!==window.__ogStatus){ closeOngoingScreen(); if(window.__catMode) openCategory(window.__catName,true); if(nd.status==='Ongoing') openOngoingScreen(mId); if(nd.status==='Results') showToast('Match finished!'); return; }
+        ogRender(nd);
+      }).subscribe();
+      window.__ogUnsub=()=>{ try{ window.sbx.removeChannel(ch); }catch(e){} };
+    }catch(e){}
+    return;
+  }
   try{
     window.__ogUnsub=db.collection('tournaments').doc(mId).onSnapshot(snap=>{
       if(!snap.exists||window.__ogId!==mId) return;
@@ -3268,7 +3302,6 @@ window.closeOngoingScreen=()=>{
   sc.addEventListener('touchend',()=>end(false),{passive:true});
   sc.addEventListener('touchcancel',()=>end(true),{passive:true});
 })();
-window.ogOpenChat=()=>{ const id=window.__ogId; if(!id) return; openMatchDetails(id,true); switchMatchModalTab('Chat'); };
 window.ogBtnClick=()=>{
   const m=window.allTournaments.find(x=>x.id===window.__ogId); if(!m) return;
   if(m.status!=='Upcoming') return ogSpectate();
@@ -3311,10 +3344,20 @@ window.confirmJoinMatch=async()=>{
   }
   const total=Number(m.fee)*window.selectedSlots.length;
   const wWin=Number(window.userData.wallets?.winning||0), wDep=Number(window.userData.wallets?.deposit||0), wBon=Number(window.userData.wallets?.bonus||0);
-  const bonusUse=Math.min(wBon,total*0.40); const remaining=total-bonusUse;
-  if((wWin+wDep)<remaining){ setTxt('joinErrorMsg',`Error: Insufficient Balance. You need at least ₹${remaining} in Deposit/Winning wallets (Max 40% bonus allowed).`); setTimeout(()=>{closeModal('matchModal'); closeCategoryScreen(); switchTab('Wallet');},3500); return; }
+  const bonusUse=Math.min(sbOn()?Math.max(wBon,0):wBon,total*0.40); const remaining=total-bonusUse;
+  if(sbOn() && wDep<0){ setTxt('joinErrorMsg','Error: '+SB_DUES_MSG); return; }
+  if((sbOn()?sbSpend(wDep,wWin):(wWin+wDep))<remaining){ setTxt('joinErrorMsg',`Error: Insufficient Balance. You need at least ₹${remaining} in Deposit/Winning wallets (Max 40% bonus allowed).`); setTimeout(()=>{closeModal('matchModal'); closeCategoryScreen(); switchTab('Wallet');},3500); return; }
   const btn=document.getElementById('mJoinBtn'); btn.innerText="Joining..."; btn.disabled=true; setTxt('joinErrorMsg',"");
   try{
+    if(sbOn()){
+      const infoList=newPlayers.map(x=>({slot:x.slot,name:x.ffName,uid:x.ffUid}));
+      try{ await sbRpc('rpc_join_match',{p_match:m.id,p_players:infoList.map(x=>({slot:x.slot,ffName:x.name,ffUid:x.uid}))}); }
+      catch(e){ setTxt('joinErrorMsg','Error: '+sbJoinMsg(e)); btn.innerHTML=`Confirm Join (₹<span id="mBtnFee">${total}</span>)`; btn.disabled=false; return; }
+      window.__noteLocalJoin(m.id,newPlayers);
+      showToast("Successfully Joined!"); closeModal('matchModal'); await loadUserProfile(window.currentUser.uid); await loadHomeData(true); await loadUserTransactions();
+      const cs0=document.getElementById('categoryMatchesScreen'); if(cs0&&cs0.style.display==='block'&&window.__catMode) openCategory(window.__catName,true);
+      btn.innerHTML=`Confirm Join (₹<span id="mBtnFee">${total}</span>)`; btn.disabled=false; return;
+    }
     let nd=wDep,nw=wWin,nb=wBon-bonusUse,rem=remaining;
     if(nd>=rem){nd-=rem;rem=0;}else{rem-=nd;nd=0;}
     if(rem>0){ if(nw>=rem){nw-=rem;rem=0;} else {rem-=nw;nw=0;} }
@@ -3340,38 +3383,6 @@ window.confirmJoinMatch=async()=>{
 
 /* ---------- Chats ---------- */
 function avatarSmall(a){ return a&&a.startsWith('http')?`<img src="${a}" style="width:20px;height:20px;object-fit:cover;border-radius:50%;margin-right:5px">`:`<span style="font-size:16px;margin-right:5px">${a||'👦'}</span>`; }
-function loadMatchChat(matchId){
-  const box=document.getElementById('chatMsgContainer'); if(chatUnsubscribe) chatUnsubscribe();
-  chatUnsubscribe=db.collection("tournaments").doc(matchId).collection("chat").orderBy("timestamp","desc").limit(60).onSnapshot((snap)=>{
-    let h=''; [...snap.docs].reverse().forEach(d=>{ const c=d.data(); const me=c.uid===window.currentUser.uid;
-      let v=(c.vip||c.crown)?`<i class="fa-solid fa-crown" style="color:#e0a800;font-size:10px;margin-left:3px"></i>`:''; if(c.tick) v+=` <span class="insta-tick" style="transform:scale(.6);margin-left:2px"></span>`;
-      const r=c.level?` <span style="font-size:8px;background:rgba(0,0,0,.1);padding:1px 3px;border-radius:3px">Lv.${c.level} | ${c.rank}</span>`:'';
-      h+=`<div class="chat-msg ${me?'mine':'other'}"><div class="sender">${avatarSmall(c.avatar)} ${c.name}${v}${r}</div><div>${c.text}</div></div>`; });
-    setHtml('chatMsgContainer',h||`<div style="text-align:center;color:var(--text-sub);font-size:11px;margin-top:20px">Welcome to match chat! Say Hi.</div>`); if(box) box.scrollTop=box.scrollHeight;
-  });
-}
-window.sendChatMessage=async()=>{
-  const inp=document.getElementById('chatInput'); const t=inp.value.trim(); if(!t||!window.selectedMatch) return; const lr=getMyLevelRank();
-  try{ await db.collection("tournaments").doc(window.selectedMatch.id).collection("chat").add({uid:window.currentUser.uid,name:window.userData?.ffName||'Player',text:t,avatar:window.userData?.avatar||'👦',vip:isVipNow(),crown:ownsItem('gold_crown'),tick:ownsItem('blue_tick'),level:lr.level,rank:lr.rank,timestamp:new Date()}); inp.value=''; }catch(e){}
-};
-window.openGlobalChat=()=>{
-  openModal('globalChatModal'); const box=document.getElementById('globalChatMsgContainer'); if(gChatUnsub) gChatUnsub();
-  gChatUnsub=db.collection("global_chat").orderBy("timestamp","desc").limit(60).onSnapshot((snap)=>{
-    let h=''; [...snap.docs].reverse().forEach(d=>{ const c=d.data(); let icon='',sName=c.senderName||'User',cl='other';
-      if(c.senderType==='admin'){icon='🌐 ';sName='ADMIN';} else if(c.senderType==='staff'){icon='🎧 ';} else if(window.currentUser&&c.uid===window.currentUser.uid){cl='mine';}
-      let v=''; if(c.isVip||c.hasCrown) v+=` <i class="fa-solid fa-crown" style="color:#e0a800;font-size:10px"></i>`; if(c.hasTick||c.isVip) v+=` <span class="insta-tick" style="transform:scale(.6);margin-left:2px"></span>`;
-      const r=c.level?` <span style="font-size:8px;border:1px solid var(--warning);padding:1px 3px;border-radius:3px;background:#111;color:#fff;margin-left:5px">Lv.${c.level} | ${c.rank}</span>`:'';
-      const av=(c.senderType==='admin'||c.senderType==='staff')?'':avatarSmall(c.avatar);
-      h+=`<div class="chat-msg ${cl}"><div class="sender">${icon}${av}${sName}${v}${r}</div><div>${c.text}</div></div>`; });
-    setHtml('globalChatMsgContainer',h||`<div style="text-align:center;color:var(--text-sub);font-size:11px;margin-top:20px">Welcome to Global Chat!</div>`); box.scrollTop=box.scrollHeight;
-  });
-};
-window.sendToGlobalChat=async()=>{
-  const inp=document.getElementById('gChatInput'); const t=inp.value.trim(); if(!t) return; const vip=isVipNow();
-  if(!vip){ const now=Date.now(); if(now-window.lastChatTime<10000) return showToast("Please wait 10 seconds before sending another message.",true); window.lastChatTime=now; }
-  const lr=getMyLevelRank();
-  try{ await db.collection("global_chat").add({uid:window.currentUser.uid,senderName:window.userData?.ffName||'Player',senderType:'user',avatar:window.userData?.avatar||'👦',isVip:vip,hasCrown:ownsItem('gold_crown'),hasTick:ownsItem('blue_tick'),rank:lr.rank,level:lr.level,text:t,timestamp:new Date()}); inp.value=''; }catch(e){showToast("Failed to send",true);}
-};
 
 /* ---------- Leaderboard ---------- */
 window.__lb={game:'All Games',period:'weekly',games:[],rows:null};
@@ -3385,7 +3396,7 @@ async function loadLeaderboard(){
   const L=window.__lb; if(!document.getElementById('lbxBody')) return;
   try{
     if(!L.games.length){
-      let gs; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(gc&&Date.now()-gc.t<3600000){ gs=gc.a; } else { const snap=await db.collection("admin_games").get(); gs=snap.docs.map(d=>d.data()); window.__gamesCache={t:Date.now(),a:gs}; window.__lsSet('cx_games_v1',window.__gamesCache); } }
+      let gs; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(gc&&Date.now()-gc.t<3600000){ gs=gc.a; } else { gs=await window.__fetchGames(); window.__gamesCache={t:Date.now(),a:gs}; window.__lsSet('cx_games_v1',window.__gamesCache); } }
       L.games=gs.slice().sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority)).map(x=>x.name).filter(Boolean);
     }
     if(L.game!=='All Games'&&!L.games.includes(L.game)) L.game='All Games';
@@ -3459,12 +3470,15 @@ function lbDraw(c){
 
 /* ---------- Referral ---------- */
 window.shareOnWhatsApp=()=>{ const code=window.userData?.myReferralCode||""; const msg="Free Fire khelte ho? Ab har kill ka milega reward.\n\nJoin ClashxWar – ek eSports platform jahan har roz matches hote hain. Har kill pe milta hai reward, aur Booyah pe badi winning.\n\nApp download karo, promo code se sign up karo aur 10 Play Coins ka free signup bonus pao – bina kisi risk ke.\n\nGame wahi, reward naya.\nDownload Now: https://github.com/youtu7854-boop/clashxwaapk/releases/download/V1/Clash.x.War_1.1.apk\n\nReferral Code : "+code; window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank'); };
+async function fetchMyReferralRows(uid){
+  if(sbOn()){ const { data, error } = await window.sbx.from('referrals').select('data').eq('referrer_uid', uid); if(error) throw new Error(error.message); return (data||[]).map(r=>sbRevive(r.data)||{}); }
+  const snap=await db.collection("referrals").where("referrerUid","==",uid).get(); const rows=[]; snap.forEach(d=>rows.push(d.data())); return rows;
+}
 async function loadReferralHistory(){
   setHtml('referHistoryList',"<div class='loader'>Loading history...</div>");
   try{
     const u=window.currentUser||auth.currentUser; if(!u){ setHtml('referHistoryList',"<div class='loader'>Please login.</div>"); return; }
-    const snap=await db.collection("referrals").where("referrerUid","==",u.uid).get();
-    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    const rows=await fetchMyReferralRows(u.uid);
     rows.sort((p,q)=>((q.createdAt&&q.createdAt.seconds)||0)-((p.createdAt&&p.createdAt.seconds)||0));
     const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     let h='';
@@ -3479,8 +3493,7 @@ async function loadMyReferrals(){
   const msg=t=>{ L.innerHTML="<div style='text-align:center;padding:14px 10px;font-size:16px;font-weight:500;color:#3a3f47'>"+t+"</div>"; };
   try{
     const u=window.currentUser||auth.currentUser; if(!u){ msg('Please login.'); return; }
-    const snap=await db.collection("referrals").where("referrerUid","==",u.uid).get();
-    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    const rows=await fetchMyReferralRows(u.uid);
     rows.sort((p,q)=>((q.createdAt&&q.createdAt.seconds)||0)-((p.createdAt&&p.createdAt.seconds)||0));
     const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const approved=rows.filter(x=>x.status==='Approved').length, bonus=Number(window.appSettings?.referralBonus)||0;
@@ -3600,7 +3613,7 @@ window.submitFinalDeposit=async()=>{
   try{
     let proof=utr,type='UTR';
     if(file){ const fd=new FormData(); fd.append('image',file); const KEY="4d3486df57ed390c7ca337185635b11d"; const res=await fetch(`https://api.imgbb.com/1/upload?key=${KEY}`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){proof=data.data.url;type='Screenshot';} else throw new Error("Image Upload Failed"); }
-    await db.collection("deposits").add({userId:window.currentUser.uid,userEmail:window.userData?.email||'',amount:amt,type,proofUrl:proof,status:'Pending',createdAt:new Date()});
+    if(sbOn()) await sbRpc('rpc_deposit_submit',{p_amount:amt,p_type:type,p_proof:proof}); else await db.collection("deposits").add({userId:window.currentUser.uid,userEmail:window.userData?.email||'',amount:amt,type,proofUrl:proof,status:'Pending',createdAt:new Date()});
     showToast("Deposit Request Sent to Admin!"); closeDepositModal(); await loadUserTransactions();
   }catch(e){showToast(e.message||"Error submitting request",true);}
   btn.innerText="Confirm Deposit"; btn.disabled=false;
@@ -3646,7 +3659,7 @@ window.submitWithdraw=async()=>{
   if(amt>winBal) return showToast("Insufficient Winning Balance!",true);
   let detail=''; if(!isW){ detail=wdEl('wdDet').value.trim(); if(!detail) return showToast("Enter UPI ID / Mobile / Email",true); }
   const uid=window.currentUser.uid, FVv=firebase.firestore.FieldValue;
-  if(!isW){
+  if(!isW && !sbOn()){
     const today=new Date(); today.setHours(0,0,0,0);
     try{
       const ws=await db.collection("withdrawals").where("userId","==",uid).where("createdAt",">=",today).get(); const maxW=isVipNow()?3:1;
@@ -3656,6 +3669,11 @@ window.submitWithdraw=async()=>{
   }
   const btn=wdEl('wdSubmitBtn'); const old=btn.innerHTML; btn.innerText="Processing..."; btn.disabled=true;
   try{
+    if(sbOn()){
+      try{ await sbRpc('rpc_withdraw',{p_amount:amt,p_method:m,p_method_label:cur[1],p_detail:isW?'':detail}); }
+      catch(e){ const t=String(e.message||''); showToast(/daily limit/.test(t)?'Daily limit reached! Try again tomorrow.':/insufficient/.test(t)?'Insufficient Winning Balance!':/limits/.test(t)?'Amount must be between ₹'+L.min+' and ₹'+L.max:'Something went wrong. Please try again.',true); btn.innerHTML=old; btn.disabled=false; return; }
+      showToast("Withdraw Request Placed!"); closeWithdraw(); await loadUserProfile(uid); await loadUserTransactions(); btn.innerHTML=old; btn.disabled=false; return;
+    }
     const batch=db.batch(), wref=db.collection("withdrawals").doc();
     batch.update(db.collection("users").doc(uid),{"wallets.winning":FVv.increment(-amt)});
     batch.set(wref,{userId:uid,userEmail:window.userData?.email||'',amount:amt,upiId:isW?'Win Money → Deposit (+10% Extra Coin)':detail,accountName:window.userData?.ffName||'',method:m,methodLabel:cur[1],bonusPercent:isW?10:0,status:'Pending',createdAt:new Date()});
@@ -3746,29 +3764,44 @@ function txnNotif(force){
   S.nAt=Date.now(); loadNotifications();
 }
 function txnStart(uid){
+  if(window.USE_SUPABASE_USER && window.sbx){
+    return txnStartSb(uid).catch(e=>{ console.warn('Supabase history fail, Firestore fallback', e); window.__txnStop(); return txnStartFs(uid); });
+  }
+  return txnStartFs(uid);
+}
+function txnStartFs(uid){
   const S=window.__txn;
   if(S.uid===uid && S.p) return S.p;
   window.__txnStop(); S.uid=uid;
+  /* LIVE + LIMIT: sirf sabse naye docs ka live listener (har listener ek baar window padhta hai, uske baad sirf badle docs).
+     Composite index na bana ho to us hisse ke liye apne aap purana (bina limit wala) listener chalta hai, history gayab nahi hogi. */
+  const TL=100, OL=50;
   const defs=[
-    ['ts',db.collection("transactions").where("userId","==",uid)],
-    ['ds',db.collection("deposits").where("userId","==",uid)],
-    ['ws',db.collection("withdrawals").where("userId","==",uid)],
-    ['rs',db.collection("referrals").where("referrerUid","==",uid)]
+    ['ts', db.collection("transactions").where("userId","==",uid).orderBy("date","desc").limit(TL), db.collection("transactions").where("userId","==",uid), 'ts'],
+    ['ts2',db.collection("transactions").where("userId","==",uid).orderBy("createdAt","desc").limit(TL), null, 'ts'],   // jin docs me 'date' nahi, sirf 'createdAt' hai
+    ['ds', db.collection("deposits").where("userId","==",uid).orderBy("createdAt","desc").limit(OL), db.collection("deposits").where("userId","==",uid), 'ds'],
+    ['ws', db.collection("withdrawals").where("userId","==",uid).orderBy("createdAt","desc").limit(OL), db.collection("withdrawals").where("userId","==",uid), 'ws'],
+    ['rs', db.collection("referrals").where("referrerUid","==",uid).orderBy("createdAt","desc").limit(OL), db.collection("referrals").where("referrerUid","==",uid), 'rs']
   ];
   S.p=new Promise(resolve=>{
     const allReady=()=>defs.every(d=>S.ready[d[0]]);
-    defs.forEach(([k,q])=>{
+    const attach=(k,q,fb,mk,limited)=>{
       const un=q.onSnapshot(snap=>{
-        snap.docChanges().forEach(ch=>{ if(ch.type==='removed') S.maps[k].delete(ch.doc.id); else S.maps[k].set(ch.doc.id,ch.doc.data()); });
+        snap.docChanges().forEach(ch=>{ if(ch.type==='removed'){ if(!limited) S.maps[mk].delete(ch.doc.id); } else S.maps[mk].set(ch.doc.id,ch.doc.data()); });
         const first=!S.ready[k]; S.ready[k]=true;
         if(allReady()){
           if(S.t) clearTimeout(S.t);
           S.t=setTimeout(()=>{ S.t=null; if(S.uid!==uid) return; txnBuild(); renderTxnHistory(); txnNotif(!first); },first?0:150);
           resolve();
         }
-      },err=>{ console.error('txn listener',k,err); S.ready[k]=true; setHtml('txnScreenList',"Error loading history"); if(allReady()) resolve(); });
+      },err=>{
+        console.error('txn listener',k,err);
+        if(limited && fb){ attach(k,fb,null,mk,false); return; }          // index missing -> purana tareeka
+        S.ready[k]=true; if(!limited && k!=='ts2') setHtml('txnScreenList',"Error loading history"); if(allReady()) resolve();
+      });
       S.unsubs.push(un);
-    });
+    };
+    defs.forEach(([k,q,fb,mk])=>attach(k,q,fb,mk,true));
   });
   return S.p;
 }
