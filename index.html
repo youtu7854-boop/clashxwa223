@@ -41,6 +41,12 @@ img{max-width:100%}
 #payReturn p{font-size:14px;color:#555;max-width:300px;line-height:1.5;margin-bottom:22px}
 #payReturn button{width:min(280px,80vw);padding:14px;border:none;border-radius:12px;background:#111;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
 #payReturn button.alt{background:transparent;color:#555;margin-top:8px;font-weight:600}
+#joinSuccess{position:fixed;inset:0;z-index:2147483000;background:#fafafa;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 27px}
+#joinSuccess.show{display:flex}
+#joinSuccess svg{width:113px;height:113px;display:block;margin-bottom:52px;flex-shrink:0}
+#joinSuccess .js-t{font-size:17px;font-weight:400;line-height:1.4;color:#2a2f31;padding:0 6px;margin-bottom:38px;word-break:break-word}
+#joinSuccess .js-m{font-size:16px;font-weight:600;color:#54e995;margin-bottom:47px}
+#joinSuccess button{font-family:inherit;width:100%;height:53px;border:0;border-radius:6px;background:#54e995;color:#fff;font-size:17px;font-weight:500;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.18)}
 #customToast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(14px);background:rgba(50,50,52,.95);color:#fff;padding:11px 20px 11px 12px;border-radius:30px;font-size:14px;font-weight:500;line-height:1.35;z-index:2147483000;box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;align-items:center;gap:10px;width:max-content;max-width:86vw;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,transform .25s ease,visibility 0s .25s}
 #customToast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);transition:opacity .25s ease,transform .25s ease}
 #customToast img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none}
@@ -784,6 +790,7 @@ window.setSplashLogo(window.SPLASH_LOGO);
 </div>
 
 <div id="payReturn"><img alt="" id="payRetLogo"><h2 id="payRetTitle">Checking payment...</h2><p id="payRetMsg">Please wait a moment.</p><button type="button" onclick="payRetBack()">BACK TO APP</button><button type="button" class="alt" onclick="payRetLogin()">Continue here</button></div>
+<div id="joinSuccess"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="#54e995"/><polyline points="27,52 43,68 74,34" fill="none" stroke="#fff" stroke-width="11" stroke-linejoin="miter" stroke-linecap="butt"/></svg><div class="js-t" id="jsTitle"></div><div class="js-m">You have joined successfully.</div><button type="button" onclick="joinSuccessHome()">Home</button></div>
 <div id="customToast"><img alt=""><span>Message</span></div>
 
 <!-- Auth -->
@@ -1678,7 +1685,7 @@ window.switchTab=(tabId)=>{
   const vis=id=>{const e=byId(id); if(!e) return false; const c=getComputedStyle(e); return c.display!=='none'&&c.visibility!=='hidden';};
   const blocked=()=>{
     if(!vis('mainApp')) return true;
-    if(vis('payReturn')||vis('categoryMatchesScreen')||vis('wdScreen')||vis('acScreen')||vis('payFrameWrap')) return true;
+    if(vis('payReturn')||vis('joinSuccess')||vis('categoryMatchesScreen')||vis('wdScreen')||vis('acScreen')||vis('payFrameWrap')) return true;
     if([...document.querySelectorAll('.modal-overlay')].some(m=>vis(m.id)||getComputedStyle(m).display!=='none')) return true;
     return ['jdOverlay','jmScreen','jpScreen','resultScreen','ongoingScreen','txnScreen'].some(id=>{const e=byId(id); return e&&e.classList.contains('show');});
   };
@@ -1786,6 +1793,7 @@ window.handleBack=function(){
     if(vis(byId('acScreen'))){ window.closeAddCoins(); return true; }
     const mods=[...document.querySelectorAll('.modal-overlay')].filter(m=>m.id!=='forceUpdateModal'&&vis(m));
     if(mods.length){ const m=mods[mods.length-1]; if(m.id==='depositModal'&&window.closeDepositModal) window.closeDepositModal(); else window.closeModal(m.id); return true; }
+    if(sh('joinSuccess')){ window.joinSuccessHome(); return true; }
     if(sh('jdOverlay')){ window.jdClose(); return true; }
     if(sh('jmScreen')){ window.jmBack(); return true; }
     if(sh('jpScreen')){ window.closeJoinFlow(); return true; }
@@ -3026,7 +3034,7 @@ window.jmJoin=async()=>{
       try{ await sbRpc('rpc_join_match',{p_match:m.id,p_players:infoList.map(x=>({slot:x.slot,ffName:x.name,ffUid:x.uid}))}); }
       catch(e){ showToast(sbJoinMsg(e),true); if(/already started|slot booked|match full/.test(String(e.message||''))){ closeJoinFlow(); await loadHomeData(true); if(window.__catMode) openCategory(window.__catName,true); } const b0=document.getElementById('jmJoinBtn'); if(b0){ b0.disabled=false; b0.innerText='Join'; } return; }
       window.__noteLocalJoin(m.id,sbJoinPlayers(infoList));
-      showToast('Successfully Joined!'); closeJoinFlow();
+      if(!showJoinSuccess(m)) showToast('Successfully Joined!'); closeJoinFlow();
       await loadUserProfile(window.currentUser.uid); await loadHomeData(true); await loadUserTransactions();
       if(window.__catMode) openCategory(window.__catName,true);
       const b1=document.getElementById('jmJoinBtn'); if(b1){ b1.disabled=false; b1.innerText='Join'; } return;
@@ -3053,7 +3061,7 @@ window.jmJoin=async()=>{
         if(amt>0){ await db.collection('users').doc(rid).update({'wallets.bonus':firebase.firestore.FieldValue.increment(amt)}); await db.collection('transactions').add({userId:rid,type:'Referral Bonus',desc:`Referred ${window.userData.ffName} (Played 1st Match)`,amount:amt,status:'Success',date:new Date()}); }
       }
     }catch(e){}
-    showToast('Successfully Joined!'); closeJoinFlow();
+    if(!showJoinSuccess(m)) showToast('Successfully Joined!'); closeJoinFlow();
     await loadUserProfile(window.currentUser.uid); await loadHomeData(true); await loadUserTransactions();
     if(window.__catMode) openCategory(window.__catName,true);
   }catch(e){ showToast('Network Error! Failed to join.',true); }
@@ -3354,7 +3362,7 @@ window.confirmJoinMatch=async()=>{
       try{ await sbRpc('rpc_join_match',{p_match:m.id,p_players:infoList.map(x=>({slot:x.slot,ffName:x.name,ffUid:x.uid}))}); }
       catch(e){ setTxt('joinErrorMsg','Error: '+sbJoinMsg(e)); btn.innerHTML=`Confirm Join (₹<span id="mBtnFee">${total}</span>)`; btn.disabled=false; return; }
       window.__noteLocalJoin(m.id,newPlayers);
-      showToast("Successfully Joined!"); closeModal('matchModal'); await loadUserProfile(window.currentUser.uid); await loadHomeData(true); await loadUserTransactions();
+      if(!showJoinSuccess(m)) showToast("Successfully Joined!"); closeModal('matchModal'); await loadUserProfile(window.currentUser.uid); await loadHomeData(true); await loadUserTransactions();
       const cs0=document.getElementById('categoryMatchesScreen'); if(cs0&&cs0.style.display==='block'&&window.__catMode) openCategory(window.__catName,true);
       btn.innerHTML=`Confirm Join (₹<span id="mBtnFee">${total}</span>)`; btn.disabled=false; return;
     }
@@ -3374,7 +3382,7 @@ window.confirmJoinMatch=async()=>{
         if(amt>0){ await db.collection("users").doc(rid).update({"wallets.bonus":firebase.firestore.FieldValue.increment(amt)}); await db.collection("transactions").add({userId:rid,type:"Referral Bonus",desc:`Referred ${window.userData.ffName} (Played 1st Match)`,amount:amt,status:"Success",date:new Date()}); }
       }
     }catch(e){}
-    showToast("Successfully Joined!"); closeModal('matchModal'); await loadUserProfile(window.currentUser.uid); await loadHomeData(true); await loadUserTransactions();
+    if(!showJoinSuccess(m)) showToast("Successfully Joined!"); closeModal('matchModal'); await loadUserProfile(window.currentUser.uid); await loadHomeData(true); await loadUserTransactions();
     const cs=document.getElementById('categoryMatchesScreen'), ct=document.getElementById('catScreenTitle');
     if(cs&&cs.style.display==='block'&&window.__catMode) openCategory(window.__catName,true);
   }catch(e){setTxt('joinErrorMsg',"Network Error! Failed to join.");}
@@ -3887,6 +3895,23 @@ async function loadNotifications(){
   window.addEventListener('focus',check);
   window.addEventListener('pageshow',check);
 })();
+</script>
+<script>
+/* Match join hone ke baad poori screen par "You have joined successfully." + HOME button */
+window.showJoinSuccess=function(m){
+  try{
+    var el=document.getElementById('joinSuccess'); if(!el) return false;
+    var t=String((m&&m.name)||'').trim();
+    var sr=(m&&m.serial!==undefined&&m.serial!==null&&String(m.serial)!=='')?String(m.serial):'';
+    document.getElementById('jsTitle').textContent=t+(sr?(t?' - ':'')+'Match #'+sr:'');
+    el.classList.add('show'); return true;
+  }catch(e){ return false; }
+};
+window.joinSuccessHome=function(){
+  var el=document.getElementById('joinSuccess'); if(el) el.classList.remove('show');
+  try{ closeCategoryScreen(); }catch(e){}
+  try{ switchTab('Home'); }catch(e){}
+};
 </script>
 </body>
 </html>
