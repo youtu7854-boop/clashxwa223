@@ -541,6 +541,18 @@ img{max-width:100%}
 .sk-game{aspect-ratio:1/1;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .sk-tile{aspect-ratio:1/1;border-radius:14px;box-shadow:0 2px 7px rgba(0,0,0,.12)}
 .sk-promo{width:100%;aspect-ratio:16/9;border-radius:12px;border:1px solid var(--border-color)}
+/* ===== Placeholder: banner/card ki photo aane tak ऐप ka logo (aur match banner par naam) ===== */
+:root{--phl:none;--phn:none}
+.sk-shim{background-image:var(--phl);background-repeat:no-repeat;background-position:center;background-size:auto 42%}
+.banner-card,.game-img{background-repeat:no-repeat!important;background-position:center,center!important}
+.banner-card{background-size:cover,contain!important}
+.game-img{background-size:cover,auto 80%!important;background-color:#fff!important}
+.sk-banner{background-image:var(--phn);background-size:contain;background-color:#8a8a8a}
+.sk-game{background-color:#fff;background-size:auto 80%}
+.sk-tile{background-image:var(--phn);background-size:contain;background-color:#8a8a8a}
+.banner-card{background-color:#8a8a8a!important}
+.cat-tile{background:#8a8a8a var(--phn) no-repeat center/contain!important}
+.mc2-banner,#mModalBanner,.og-img{background-repeat:no-repeat!important;background-size:cover,contain!important;background-position:center,center!important;background-color:#8a8a8a!important}
 /* Skeleton loading (game card tap -> match list) */
 .sk-card{background:#efeff1;margin:0 16px 12px;border-radius:14px;padding:12px;position:relative;overflow:hidden;box-shadow:0 5px 15px rgba(0,0,0,.05)}
 .sk-card .sk{background:#dcdce0;border-radius:6px}
@@ -1859,6 +1871,7 @@ window.handleWaClick=(e)=>{ e.preventDefault(); if(!window.appSettings?.whatsapp
 /* ---------- Logo helper: one logo, fitted everywhere ---------- */
 function applyLogo(url){
   if(!url) return;
+  try{ window.__setPh&&window.__setPh(url,(window.appSettings&&window.appSettings.appName)||''); }catch(e){}
   document.querySelectorAll('.app-brand-logo, .app-brand-logo-raw').forEach(el=>{ el.src=url; el.style.display='block'; });
   
   updateHeaderAvatar();
@@ -1969,7 +1982,7 @@ window.openAllCategories=async()=>{
   setHtml('catMatchesContainer','<div class="cat-grid" id="allCategoryGrid">'+'<div class="sk-shim sk-tile"></div>'.repeat(9)+'</div>');
   const grid=document.getElementById('allCategoryGrid');
   try{
-    let snap; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(gc&&Date.now()-gc.t<3600000){ snap={docs:gc.a.map(x=>({data:()=>x}))}; } else { const _ga=await window.__fetchGames(); snap={docs:_ga.map(x=>({data:()=>x}))}; window.__gamesCache={t:Date.now(),a:_ga}; window.__lsSet('cx_games_v1',window.__gamesCache); } } let h='';
+    let snap; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(false){ snap={docs:gc.a.map(x=>({data:()=>x}))}; } else { const _ga=await window.__fetchGames(); snap={docs:_ga.map(x=>({data:()=>x}))}; window.__gamesCache={t:Date.now(),a:_ga}; window.__lsSet('cx_games_v1',window.__gamesCache); } } let h='';
     const gl=snap.docs.map(d=>d.data()).sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority));
     gl.forEach(x=>{h+=`<div class="cat-tile" onclick="openCategory('${String(x.name||'').replace(/'/g,"\\'")}')"><img src="${window.__imgSrc(x.url)}" alt="${x.name||''}"></div>`;});
     grid.innerHTML=h||'<div class="loader" style="grid-column:1/-1">No tournaments available.</div>';
@@ -2651,9 +2664,9 @@ async function fetchAllTournaments(force){
 async function loadHomeData(force){
   try{
     try{ await window.__imgReady; }catch(e){}
-    let bs; { const bc=(window.__bannerCache=window.__bannerCache||window.__lsGet('cx_banners_v1')); if(bc&&Date.now()-bc.t<3600000){ bs={forEach:fn=>bc.a.forEach(x=>fn({data:()=>x}))}; } else { const _a=await window.__fetchBanners(); window.__bannerCache={t:Date.now(),a:_a}; window.__lsSet('cx_banners_v1',window.__bannerCache); bs={forEach:fn=>_a.forEach(x=>fn({data:()=>x}))}; } } let bh='',hb='';
+    let bs; { const bc=(window.__bannerCache=window.__bannerCache||window.__lsGet('cx_banners_v1')); if(false){ bs={forEach:fn=>bc.a.forEach(x=>fn({data:()=>x}))}; } else { const _a=await window.__fetchBanners(); window.__bannerCache={t:Date.now(),a:_a}; window.__lsSet('cx_banners_v1',window.__bannerCache); bs={forEach:fn=>_a.forEach(x=>fn({data:()=>x}))}; } } let bh='',hb='';
     bs.forEach(d=>{ const x=d.data(); const c=x.link?`onclick="window.open('${x.link}','_blank')"`:'';
-      bh+=`<div class="banner-card" style="background-image:url('${window.__imgSrc(x.url)}')" ${c}></div>`;
+      bh+=`<div class="banner-card" style="background-image:url('${window.__imgSrc(x.url)}'),var(--phn)" ${c}></div>`;
       hb+=`<div class="mr-card" ${c}><img src="${window.__imgSrc(x.url)}" alt=""></div>`; });
     setHtml('userBanners',bh||'<div class="loader">No banners</div>'); setHtml('helpBanners',hb||'<div class="loader">No promotions available</div>');
     if(window.bannerInterval) clearInterval(window.bannerInterval);
@@ -2697,7 +2710,7 @@ document.addEventListener('pointerdown',function(e){
 window.renderTopGames=()=>{
   const as=window.appSettings||{};
   const mainImg=as.topGameLogo||DEFAULT_FF_LOGO; const privImg=as.privateContestLogo||as.topGameLogo||DEFAULT_FF_LOGO;
-  const card=(img,fn)=>`<div class="game-card" onclick="${fn}()"><div class="game-img" style="background-image:url('${window.__imgSrc(img)}')"></div><div class="fair-tag"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 1.5 3.5 4.6v6.2c0 5.2 3.6 9.6 8.5 11.7 4.9-2.1 8.5-6.5 8.5-11.7V4.6z"/><path fill="none" stroke="#4caf50" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="m7.8 12.2 3 3 5.6-6"/></svg> FairPlay : ON</div><div class="play-tag">Play <i class="fa-solid fa-play"></i></div></div>`;
+  const card=(img,fn)=>`<div class="game-card" onclick="${fn}()"><div class="game-img" style="background-image:url('${window.__imgSrc(img)}'),var(--phl)"></div><div class="fair-tag"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 1.5 3.5 4.6v6.2c0 5.2 3.6 9.6 8.5 11.7 4.9-2.1 8.5-6.5 8.5-11.7V4.6z"/><path fill="none" stroke="#4caf50" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="m7.8 12.2 3 3 5.6-6"/></svg> FairPlay : ON</div><div class="play-tag">Play <i class="fa-solid fa-play"></i></div></div>`;
   setHtml('userGames',card(mainImg,'openAllCategories')+card(privImg,'openPrivateContest'));
 };
 /* ---------- Category / match list ---------- */
@@ -2828,7 +2841,7 @@ window.renderCatList=(catName,tab)=>{
     const d=new Date(m.time); let dt='--',tm='';
     if(!isNaN(d)){ const p=n=>String(n).padStart(2,'0'); dt=`${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`; let hh=d.getHours(); const ap=hh>=12?'pm':'am'; hh=hh%12||12; tm=`${hh}:${p(d.getMinutes())} ${ap}`; }
     const title=String(m.name||'')+(m.serial?` - Match #${String(m.serial).replace(/^#+/,'')}`:'');
-    const banner=m.banner?`background-image:url('${bnUrl(m.banner).replace(/'/g,"%27")}')`:'';
+    const banner=`background-image:${m.banner?`url('${bnUrl(m.banner).replace(/'/g,"%27")}')`:'none'},var(--phn)`;
     const vip=m.isVipOnly?'<div class="mc2-vip"><i class="fa-solid fa-crown"></i> VIP</div>':'';
     const openFn=`event.stopPropagation();openMatchDetails('${m.id}')`;
     const coinSvg='<svg class="coin-ic" viewBox="0 0 32 32"><use href="#coinSym"/></svg>';
@@ -2908,7 +2921,7 @@ window.openMatchDetails=(mId,force)=>{
   document.getElementById('mTabDetailsBtn').classList.add('active'); document.getElementById('mTabDetails').style.display='block';
   setTxt('mModalName',m.name+(m.serial?` [#${m.serial}]`:'')); setTxt('mModalTime',new Date(m.time).toLocaleString());
   setTxt('mModalFee',"₹"+m.fee); setTxt('mModalPool',"₹"+m.pool); setTxt('mModalKill',"₹"+(m.perKill||0)); setTxt('mModalType',`${m.map} | ${m.type}`); setTxt('mModalRules',m.rules||"No specific rules provided by Admin.");
-  const bn=document.getElementById('mModalBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:"none";
+  const bn=document.getElementById('mModalBanner'); if(bn) bn.style.backgroundImage=(m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:"none")+',var(--phn)';
   let isJoined=false,mySlots="";
   if(m.joinedUsers){ const mine=m.joinedUsers.filter(u=>u.userDocId===window.currentUser.uid); if(mine.length){isJoined=true; mySlots=mine.map(u=>u.slot).join(', ');} }
   let ph='';
@@ -3121,7 +3134,7 @@ window.__renderResultScreen=(m)=>{
   // Result note sent from staff panel -> shown as "Comment". Hidden when empty.
   const cmtRaw=[m.resultNote,m.resultComment,m.resultNotes,m.result_note,m.comment,m.note].find(v=>typeof v==='string'&&v.trim()!=='');
   const cmtHtml=cmtRaw?`<div class="og-h">Comment</div><div style="font-size:14px;line-height:20px;color:#222;padding:0 2px;white-space:pre-wrap;word-break:break-word">${ogEsc(cmtRaw.trim())}</div>`:'';
-  const bn=document.getElementById('rsBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:'none';
+  const bn=document.getElementById('rsBanner'); if(bn) bn.style.backgroundImage=(m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:'none')+',var(--phn)';
   setHtml('rsBody',`<div class="og-h first">${ogEsc(title)}</div>
   <div class="og-chips"><div class="og-chip">Organised on <b>${when}</b></div><div class="og-chip">Winning Prize : <b>${Number(m.pool)||0}(₹)</b></div><div class="og-chip">Per Kill : <b>${Number(m.perKill)||0}(₹)</b></div><div class="og-chip">Entry Fee : ${fee>0?coin+' <b>'+fee+'</b>':'<b>FREE</b>'}</div></div>
   ${cmtHtml}
@@ -3183,7 +3196,7 @@ window.ogRender=(m)=>{
       else { bb.textContent='JOIN NOW'+(fe>0?' (₹'+fe+')':' (FREE)'); }
     } else bb.textContent='SPECTATE';
   })();
-  const bn=document.getElementById('ogBanner'); if(bn) bn.style.backgroundImage=m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:'none';
+  const bn=document.getElementById('ogBanner'); if(bn) bn.style.backgroundImage=(m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:'none')+',var(--phn)';
   let h='';
   let rd='';if(isJoined){
     const showRoom=isJoined&&m.publishRoom&&m.roomId;
@@ -3404,7 +3417,7 @@ async function loadLeaderboard(){
   const L=window.__lb; if(!document.getElementById('lbxBody')) return;
   try{
     if(!L.games.length){
-      let gs; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(gc&&Date.now()-gc.t<3600000){ gs=gc.a; } else { gs=await window.__fetchGames(); window.__gamesCache={t:Date.now(),a:gs}; window.__lsSet('cx_games_v1',window.__gamesCache); } }
+      let gs; { const gc=(window.__gamesCache=window.__gamesCache||window.__lsGet('cx_games_v1')); if(false){ gs=gc.a; } else { gs=await window.__fetchGames(); window.__gamesCache={t:Date.now(),a:gs}; window.__lsSet('cx_games_v1',window.__gamesCache); } }
       L.games=gs.slice().sort((a,b)=>(a.priority==null||a.priority===''?9999:+a.priority)-(b.priority==null||b.priority===''?9999:+b.priority)).map(x=>x.name).filter(Boolean);
     }
     if(L.game!=='All Games'&&!L.games.includes(L.game)) L.game='All Games';
@@ -3912,6 +3925,22 @@ window.joinSuccessHome=function(){
   try{ closeCategoryScreen(); }catch(e){}
   try{ switchTab('Home'); }catch(e){}
 };
+</script>
+<script>
+/* Photo aane tak logo / naam: CSS variables --phl (logo) aur --phn (app ka naam) */
+window.__setPh=function(url,name){
+  try{
+    var r=document.documentElement.style;
+    if(url){ r.setProperty('--phl','url("'+String(window.__imgSrc?window.__imgSrc(url):url).replace(/"/g,'%22')+'")'); }
+    if(name){
+      var n=String(name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var fs=Math.max(14,Math.min(46,Math.floor(270/Math.max(1,String(name).length*0.62)))); var svg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 160'><text x='160' y='"+(80+fs*0.35)+"' text-anchor='middle' font-family='Poppins,Arial Black,Arial,sans-serif' font-weight='900' font-style='italic' font-size='"+fs+"' fill='#fff'>"+n+"</text></svg>";
+      r.setProperty('--phn','url("data:image/svg+xml,'+encodeURIComponent(svg)+'")');
+    }
+    if(url||name){ try{ var o=JSON.parse(localStorage.getItem('cx_ph')||'{}'); if(url) o.u=url; if(name) o.n=name; localStorage.setItem('cx_ph',JSON.stringify(o)); }catch(e){} }
+  }catch(e){}
+};
+(function(){ var o={}; try{ o=JSON.parse(localStorage.getItem('cx_ph')||'{}'); }catch(e){} window.__setPh(o.u,o.n||'CLASH X WAR'); })();
 </script>
 </body>
 </html>
