@@ -47,6 +47,12 @@ img{max-width:100%}
 #joinSuccess .js-t{font-size:17px;font-weight:400;line-height:1.4;color:#2a2f31;padding:0 6px;margin-bottom:38px;word-break:break-word}
 #joinSuccess .js-m{font-size:16px;font-weight:600;color:#54e995;margin-bottom:47px}
 #joinSuccess button{font-family:inherit;width:100%;height:53px;border:0;border-radius:6px;background:#54e995;color:#fff;font-size:17px;font-weight:500;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+/* ===== Smooth slide: screens aate bhi smooth, jaate bhi smooth ===== */
+#categoryMatchesScreen,#resultScreen,#ongoingScreen,#wdScreen,#acScreen,.flow-screen{animation-duration:.34s!important;animation-timing-function:cubic-bezier(.22,.61,.36,1)!important}
+#txnScreen.show{animation:slideInRight .34s cubic-bezier(.22,.61,.36,1)}
+.modal-overlay{animation:fadeIn .25s ease}
+.modal-content{animation-duration:.34s;animation-timing-function:cubic-bezier(.22,.61,.36,1)}
+#joinSuccess.show{animation:fadeIn .3s ease}
 #customToast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(14px);background:rgba(50,50,52,.95);color:#fff;padding:11px 20px 11px 12px;border-radius:30px;font-size:14px;font-weight:500;line-height:1.35;z-index:2147483000;box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;align-items:center;gap:10px;width:max-content;max-width:86vw;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,transform .25s ease,visibility 0s .25s}
 #customToast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);transition:opacity .25s ease,transform .25s ease}
 #customToast img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none}
@@ -173,7 +179,8 @@ img{max-width:100%}
 #notifBadge{display:none;position:absolute;top:-7px;right:-7px;background:#e64c4c;color:#fff;min-width:16px;height:16px;border-radius:50%;font-size:9px;font-weight:700;justify-content:center;align-items:center}
 .bal-pill{background:linear-gradient(145deg,#0d0d0d,#2b2b2b);color:#fff;border-radius:22px;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .bal-pill small{display:block;font-size:10px;color:#aaa;letter-spacing:.5px;line-height:1}
-.bal-pill b{font-size:17px;font-weight:600}
+.bal-pill b{font-size:17px;font-weight:600;white-space:nowrap}
+.bal-pill>div:first-child{flex-shrink:0}
 .bal-plus{width:38px;height:38px;border-radius:50%;background:#fff;color:var(--accent);font-size:22px;display:flex;align-items:center;justify-content:center;font-weight:600}
 
 /* Notice */
@@ -3941,6 +3948,64 @@ window.__setPh=function(url,name){
   }catch(e){}
 };
 (function(){ var o={}; try{ o=JSON.parse(localStorage.getItem('cx_ph')||'{}'); }catch(e){} window.__setPh(o.u,o.n||'CLASH X WAR'); })();
+</script>
+<script>
+/* Screens / bottom-sheets band hote waqt bhi smooth slide (asli screen turant band hoti hai, sirf uski "parchhai" slide hoti hai) */
+(function(){
+  var EASE='cubic-bezier(.22,.61,.36,1)', DUR=300;
+  function byId(i){ return document.getElementById(i); }
+  function shown(e){ if(!e) return false; var c=getComputedStyle(e); return c.display!=='none'&&c.visibility!=='hidden'; }
+  function ghostOf(el){
+    var g=el.cloneNode(true);
+    g.removeAttribute('id'); [].forEach.call(g.querySelectorAll('[id]'),function(n){ n.removeAttribute('id'); });
+    var disp=getComputedStyle(el).display;
+    g.style.setProperty('display',disp,'important'); g.style.setProperty('animation','none','important');
+    g.style.pointerEvents='none'; g.setAttribute('aria-hidden','true');
+    var a=el.querySelectorAll('*'), b=g.querySelectorAll('*'), i;
+    document.body.appendChild(g);
+    g.scrollTop=el.scrollTop;
+    for(i=0;i<a.length&&i<b.length;i++){ if(a[i].scrollTop>0) b[i].scrollTop=a[i].scrollTop; }
+    return g;
+  }
+  function run(el,anims,g){
+    var done=false, fin=function(){ if(done) return; done=true; if(g.parentNode) g.parentNode.removeChild(g); };
+    anims.forEach(function(x){ try{ var an=x[0].animate(x[1],{duration:DUR,easing:EASE,fill:'forwards'}); x[2]&&(an.onfinish=fin); }catch(e){ fin(); } });
+    setTimeout(fin,DUR+120);
+    /* agar usi waqt screen dobara khul gayi (jaise status badalne par) to parchhai turant hata do */
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(shown(el)) fin(); }); });
+  }
+  function wrap(name,ids,kind){
+    var o=window[name]; if(typeof o!=='function'||o.__sl) return;
+    var w=function(){
+      var args=arguments, snaps=[];
+      try{
+        var list=typeof ids==='function'?ids.apply(this,args):ids;
+        list.forEach(function(id){ var el=byId(id); if(shown(el)) snaps.push([el,ghostOf(el)]); });
+      }catch(e){}
+      var r=o.apply(this,args);
+      snaps.forEach(function(s){
+        var el=s[0], g=s[1];
+        if(kind==='sheet'){
+          var c=g.querySelector('.modal-content');
+          run(el,[[g,[{opacity:1},{opacity:0}],!c],[c||g,[{transform:'translate3d(0,0,0)'},{transform:'translate3d(0,100%,0)'}],!!c]],g);
+        } else {
+          run(el,[[g,[{transform:'translate3d(0,0,0)'},{transform:'translate3d(100%,0,0)'}],1]],g);
+        }
+      });
+      return r;
+    };
+    w.__sl=1; window[name]=w;
+  }
+  wrap('closeCategoryScreen',['categoryMatchesScreen']);
+  wrap('closeResultScreen',['resultScreen']);
+  wrap('closeOngoingScreen',['ongoingScreen']);
+  wrap('closeTxnScreen',['txnScreen']);
+  wrap('closeWithdraw',['wdScreen']);
+  wrap('closeAddCoins',['acScreen']);
+  wrap('jmBack',['jmScreen']);
+  wrap('closeJoinFlow',['jmScreen','jpScreen']);
+  wrap('closeModal',function(id){ return [id]; },'sheet');
+})();
 </script>
 </body>
 </html>
