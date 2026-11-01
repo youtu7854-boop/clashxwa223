@@ -616,6 +616,7 @@ img{max-width:100%}
 /* Match card: 3/4 (bhara nahi) = orange bar, 4/4 (full) = purple bar + black MATCH FULL button */
 .mc2.upc .mc2-bar i{background:#8576ef}
 .mc2.upc .mc2-bar i.part{background:#fc7803}
+.mc2.upc .mc2-bar i.low{background:#000}
 .mc2.upc .mc2-bar:has(i.part){background:#ffdbb6}
 /* Slot checkbox: ripple + black tick, taken = grey tick */
 .jp-box{position:relative;transition:background .16s,border-color .16s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -2927,7 +2928,7 @@ window.renderCatList=(catName,tab)=>{
     const coinSvg='<svg class="coin-ic" viewBox="0 0 32 32"><use href="#coinSym"/></svg>';
     const canJoin=(tab==='Upcoming')&&!isJoined&&left>0&&!(m.isVipOnly&&!isVipNow());
     const btnFn=canJoin?`event.stopPropagation();openJoinFlow('${m.id}')`:openFn;
-    const upFoot=`<div class="mc2-foot"><div class="mc2-spots">${joinedN}/${m.max||0}<div class="mc2-bar"><i class="${(joinedN>0&&joinedN<(m.max||0))?'part':''}" style="width:${pct}%"></i></div></div><button class="mc2-btn ${gray?'gray':''} ${stCls}" onclick="${btnFn}">${showFee?coinSvg+feeTxt+' ':''}${bt} <i class="fa-solid fa-chevron-right" style="font-size:12px"></i></button></div>`;
+    const upFoot=`<div class="mc2-foot"><div class="mc2-spots">${joinedN}/${m.max||0}<div class="mc2-bar"><i class="${(joinedN>0&&joinedN<(m.max||0))?(pct>=50?'part':'low'):''}" style="width:${pct}%"></i></div></div><button class="mc2-btn ${gray?'gray':''} ${stCls}" onclick="${btnFn}">${showFee?coinSvg+feeTxt+' ':''}${bt} <i class="fa-solid fa-chevron-right" style="font-size:12px"></i></button></div>`;
     let footHtml=upFoot;
     if(tab==='Ongoing'){
       footHtml=`<div class="mc2-foot2"><button class="mc2-btn2" onclick="${openFn}">SPECTATE</button></div>`;
