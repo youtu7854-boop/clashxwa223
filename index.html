@@ -3737,7 +3737,19 @@ window.submitFinalDeposit=async()=>{
   const btn=document.getElementById('depSubmitFinalBtn'); btn.innerText="Uploading..."; btn.disabled=true;
   try{
     let proof=utr,type='UTR';
-    if(file){ const fd=new FormData(); fd.append('image',file); const KEY="4d3486df57ed390c7ca337185635b11d"; const res=await fetch(`https://api.imgbb.com/1/upload?key=${KEY}`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){proof=data.data.url;type='Screenshot';} else throw new Error("Image Upload Failed"); }
+    if(file){
+      let url=null;
+      try{
+        if(sbOn()&&window.sbx.storage){
+          const ext=((file.name||'').split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5)||'jpg';
+          const path='proof/'+window.currentUser.uid+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+          const r=await window.sbx.storage.from('images').upload(path,file,{contentType:file.type||'image/jpeg',upsert:false});
+          if(r.error) throw r.error; url=window.sbx.storage.from('images').getPublicUrl(path).data.publicUrl;
+        }
+      }catch(e){ console.warn('Supabase upload fail, imgbb fallback',e); url=null; }
+      if(!url){ const fd=new FormData(); fd.append('image',file); const KEY="4d3486df57ed390c7ca337185635b11d"; const res=await fetch(`https://api.imgbb.com/1/upload?key=${KEY}`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){ url=data.data.url; } else throw new Error("Image Upload Failed"); }
+      proof=url; type='Screenshot';
+    }
     if(sbOn()) await sbRpc('rpc_deposit_submit',{p_amount:amt,p_type:type,p_proof:proof}); else await db.collection("deposits").add({userId:window.currentUser.uid,userEmail:window.userData?.email||'',amount:amt,type,proofUrl:proof,status:'Pending',createdAt:new Date()});
     showToast("Deposit Request Sent to Admin!"); closeDepositModal(); await loadUserTransactions();
   }catch(e){showToast(e.message||"Error submitting request",true);}
