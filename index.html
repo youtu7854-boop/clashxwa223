@@ -2296,7 +2296,7 @@ if(!auth){
     showAuth();
   }
 });
-window.logoutUser=async()=>{ if(confirm("Logout from App?")) await auth.signOut(); };
+window.logoutUser=async()=>{ if(await window.__cxConfirm("Logout from App?")) await auth.signOut(); };
 
 window.registerUser=async()=>{
   const btn=document.getElementById('signupBtn');
@@ -4222,7 +4222,6 @@ window.__setPh=function(url,name){
 <div class="pv-nav" id="pvNav"><div onclick="pvtLoad()"><i class="fa-solid fa-rotate"></i>Refresh</div><div onclick="pvtCreateDlg()"><i class="fa-solid fa-gamepad"></i>Create Contest</div></div>
 <div id="pvDetail"><div class="pd-top"><div class="pd-hd"><i class="fa-solid fa-arrow-left" onclick="pvtDetailClose()"></i><span id="pdTitle"></span></div></div><div id="pdBody"></div></div>
 <div id="pvChat"><div class="pd-hd" style="padding:8px 14px;border-bottom:1px solid #ddd"><i class="fa-solid fa-arrow-left" onclick="pvtChatClose()"></i><span id="pcTitle"></span></div><div id="pcMsgs"></div><div class="pc-in"><input id="pcMsg" maxlength="500" placeholder="Message..." autocomplete="off" onkeydown="if(event.key==='Enter')pvtSend()"><button class="pd-btn" onclick="pvtSend()">Send</button></div></div>
-<input type="file" id="pvFile" accept="image/*" style="display:none">
 <div class="pv-ov" id="pvOv"><div class="pv-box" id="pvBox"></div></div>
 <script>
 /* ===== Private Contest (user app): Contests grid -> challenges screen. Baaki app nahi chhua. ===== */
@@ -4236,11 +4235,11 @@ window.__setPh=function(url,name){
   function toast(m){ try{ showToast(m); }catch(e){ alert(m); } }
   function err(e){
     var m=String((e&&e.message)||e||'');
-    var map={'insufficient balance':'Wallet me balance kam hai','dues pending':'Pehle wallet ka due bharo','already accepted':'Ye challenge kisi ne accept kar liya','own challenge':'Apna challenge accept nahi kar sakte','bad winning':'Winning, entry ke 2x se zyada nahi ho sakti','bad entry':'Entry sahi daalo','cannot cancel now':'Ab cancel nahi ho sakta','login required':'Pehle login karo'};
+    var map={'insufficient balance':'Insufficient wallet balance','dues pending':'Please clear your wallet dues first','already accepted':'This challenge has already been accepted','own challenge':'You cannot accept your own challenge','bad winning':'Winning cannot be more than 2x the entry','bad entry':'Enter a valid entry','cannot cancel now':'This challenge can no longer be cancelled','login required':'Please login first'};
     for(var k in map) if(m.indexOf(k)>=0) return map[k];
-    return m||'Kuch gadbad ho gayi';
+    return m||'Something went wrong';
   }
-  function rpc(n,a){ if(!window.sbx) return Promise.reject(new Error('Network issue, dobara try karo')); return window.sbx.rpc(n,a||{}).then(function(r){ if(r.error) throw new Error(r.error.message||'error'); return r.data; }); }
+  function rpc(n,a){ if(!window.sbx) return Promise.reject(new Error('Network issue, please try again')); return window.sbx.rpc(n,a||{}).then(function(r){ if(r.error) throw new Error(r.error.message||'error'); return r.data; }); }
 
   /* Contests grid (admin ke banner) */
   window.openPrivateContest=function(){
@@ -4250,13 +4249,15 @@ window.__setPh=function(url,name){
     var box=$('catMatchesContainer');
     box.innerHTML='<div class="cat-grid" id="allCategoryGrid">'+'<div class="sk-shim sk-tile"></div>'.repeat(3)+'</div>';
     var g=$('allCategoryGrid');
-    if(!window.sbx){ g.innerHTML='<div class="loader" style="grid-column:1/-1">Unable to load contests.</div>'; return; }
+    try{ jbShow(); }catch(e){}
+    if(!window.sbx){ try{ jbHide(); }catch(e){} g.innerHTML='<div class="loader" style="grid-column:1/-1">Unable to load contests.</div>'; return; }
     window.sbx.from('pvt_contests').select('id,data,created_at').order('created_at',{ascending:true}).then(function(r){
+      try{ jbHide(); }catch(e){}
       if(r.error) throw new Error(r.error.message);
       var h=''; (r.data||[]).forEach(function(d){ var o=d.data||{};
         h+='<div class="cat-tile" onclick="pvtOpen(\''+esc(d.id)+'\',\''+esc(o.name||'').replace(/'/g,"\\'")+'\')"><img src="'+esc(window.__imgSrc?window.__imgSrc(o.banner):o.banner)+'" alt=""></div>'; });
       g.innerHTML=h||'<div class="loader" style="grid-column:1/-1">No contest found.</div>';
-    }).catch(function(){ g.innerHTML='<div class="loader" style="grid-column:1/-1">Unable to load contests.</div>'; });
+    }).catch(function(){ try{ jbHide(); }catch(e){} g.innerHTML='<div class="loader" style="grid-column:1/-1">Unable to load contests.</div>'; });
   };
 
   /* Challenges screen */
@@ -4281,11 +4282,13 @@ window.__setPh=function(url,name){
   }
   window.pvtLoad=function(){
     var l=$('pvList'); l.innerHTML='<div class="pv-empty">Loading...</div>';
+    try{ jbShow(); }catch(e){}
     var my=tab, mc=cid;
     rpc('pvt_challenge_list',{p_contest:mc,p_tab:my}).then(function(a){
+      try{ jbHide(); }catch(e){}
       if(my!==tab||mc!==cid) return;
       l.innerHTML=(a&&a.length)?a.map(card).join(''):'<div class="pv-empty">'+(my==='open'?'No challenges yet':'Nothing here yet')+'</div>';
-    }).catch(function(e){ l.innerHTML='<div class="pv-empty">'+esc(err(e))+'</div>'; });
+    }).catch(function(e){ try{ jbHide(); }catch(x){} l.innerHTML='<div class="pv-empty">'+esc(err(e))+'</div>'; });
   };
 
   /* Dialogs */
@@ -4303,18 +4306,18 @@ window.__setPh=function(url,name){
   window.pvtCancel=function(id){
     if(busy) return; busy=true;
     try{ jbShow(); }catch(e){}
-    rpc('pvt_challenge_cancel',{p_id:id}).then(function(){ toast('Challenge cancelled, coins wapas'); }).catch(function(e){ toast(err(e)); })
+    rpc('pvt_challenge_cancel',{p_id:id}).then(function(){ toast('Challenge cancelled, coins refunded'); }).catch(function(e){ toast(err(e)); })
       .then(function(){ busy=false; try{ jbHide(); }catch(e){} pvtLoad(); });
   };
   window.pvtCreateDlg=function(){
-    dlg('<p style="font-weight:600">Create Contest</p><div class="pv-lb">Entry (coins)</div><input class="pv-in" id="pvE" type="number" inputmode="numeric" min="1"><div class="pv-lb">Winning (coins)</div><input class="pv-in" id="pvW" type="number" inputmode="numeric" min="1"><div class="pv-lb" style="font-size:12px">Winning, entry ke 2x se zyada nahi ho sakti. Entry abhi wallet se kategi.</div><div class="pv-btns"><button onclick="pvtCreate()">Create</button><button onclick="pvtDlgClose()">Cancel</button></div>');
+    dlg('<p style="font-weight:600">Create Contest</p><div class="pv-lb">Entry (coins)</div><input class="pv-in" id="pvE" type="number" inputmode="numeric" min="1"><div class="pv-lb">Winning (coins)</div><input class="pv-in" id="pvW" type="number" inputmode="numeric" min="1"><div class="pv-lb" style="font-size:12px">Winning cannot be more than 2x the entry. The entry is deducted from your wallet now.</div><div class="pv-btns"><button onclick="pvtCreate()">Create</button><button onclick="pvtDlgClose()">Cancel</button></div>');
   };
   window.pvtCreate=function(){
     if(busy) return;
     var e=+$('pvE').value, w=+$('pvW').value;
-    if(!(e>=1)) return toast('Entry sahi daalo');
-    if(!(w>0)) return toast('Winning sahi daalo');
-    if(w>e*2) return toast('Winning, entry ke 2x se zyada nahi ho sakti');
+    if(!(e>=1)) return toast('Enter a valid entry');
+    if(!(w>0)) return toast('Enter a valid winning amount');
+    if(w>e*2) return toast('Winning cannot be more than 2x the entry');
     busy=true; pvtDlgClose();
     try{ jbShow(); }catch(x){}
     rpc('pvt_challenge_create',{p_contest:cid,p_entry:e,p_win:w}).then(function(){ toast('Challenge created'); tab='open'; setTabUI(); }).catch(function(x){ toast(err(x)); })
@@ -4344,17 +4347,17 @@ window.__setPh=function(url,name){
       if(own&&(st==='Open'||st==='Accepted')){
         h+='<div class="pd-kv"><input class="pd-in" id="pdRoom" placeholder="Room ID" value="'+esc(c.roomId||'')+'"></div><div class="pd-kv"><input class="pd-in" id="pdPass" placeholder="Password" value="'+esc(c.roomPass||'')+'"><button class="pd-btn" onclick="pvtRoomSave()">Save</button></div>';
       } else if(c.roomId||c.roomPass){
-        h+='<div class="pd-kv"><span>Room ID</span><b onclick="pvtCopy(\''+esc(c.roomId||'')+'\')">'+esc(c.roomId||'-')+'</b></div><div class="pd-kv"><span>Password</span><b onclick="pvtCopy(\''+esc(c.roomPass||'')+'\')">'+esc(c.roomPass||'-')+'</b></div><div class="pd-note">Tap karke copy karo</div>';
-      } else h+='<div class="pd-note">Challenge banane wale ne abhi Room ID nahi diya.</div>';
+        h+='<div class="pd-kv"><span>Room ID</span><b onclick="pvtCopy(\''+esc(c.roomId||'')+'\')">'+esc(c.roomId||'-')+'</b></div><div class="pd-kv"><span>Password</span><b onclick="pvtCopy(\''+esc(c.roomPass||'')+'\')">'+esc(c.roomPass||'-')+'</b></div><div class="pd-note">Tap to copy</div>';
+      } else h+='<div class="pd-note">The creator has not added the Room ID yet.</div>';
       h+='</div>';
     }
     /* Result */
     if(st==='Accepted'){
       if(c.myResult) h+='<div class="pd-sec"><div class="pd-h">Result</div><div class="pd-note">Waiting for Result</div></div>';
-      else if(c.roomId) h+='<div class="pd-sec"><div class="pd-h">Result</div><div class="pd-res"><button class="pd-btn g" onclick="pvtWinPick()">I Won</button><button class="pd-btn r" onclick="pvtLossDlg()">I Lost</button></div><div class="pd-note" style="margin-top:8px">Jeet par screenshot upload karna zaroori hai. Galat result dene par action liya jayega.</div></div>';
-    } else if(st==='Review') h+='<div class="pd-sec"><div class="pd-note">Review by Team. Team result tay karegi.</div></div>';
+      else if(c.roomId) h+='<div class="pd-sec"><div class="pd-h">Result</div><div class="pd-res"><label class="pd-btn g" style="position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">I Won<input type="file" id="pvFile" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0"></label><button class="pd-btn r" onclick="pvtLossDlg()">I Lost</button></div><div class="pd-note" style="margin-top:8px">A screenshot is required if you won. Action will be taken for a wrong result.</div></div>';
+    } else if(st==='Review') h+='<div class="pd-sec"><div class="pd-note">Review by Team. The team will decide the result.</div></div>';
     else if(st==='Completed') h+='<div class="pd-sec"><div class="pd-h">Result</div><b>'+(c.winnerUid===me?'You Won '+fmt(c.win)+' Coins':'You Lost')+'</b></div>';
-    else if(st==='Cancelled') h+='<div class="pd-sec"><div class="pd-note">Challenge cancel ho gaya.</div></div>';
+    else if(st==='Cancelled') h+='<div class="pd-sec"><div class="pd-note">This challenge was cancelled.</div></div>';
     /* Chat */
     if(c.acceptorUid&&(st==='Accepted'||st==='Review')) h+='<div class="pd-sec"><button class="pd-btn" style="width:100%;height:46px;font-size:16px" onclick="pvtChatOpen()"><i class="fa-solid fa-comments"></i>&nbsp; Open Chat</button></div>';
     $('pdBody').innerHTML=h;
@@ -4364,7 +4367,7 @@ window.__setPh=function(url,name){
     rpc('pvt_chat_list',{p_id:id}).then(function(a){
       var box=$('pcMsgs'); if(!box||id!==dId) return; var sj=JSON.stringify(a); if(sj===lastChat) return; lastChat=sj;
       var me=uid(), near=box.scrollHeight-box.scrollTop-box.clientHeight<80;
-      box.innerHTML=(a&&a.length)?a.map(function(m){ var mine=m.uid===me; return '<div class="pd-m '+(mine?'me':'ot')+'"><small>'+esc(mine?'You':m.name)+'</small>'+esc(m.msg)+'</div>'; }).join(''):'<div class="pd-note" style="text-align:center;margin-top:30px">Abhi koi message nahi.</div>';
+      box.innerHTML=(a&&a.length)?a.map(function(m){ var mine=m.uid===me; return '<div class="pd-m '+(mine?'me':'ot')+'"><small>'+esc(mine?'You':m.name)+'</small>'+esc(m.msg)+'</div>'; }).join(''):'<div class="pd-note" style="text-align:center;margin-top:30px">No messages yet.</div>';
       if(near||!box.dataset.s){ box.scrollTop=box.scrollHeight; box.dataset.s='1'; }
     }).catch(function(){});
   }
@@ -4381,23 +4384,24 @@ window.__setPh=function(url,name){
     rpc('pvt_room_set',{p_id:dId,p_room:$('pdRoom').value,p_pass:$('pdPass').value}).then(function(){ toast('Room ID / Password saved'); tick(); }).catch(function(e){ toast(err(e)); }); };
   function submit(res,proof){
     if(busy) return; busy=true; try{ jbShow(); }catch(e){}
-    rpc('pvt_challenge_result',{p_id:dId,p_result:res,p_proof:proof||null}).then(function(r){ toast(r==='Completed'?'Result mil gaya':r==='Review'?'Result mismatch, team review karegi':'Result submit ho gaya'); })
+    rpc('pvt_challenge_result',{p_id:dId,p_result:res,p_proof:proof||null}).then(function(r){ toast(r==='Completed'?'Result received':r==='Review'?'Results do not match, the team will review':'Result submitted'); })
       .catch(function(e){ toast(err(e)); }).then(function(){ busy=false; try{ jbHide(); }catch(e){} tick(); });
   }
-  window.pvtLossDlg=function(){ dlg('<p>Kya aap haar gaye?</p><p style="font-size:14px;color:#555">Opponent ko winning mil jayegi.</p><div class="pv-btns"><button onclick="pvtDlgClose();pvtSubmitLoss()">Yes</button><button onclick="pvtDlgClose()">No</button></div>'); };
+  window.pvtLossDlg=function(){ dlg('<p>Did you lose this match?</p><p style="font-size:14px;color:#555">Your opponent will receive the winning amount.</p><div class="pv-btns"><button onclick="pvtDlgClose();pvtSubmitLoss()">Yes</button><button onclick="pvtDlgClose()">No</button></div>'); };
   window.pvtSubmitLoss=function(){ submit('loss'); };
   window.pvtWinPick=function(){ var f=$('pvFile'); f.value=''; f.click(); };
-  $('pvFile').addEventListener('change',function(){
-    var f=this.files&&this.files[0]; if(!f) return;
-    if(f.size>8*1024*1024) return toast('Screenshot 8MB se chhota rakho');
+  document.addEventListener('change',function(ev){
+    var inp=ev.target; if(!inp||inp.id!=='pvFile') return;
+    var f=inp.files&&inp.files[0]; if(!f) return;
+    if(f.size>8*1024*1024) return toast('Screenshot must be smaller than 8MB');
     window.__pvFile=f;
-    dlg('<p>Aap jeet gaye? Screenshot upload hoga.</p><p style="font-size:14px;color:#555">'+esc(f.name||'screenshot')+'</p><div class="pv-btns"><button onclick="pvtDlgClose();pvtSubmitWin()">Yes</button><button onclick="pvtDlgClose()">No</button></div>');
+    dlg('<p>Did you win? Your screenshot will be uploaded.</p><p style="font-size:14px;color:#555">'+esc(f.name||'screenshot')+'</p><div class="pv-btns"><button onclick="pvtDlgClose();pvtSubmitWin()">Yes</button><button onclick="pvtDlgClose()">No</button></div>');
   });
   window.pvtSubmitWin=async function(){
     var f=window.__pvFile; if(!f||busy) return;
     busy=true; try{ jbShow(); }catch(e){}
     try{
-      if(!window.sbx||!window.sbx.storage) throw new Error('Upload abhi nahi ho sakta');
+      if(!window.sbx||!window.sbx.storage) throw new Error('Upload is not available right now');
       var ext=((f.name||'').split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5)||'jpg';
       var path='proof/'+uid()+'/pvt-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
       var r=await window.sbx.storage.from('images').upload(path,f,{contentType:f.type||'image/jpeg',cacheControl:'31536000',upsert:false});
@@ -4412,7 +4416,7 @@ window.__setPh=function(url,name){
   var _card2=card;
   card=function(c){ var h=_card2(c); if(c.locked) h=h.replace('<div class="pv-code">','<div style="line-height:1;margin-bottom:3px"><i class="fa-solid fa-lock" style="font-size:16px"></i></div><div class="pv-code">'); return h; };
   var _err=err;
-  err=function(e){ var m=String((e&&e.message)||e||''); if(m.indexOf('wrong password')>=0) return 'Galat password'; if(m.indexOf('bad username')>=0) return 'Username 2 se 30 akshar ka daalo'; if(m.indexOf('bad password')>=0) return 'Password 20 akshar tak hi'; return _err(e); };
+  err=function(e){ var m=String((e&&e.message)||e||''); if(m.indexOf('wrong password')>=0) return 'Wrong password'; if(m.indexOf('bad username')>=0) return 'Username must be 2 to 30 characters'; if(m.indexOf('bad password')>=0) return 'Password can be up to 20 characters'; return _err(e); };
   tick=function(){ if(!dId) return; rpc('pvt_challenge_get',{p_id:dId}).then(function(c){ if(!c||!dId) return; cache[c.id]=c; if(c.status!==lastStatus||c.roomId!==lastRoom||c.myResult!==lastRes||c.acceptorUid!==lastAcc) draw(false); loadChat(); }).catch(function(){}); };
   window.pvtAcceptDlg=function(id,entry){
     var c=cache[id]||{};
@@ -4420,7 +4424,7 @@ window.__setPh=function(url,name){
   };
   window.pvtAccept=function(id){
     if(busy) return; var c=cache[id]||{}, pw=$('pvAP')?$('pvAP').value.trim():'';
-    if(c.locked&&!pw) return toast('Password daalo');
+    if(c.locked&&!pw) return toast('Enter the password');
     busy=true; pvtDlgClose(); try{ jbShow(); }catch(e){}
     rpc('pvt_challenge_accept',{p_id:id,p_password:c.locked?pw:null}).then(function(){ toast('Challenge accepted'); return rpc('pvt_challenge_get',{p_id:id}).then(function(r){ cache[id]=r; return true; }); })
       .catch(function(e){ toast(err(e)); return false; })
@@ -4441,14 +4445,41 @@ window.__setPh=function(url,name){
   window.pvtCreate=function(){
     if(busy) return;
     var u=$('pvU').value.trim(), e=+$('pvE').value, p=wp?$('pvP').value.trim():'';
-    if(u.length<2) return toast('Username daalo');
-    if(!(e>=1)) return toast('Amount sahi daalo');
-    if(wp&&!p) return toast('Password daalo');
+    if(u.length<2) return toast('Enter your username');
+    if(!(e>=1)) return toast('Enter a valid amount');
+    if(wp&&!p) return toast('Enter the password');
     busy=true; pvtDlgClose(); try{ jbShow(); }catch(x){}
     rpc('pvt_challenge_create',{p_contest:cid,p_entry:e,p_name:u,p_password:wp?p:null}).then(function(){ toast('Challenge created'); tab='open'; setTabUI(); }).catch(function(x){ toast(err(x)); })
       .then(function(){ busy=false; try{ jbHide(); }catch(x){} pvtLoad(); });
   };
+
+  /* ===== Back button (phone) + loading ring ===== */
+  var _hb=window.handleBack;
+  window.handleBack=function(){
+    try{
+      if($('pvOv')&&$('pvOv').style.display==='flex'){ pvtDlgClose(); return true; }
+      if($('pvChat')&&$('pvChat').style.display==='flex'){ pvtChatClose(); return true; }
+      if($('pvDetail')&&$('pvDetail').style.display==='block'){ pvtDetailClose(); return true; }
+      if($('pvtScreen')&&$('pvtScreen').style.display==='block'){ pvtClose(); return true; }
+    }catch(e){}
+    return _hb?_hb.apply(this,arguments):false;
+  };
+  $('pvOv').addEventListener('click',function(ev){ if(ev.target===this) pvtDlgClose(); });
 })();
+</script>
+<script>
+/* Sketchware WebView me confirm() nahi chalta: apna Yes/No dialog (abhi sirf Logout me use) */
+window.__cxConfirm=function(msg){
+  return new Promise(function(res){
+    var ov=document.createElement('div'); ov.className='pv-ov'; ov.style.display='flex'; ov.style.zIndex='10200';
+    ov.innerHTML='<div class="pv-box"><p></p><div class="pv-btns"><button>Yes</button><button>No</button></div></div>';
+    ov.querySelector('p').textContent=msg;
+    var b=ov.querySelectorAll('button'), done=function(v){ ov.remove(); res(v); };
+    b[0].onclick=function(){ done(true); }; b[1].onclick=function(){ done(false); };
+    ov.addEventListener('click',function(e){ if(e.target===ov) done(false); });
+    document.body.appendChild(ov);
+  });
+};
 </script>
 </body>
 </html>
