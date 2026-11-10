@@ -1771,7 +1771,7 @@ window.switchTab=(tabId)=>{
   const vis=id=>{const e=byId(id); if(!e) return false; const c=getComputedStyle(e); return c.display!=='none'&&c.visibility!=='hidden';};
   const blocked=()=>{
     if(!vis('mainApp')) return true;
-    if(vis('payReturn')||vis('joinSuccess')||vis('categoryMatchesScreen')||vis('wdScreen')||vis('acScreen')||vis('payFrameWrap')) return true;
+    if(vis('payReturn')||vis('joinSuccess')||vis('categoryMatchesScreen')||vis('wdScreen')||vis('acScreen')||vis('payFrameWrap')||vis('pvtScreen')||vis('pvDetail')) return true;
     if([...document.querySelectorAll('.modal-overlay')].some(m=>vis(m.id)||getComputedStyle(m).display!=='none')) return true;
     return ['jdOverlay','jmScreen','jpScreen','resultScreen','ongoingScreen','txnScreen'].some(id=>{const e=byId(id); return e&&e.classList.contains('show');});
   };
@@ -4230,6 +4230,8 @@ window.__setPh=function(url,name){
 .pc-in{display:flex;gap:8px;padding:10px;border-top:1px solid #ddd;background:#fff}
 .pc-in input{flex:1;min-width:0;height:44px;border:1px solid #ccc;background:#f3f3f3;color:#111;border-radius:22px;padding:0 16px;font-size:16px;font-family:inherit;outline:0}
 .pc-in .pd-btn{border-radius:22px;height:44px}
+@keyframes pvSwL{from{transform:translateX(40px);opacity:.3}to{transform:none;opacity:1}}@keyframes pvSwR{from{transform:translateX(-40px);opacity:.3}to{transform:none;opacity:1}}
+.pv-list.pvSwL{animation:pvSwL .22s ease-out}.pv-list.pvSwR{animation:pvSwR .22s ease-out}
 #pvDetail{background:#fafafa;color:#111;padding-bottom:76px}
 #pvDetail .pd-top{background:#fff;padding:6px 14px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 #pvDetail .pd-hd{font-size:17px;font-weight:700;color:#111;min-height:42px;gap:12px}#pvDetail .pd-hd i{font-size:17px}
@@ -4520,6 +4522,28 @@ window.__setPh=function(url,name){
     return _hb?_hb.apply(this,arguments):false;
   };
   $('pvOv').addEventListener('click',function(ev){ if(ev.target===this) pvtDlgClose(); });
+})();
+</script>
+<script>
+/* Private Contest: Ongoing / My Contest / Results ke beech swipe */
+(function(){
+  var el=document.getElementById('pvtScreen'); if(!el) return;
+  var T=['open','mine','results'], sx=0, sy=0, on=false;
+  el.addEventListener('touchstart',function(e){
+    on=false; if(e.touches.length!==1) return;
+    var ov=document.getElementById('pvOv'); if(ov&&ov.style.display==='flex') return;
+    var t=e.target; if(t&&t.closest&&t.closest('input,textarea,select')) return;
+    sx=e.touches[0].clientX; sy=e.touches[0].clientY; if(sx<14||sx>window.innerWidth-14) return; on=true;
+  },{passive:true});
+  el.addEventListener('touchend',function(e){
+    if(!on) return; on=false;
+    var c=e.changedTouches[0], dx=c.clientX-sx, dy=c.clientY-sy;
+    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5) return;
+    var cur=el.querySelector('.pv-tab.on'); var i=T.indexOf(cur?cur.getAttribute('data-t'):'open'); if(i<0) return;
+    var n=i+(dx<0?1:-1); if(n<0||n>=T.length) return;
+    window.pvtTab(T[n]);
+    var l=document.getElementById('pvList'); if(l){ l.classList.remove('pvSwL','pvSwR'); void l.offsetWidth; l.classList.add(dx<0?'pvSwL':'pvSwR'); }
+  },{passive:true});
 })();
 </script>
 <script>
