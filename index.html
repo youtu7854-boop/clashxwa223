@@ -1706,9 +1706,22 @@ window.openExternal=function(url){
       const intent='intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+(pkg?';package='+pkg:'')+';S.browser_fallback_url='+encodeURIComponent(url)+';end';
       window.location.href=intent; return;
     }
-    window.open(url,'_blank','noopener');
-  }catch(e){ try{ window.open(url,'_blank'); }catch(e2){} }
+    (window.__nativeOpen||window.open)(url,'_blank','noopener');
+  }catch(e){ try{ (window.__nativeOpen||window.open)(url,'_blank'); }catch(e2){} }
 };
+
+/* Sketchware WebView me window.open / target=_blank links ab ek hi 'openExternal' se bahar (Chrome) me khulte hain */
+(function(){
+  var nat=window.open.bind(window); window.__nativeOpen=nat;
+  window.open=function(url,t,f){
+    try{ var u=String(url||''); if(/^https?:\/\//i.test(u)||/^(?:[a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#]|$)/i.test(u)){ window.openExternal(u); return null; } }catch(e){}
+    return nat(url,t,f);
+  };
+  document.addEventListener('click',function(ev){
+    try{ if(ev.defaultPrevented) return; var a=ev.target&&ev.target.closest&&ev.target.closest('a[href]'); if(!a) return;
+      var h=a.getAttribute('href')||''; if(/^https?:\/\//i.test(h)&&(a.target==='_blank'||a.hasAttribute('target'))){ ev.preventDefault(); window.openExternal(h); } }catch(e){}
+  });
+})();
 window.openSupportWa=()=>{ let sl=(window.appSocials&&window.appSocials.support||'').toString().trim(); if(sl){ window.openExternal(sl); return; } const f=document.getElementById('floatingWa'); if(window.appSettings?.whatsapp && f && f.href) window.openExternal(f.href); else showToast("Admin has not set WhatsApp number yet!",true); };
 
 /* ---------- Tabs ---------- */
@@ -2069,7 +2082,7 @@ window.openPrivateContest=()=>{
   setHtml('catMatchesContainer','<div style="text-align:center;color:var(--text-sub);padding:60px 20px;font-size:14px"><i class="fa-solid fa-trophy" style="font-size:40px;margin-bottom:12px;display:block;opacity:.5"></i>No contest found</div>');
 };
 window.closeCategoryScreen=()=>{const el=document.getElementById('categoryMatchesScreen'); if(el) el.style.display='none';};
-window.openUpdateLink=()=>{ if(window.appSettings?.updateLink) window.open(window.appSettings.updateLink,'_blank'); };
+window.openUpdateLink=()=>{ if(window.appSettings?.updateLink) window.openExternal(window.appSettings.updateLink); };
 window.toggleAuth=(t)=>auGo(t==='signup'?'reg':'login');
 
 /* ---------- Device ID / multi-account guard ---------- */
