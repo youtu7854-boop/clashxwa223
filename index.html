@@ -3822,8 +3822,8 @@ window.submitWithdraw=async()=>{
 
 /* ---------- Transactions & notifications ---------- */
 
-const TX_PLUS=['Redeem Code','Signup Bonus','Prize Distribution','Prize','Match Reward','Winning','Deposit','Referral Bonus','Refund','Admin Add','Level Bonus','Airdrop'];
-const TX_MINUS=['Match Entry','Withdraw','Store Purchase','Password Change Fee','Penalty'];
+const TX_PLUS=['Redeem Code','Signup Bonus','Prize Distribution','Prize','Match Reward','Winning','Deposit','Referral Bonus','Refund','Admin Add','Level Bonus','Airdrop','Challenge Win','Challenge Refund'];
+const TX_MINUS=['Match Entry','Withdraw','Store Purchase','Password Change Fee','Penalty','Challenge Entry'];
 function txSerial(x){
   let v=x.matchSerial||x.serial||''; if(v) return String(v).replace(/^#+/,'');
   const mm=String(x.desc||'').match(/#\s*(\d+)/); if(mm) return mm[1];
@@ -3840,6 +3840,7 @@ function txPenaltyReason(x){
 function txTitle(x){
   if(String(x.tType).toLowerCase()==='penalty') return txPenaltyReason(x);
   const sr=txSerial(x); const suf=sr?` - #${sr}`:'';
+  if(/^Challenge (Win|Entry|Refund)$/.test(x.tType)) return 'PVT Contest '+x.tType.slice(10)+suf;
   if(x.tType==='Match Entry') return 'Match Joined'+suf;
   if(['Prize Distribution','Prize','Match Reward','Winning'].includes(x.tType)) return 'Match Reward'+suf;
   if(x.tType==='Refund') return 'Refund'+suf;
@@ -4211,6 +4212,29 @@ window.__setPh=function(url,name){
 .pc-in{display:flex;gap:8px;padding:10px;border-top:1px solid #ddd;background:#fff}
 .pc-in input{flex:1;min-width:0;height:44px;border:1px solid #ccc;background:#f3f3f3;color:#111;border-radius:22px;padding:0 16px;font-size:16px;font-family:inherit;outline:0}
 .pc-in .pd-btn{border-radius:22px;height:44px}
+#pvDetail{background:#fafafa;color:#111;padding-bottom:76px}
+#pvDetail .pd-top{background:#fff;padding:6px 14px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+#pvDetail .pd-hd{font-size:17px;font-weight:700;color:#111;min-height:42px;gap:12px}#pvDetail .pd-hd i{font-size:17px}
+.pe-card{background:#fff;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.12);margin:10px 10px 8px;padding:8px 8px 10px}
+.pe-code{text-align:center;font-size:14px;font-weight:500;color:#111;line-height:1.2}
+.pe-ser{text-align:center;font-size:10px;color:#888;margin-top:1px}
+.pe-row{display:flex;align-items:flex-start;justify-content:space-between;margin:6px 0 12px}
+.pe-side{width:72px;text-align:center;font-size:12.5px;line-height:1.25;word-break:break-word;color:#444}
+.pe-side img{width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 5px}
+.pe-vs{color:#777;font-size:13px;margin-top:16px}
+.pe-box3{display:flex;gap:10px}
+.pe-b{flex:1 1 0;min-width:0;border:1px solid #bbb;border-radius:4px;padding:8px 3px;text-align:center;font-size:13px;font-weight:500;line-height:1.3;color:#111}
+.pe-b.g{color:#3ddc97}.pe-b.p{color:#8b7bf0}
+.pe-rules{margin:0 10px 10px;background:#fff;border:1.5px solid #111;border-radius:8px;padding:8px;font-size:11px;line-height:1.25;color:#111}
+.pe-rules p{margin:0}
+.pe-chat{display:block;margin:0 10px 8px;height:38px;width:calc(100% - 20px);border:0;border-radius:6px;background:#8b7bf0;color:#fff;font-size:13px;font-family:inherit;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 10px}
+#pdBar{display:none;position:fixed;left:0;right:0;bottom:0;height:61px;background:#000;color:#fff;z-index:10003;font-size:18px;font-weight:500}
+.pe-bt{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;text-align:center}
+.pe-bt+.pe-bt{border-left:1px solid #444}
+.pe-bt.pe-w{background:#1fa463}.pe-bt.pe-l{background:#e5484d}.pe-bt.pe-w+.pe-bt{border-left:0}
+.pe-in{width:100%;height:44px;border:1px solid #ccc;background:#f3f3f3;color:#111;border-radius:6px;padding:0 12px;font-size:16px;font-family:inherit;margin-bottom:10px;box-sizing:border-box}
+.pe-cp{display:flex;justify-content:space-between;gap:10px;text-align:left;padding:8px 0;border-bottom:1px solid #eee;font-size:16px}
+.pe-cp b{word-break:break-all;text-align:right}
 </style>
 <div id="pvtScreen">
   <div class="pv-top">
@@ -4221,6 +4245,7 @@ window.__setPh=function(url,name){
 </div>
 <div class="pv-nav" id="pvNav"><div onclick="pvtLoad()"><i class="fa-solid fa-rotate"></i>Refresh</div><div onclick="pvtCreateDlg()"><i class="fa-solid fa-gamepad"></i>Create Contest</div></div>
 <div id="pvDetail"><div class="pd-top"><div class="pd-hd"><i class="fa-solid fa-arrow-left" onclick="pvtDetailClose()"></i><span id="pdTitle"></span></div></div><div id="pdBody"></div></div>
+<div id="pdBar"></div>
 <div id="pvChat"><div class="pd-hd" style="padding:8px 14px;border-bottom:1px solid #ddd"><i class="fa-solid fa-arrow-left" onclick="pvtChatClose()"></i><span id="pcTitle"></span></div><div id="pcMsgs"></div><div class="pc-in"><input id="pcMsg" maxlength="500" placeholder="Message..." autocomplete="off" onkeydown="if(event.key==='Enter')pvtSend()"><button class="pd-btn" onclick="pvtSend()">Send</button></div></div>
 <div class="pv-ov" id="pvOv"><div class="pv-box" id="pvBox"></div></div>
 <script>
@@ -4332,36 +4357,47 @@ window.__setPh=function(url,name){
       h=h.replace(/onclick="pvt(Cancel|AcceptDlg)\(/,function(m){return 'onclick="event.stopPropagation();pvt'+(m.indexOf('Cancel')>0?'Cancel':'AcceptDlg')+'('; }); }
     return h; };
   window.pvtDetail=function(id){ dId=id; $('pvDetail').style.display='block'; $('pvDetail').scrollTop=0; lastChat=''; draw(true); clearInterval(dPoll); dPoll=setInterval(tick,5000); };
-  window.pvtDetailClose=function(){ try{ pvtChatClose(); }catch(e){} $('pvDetail').style.display='none'; dId=null; clearInterval(dPoll); dPoll=null; pvtLoad(); };
+  window.pvtDetailClose=function(){ try{ pvtChatClose(); }catch(e){} $('pvDetail').style.display='none'; $('pdBar').style.display='none'; dId=null; clearInterval(dPoll); dPoll=null; pvtLoad(); };
   function tick(){ if(!dId) return; rpc('pvt_challenge_list',{p_contest:cid,p_tab:'mine'}).then(function(a){ (a||[]).forEach(function(c){cache[c.id]=c}); if(dId&&cache[dId]){ var c=cache[dId]; if(c.status!==lastStatus||c.roomId!==lastRoom||c.myResult!==lastRes||c.acceptorUid!==lastAcc) draw(false); } loadChat(); }).catch(function(){}); }
   var lastStatus,lastRoom,lastRes,lastAcc;
   function draw(first){
     var c=cache[dId]; if(!c) return;
     lastStatus=c.status; lastRoom=c.roomId; lastRes=c.myResult; lastAcc=c.acceptorUid;
-    var me=uid(), own=c.creatorUid===me, opp=own?c.acceptorName:c.creatorName, st=c.status, h='';
-    $('pdTitle').textContent=c.code+'  #'+(c.serial||'');
-    h+='<div class="pd-sec"><div class="pd-kv"><span>Opponent</span><b>'+esc(opp||'Waiting...')+'</b></div><div class="pd-kv"><span>Entry</span><b>'+fmt(c.entry)+' Coins</b></div><div class="pd-kv"><span>Winning</span><b>'+fmt(c.win)+' Coins</b></div><div class="pd-kv"><span>Status</span><b>'+esc(st==='Review'?'Review by Team':(st==='Accepted'&&c.myResult)?'Waiting for Result':st)+'</b></div></div>';
-    /* Room */
-    if(st==='Open'||st==='Accepted'||st==='Review'||c.roomId){
-      h+='<div class="pd-sec"><div class="pd-h">Room ID / Password</div>';
-      if(own&&(st==='Open'||st==='Accepted')){
-        h+='<div class="pd-kv"><input class="pd-in" id="pdRoom" placeholder="Room ID" value="'+esc(c.roomId||'')+'"></div><div class="pd-kv"><input class="pd-in" id="pdPass" placeholder="Password" value="'+esc(c.roomPass||'')+'"><button class="pd-btn" onclick="pvtRoomSave()">Save</button></div>';
-      } else if(c.roomId||c.roomPass){
-        h+='<div class="pd-kv"><span>Room ID</span><b onclick="pvtCopy(\''+esc(c.roomId||'')+'\')">'+esc(c.roomId||'-')+'</b></div><div class="pd-kv"><span>Password</span><b onclick="pvtCopy(\''+esc(c.roomPass||'')+'\')">'+esc(c.roomPass||'-')+'</b></div><div class="pd-note">Tap to copy</div>';
-      } else h+='<div class="pd-note">The creator has not added the Room ID yet.</div>';
-      h+='</div>';
-    }
-    /* Result */
-    if(st==='Accepted'){
-      if(c.myResult) h+='<div class="pd-sec"><div class="pd-h">Result</div><div class="pd-note">Waiting for Result</div></div>';
-      else if(c.roomId) h+='<div class="pd-sec"><div class="pd-h">Result</div><div class="pd-res"><label class="pd-btn g" style="position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">I Won<input type="file" id="pvFile" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0"></label><button class="pd-btn r" onclick="pvtLossDlg()">I Lost</button></div><div class="pd-note" style="margin-top:8px">A screenshot is required if you won. Action will be taken for a wrong result.</div></div>';
-    } else if(st==='Review') h+='<div class="pd-sec"><div class="pd-note">Review by Team. The team will decide the result.</div></div>';
-    else if(st==='Completed') h+='<div class="pd-sec"><div class="pd-h">Result</div><b>'+(c.winnerUid===me?'You Won '+fmt(c.win)+' Coins':'You Lost')+'</b></div>';
-    else if(st==='Cancelled') h+='<div class="pd-sec"><div class="pd-note">This challenge was cancelled.</div></div>';
-    /* Chat */
-    if(c.acceptorUid&&(st==='Accepted'||st==='Review')) h+='<div class="pd-sec"><button class="pd-btn" style="width:100%;height:46px;font-size:16px" onclick="pvtChatOpen()"><i class="fa-solid fa-comments"></i>&nbsp; Open Chat</button></div>';
+    var me=uid(), own=c.creatorUid===me, st=c.status, h='', bar='';
+    $('pdTitle').textContent=($('pvTitle').textContent||'').trim()||'Contest';
+    var L=esc(c.creatorName||''), R=c.acceptorUid?esc(c.acceptorName||''):'Waiting...', lg=esc(logo());
+    var roomLbl=(own&&!c.roomId&&(st==='Open'||st==='Accepted'))?'Room Code Add':'Room Code View';
+    h+='<div class="pe-card"><div class="pe-code">'+esc(c.code)+'</div><div class="pe-ser">#'+esc(c.serial||'')+'</div>'
+      +'<div class="pe-row"><div class="pe-side"><img src="'+lg+'" alt="">'+L+'</div><div class="pe-vs">vs</div><div class="pe-side"><img src="'+lg+'" alt="">'+R+'</div></div>'
+      +'<div class="pe-box3"><div class="pe-b g">Challenged Coins- '+fmt(c.entry)+'</div><div class="pe-b">Winning Coins- '+fmt(c.win)+'</div><div class="pe-b p" onclick="pvtRoomDlg()">'+roomLbl+'</div></div></div>';
+    if(c.acceptorUid&&(st==='Accepted'||st==='Review')) h+='<button class="pe-chat" onclick="pvtChatOpen()"><i class="fa-solid fa-comments"></i>&nbsp; Chat with '+esc((own?c.acceptorName:c.creatorName)||'opponent')+'</button>';
+    var cn=esc(($('pvTitle').textContent||'').trim()||'this');
+    h+='<div class="pe-rules"><p>• If you win the match then take a screen shot of the win and upload it in the won section</p>'
+      +'<p>• If you lose the match then just update your result by clicking on the lose option.</p>'
+      +'<p>• If your match is canceled due to any reason then click on cancel option then select the reason and update your status.</p>'
+      +'<p>• It is necessary to upload the result after the match is over</p>'
+      +'<p>• If a user does not upload the result within 1 hour after the end of the match, then he will have to pay a fine and the winning will credit to the winner wallet within 4 hours after uploading the result.</p>'
+      +'<p>• If any user cheats, then record the game for your safety and contact customer support after investigation your coin will be refunded to you if other user found guilty.</p>'
+      +'<p>• You have to play your '+cn+' game only in '+cn+' application.</p>'
+      +'<p>• If you have any other query then customer support</p></div>';
     $('pdBody').innerHTML=h;
+    if(st==='Open') bar=own?'<div class="pe-bt" onclick="pvtCancelDet()">Cancel Challenge</div>':'<div class="pe-bt">Open</div>';
+    else if(st==='Accepted'){
+      if(c.myResult) bar='<div class="pe-bt">Wait for result</div>';
+      else if(c.roomId) bar='<label class="pe-bt pe-w">I Won \u263A\uFE0E<input type="file" id="pvFile" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0"></label><div class="pe-bt pe-l" onclick="pvtLossDlg()">I Lost \u2639\uFE0E</div>';
+      else bar=own?'<div class="pe-bt" onclick="pvtRoomDlg()">Add Room Code</div>':'<div class="pe-bt" style="font-size:15px">Waiting for Room Code</div>';
+    }
+    else if(st==='Review') bar='<div class="pe-bt">Review by Team</div>';
+    else if(st==='Completed') bar='<div class="pe-bt">'+(c.winnerUid===me?'You Won '+fmt(c.win)+' Coins':'You Lost')+'</div>';
+    else bar='<div class="pe-bt">Cancelled</div>';
+    $('pdBar').style.display='flex'; $('pdBar').innerHTML=bar;
   }
+  window.pvtRoomDlg=function(){ var c=cache[dId]; if(!c) return; var own=c.creatorUid===uid(), st=c.status;
+    if(own&&(st==='Open'||st==='Accepted')) dlg('<p style="font-weight:600">Room ID / Password</p><input class="pe-in" id="pdRoom" placeholder="Room ID" value="'+esc(c.roomId||'')+'"><input class="pe-in" id="pdPass" placeholder="Password" value="'+esc(c.roomPass||'')+'"><div class="pv-btns"><button onclick="pvtRoomSave()">Save</button><button onclick="pvtDlgClose()">Close</button></div>');
+    else if(c.roomId||c.roomPass) dlg('<p style="font-weight:600">Room Code</p><div class="pe-cp" onclick="pvtCopy(\''+esc(c.roomId||'')+'\')"><span>Room ID</span><b>'+esc(c.roomId||'-')+'</b></div><div class="pe-cp" onclick="pvtCopy(\''+esc(c.roomPass||'')+'\')"><span>Password</span><b>'+esc(c.roomPass||'-')+'</b></div><p style="font-size:13px;color:#777;margin:10px 0 0">Tap to copy</p><div class="pv-btns"><button onclick="pvtDlgClose()">Close</button></div>');
+    else dlg('<p>The creator has not added the Room ID yet.</p><div class="pv-btns"><button onclick="pvtDlgClose()">Close</button></div>');
+  };
+  window.pvtCancelDet=function(){ var id=dId; pvtDetailClose(); pvtCancel(id); };
   function loadChat(){
     if(!dId||!$('pvChat')||$('pvChat').style.display!=='flex') return; var id=dId;
     rpc('pvt_chat_list',{p_id:id}).then(function(a){
@@ -4381,7 +4417,7 @@ window.__setPh=function(url,name){
     rpc('pvt_chat_send',{p_id:dId,p_msg:m}).then(function(){ pvtNotify(dId); lastChat=''; $('pcMsgs').dataset.s=''; loadChat(); }).catch(function(e){ toast(err(e)); }); };
   window.pvtCopy=function(t){ try{ navigator.clipboard.writeText(t); toast('Copied'); }catch(e){} };
   window.pvtRoomSave=function(){
-    rpc('pvt_room_set',{p_id:dId,p_room:$('pdRoom').value,p_pass:$('pdPass').value}).then(function(){ toast('Room ID / Password saved'); tick(); }).catch(function(e){ toast(err(e)); }); };
+    rpc('pvt_room_set',{p_id:dId,p_room:$('pdRoom').value,p_pass:$('pdPass').value}).then(function(){ pvtDlgClose(); toast('Room ID / Password saved'); tick(); }).catch(function(e){ toast(err(e)); }); };
   function submit(res,proof){
     if(busy) return; busy=true; try{ jbShow(); }catch(e){}
     rpc('pvt_challenge_result',{p_id:dId,p_result:res,p_proof:proof||null}).then(function(r){ toast(r==='Completed'?'Result received':r==='Review'?'Results do not match, the team will review':'Result submitted'); })
@@ -4416,7 +4452,7 @@ window.__setPh=function(url,name){
   var _card2=card;
   card=function(c){ var h=_card2(c); if(c.locked) h=h.replace('<div class="pv-code">','<div style="line-height:1;margin-bottom:3px"><i class="fa-solid fa-lock" style="font-size:16px"></i></div><div class="pv-code">'); return h; };
   var _err=err;
-  err=function(e){ var m=String((e&&e.message)||e||''); if(m.indexOf('wrong password')>=0) return 'Wrong password'; if(m.indexOf('bad username')>=0) return 'Username must be 2 to 30 characters'; if(m.indexOf('bad password')>=0) return 'Password can be up to 20 characters'; return _err(e); };
+  err=function(e){ var m=String((e&&e.message)||e||''); if(m.indexOf('wrong password')>=0) return 'Wrong password'; if(m.indexOf('min entry')>=0) return 'Minimum amount is 6 coins'; if(m.indexOf('bad username')>=0) return 'Username must be 2 to 30 characters'; if(m.indexOf('bad password')>=0) return 'Password can be up to 20 characters'; return _err(e); };
   tick=function(){ if(!dId) return; rpc('pvt_challenge_get',{p_id:dId}).then(function(c){ if(!c||!dId) return; cache[c.id]=c; if(c.status!==lastStatus||c.roomId!==lastRoom||c.myResult!==lastRes||c.acceptorUid!==lastAcc) draw(false); loadChat(); }).catch(function(){}); };
   window.pvtAcceptDlg=function(id,entry){
     var c=cache[id]||{};
@@ -4435,7 +4471,7 @@ window.__setPh=function(url,name){
     wp=true; var nm=($('pvTitle').textContent||'').trim();
     dlg('<div class="pv-nc">New Contest</div><div class="pv-ncb">'
       +'<div class="pv-fl"><i class="fa-solid fa-gamepad" style="color:#4cd98f"></i><input id="pvU" maxlength="30" autocomplete="off" placeholder=" "><label>'+esc(nm)+' Username</label></div>'
-      +'<div class="pv-fl"><svg class="coin-ic" viewBox="0 0 32 32" style="width:16px;height:16px"><use href="#coinSym"/></svg><input id="pvE" type="number" inputmode="numeric" min="1" placeholder=" "><label>Amount</label></div>'
+      +'<div class="pv-fl"><svg class="coin-ic" viewBox="0 0 32 32" style="width:16px;height:16px"><use href="#coinSym"/></svg><input id="pvE" type="number" inputmode="numeric" min="6" placeholder=" "><label>Amount</label></div>'
       +'<div class="pv-rd"><label><input type="radio" name="pvm" value="1" checked onchange="pvtMode(1)"> with password</label><label><input type="radio" name="pvm" value="0" onchange="pvtMode(0)"> without password</label></div>'
       +'<div class="pv-fl" id="pvPW"><input id="pvP" maxlength="20" autocomplete="off" placeholder=" "><label>Enter password</label></div>'
       +'<div class="pv-ncn">Make sure you have entered correct information</div>'
@@ -4447,6 +4483,7 @@ window.__setPh=function(url,name){
     var u=$('pvU').value.trim(), e=+$('pvE').value, p=wp?$('pvP').value.trim():'';
     if(u.length<2) return toast('Enter your username');
     if(!(e>=1)) return toast('Enter a valid amount');
+    if(e<6) return toast('Minimum amount is 6 coins');
     if(wp&&!p) return toast('Enter the password');
     busy=true; pvtDlgClose(); try{ jbShow(); }catch(x){}
     rpc('pvt_challenge_create',{p_contest:cid,p_entry:e,p_name:u,p_password:wp?p:null}).then(function(){ toast('Challenge created'); tab='open'; setTabUI(); }).catch(function(x){ toast(err(x)); })
