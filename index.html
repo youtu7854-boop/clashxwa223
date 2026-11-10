@@ -612,6 +612,11 @@ img{max-width:100%}
 .play-tag i{font-size:2.6vw}
 .sk-game{aspect-ratio:322/300}
 </style>
+<style id="cxNoSelect">
+/* Long-press se text select / Copy-Translate menu band: sirf input boxes me chalega */
+html,body,*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+</style>
 <style id="cxJoinLook">
 /* Match card: 3/4 (bhara nahi) = orange bar, 4/4 (full) = purple bar + black MATCH FULL button */
 .mc2.upc .mc2-bar i{background:#8576ef}
