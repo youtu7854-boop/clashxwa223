@@ -2174,11 +2174,25 @@ window.showAuth=()=>{
 };
 window.auEye=(id,ic)=>{ const i=document.getElementById(id); if(!i) return; const show=i.type==='password'; i.type=show?'text':'password'; ic.className='fa-solid '+(show?'fa-eye-slash':'fa-eye'); };
 const auUserEmail=u=>{ const c=String(u||'').trim().toLowerCase().replace(/[^a-z0-9._-]/g,''); return c?c+'@msz.user':''; };
-window.auReset=async()=>{
-  let v=(document.getElementById('loginEmail')?.value||'').trim();
-  if(!v||!v.includes('@')) v=(prompt('Apni registered email daalein:')||'').trim();
-  if(!v) return; if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return showToast('Enter a valid email',true);
-  try{ await auth.sendPasswordResetEmail(v); showToast('Password reset link sent to your email'); }catch(e){ showToast(e?.code==='auth/user-not-found'?'No account found with this email (for accounts without email, ask admin to reset)':'Could not send reset email',true); }
+window.auReset=()=>{
+  let o=document.getElementById('auRstDlg');
+  if(!o){
+    o=document.createElement('div'); o.id='auRstDlg';
+    o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2147483000;display:none;align-items:center;justify-content:center;padding:16px;font-family:inherit';
+    o.innerHTML='<div style="background:#fff;width:100%;max-width:400px;border-radius:4px;padding:36px 22px 30px;box-shadow:0 8px 28px rgba(0,0,0,.4)"><div style="font-size:24px;font-weight:600;color:#55e896;margin:0 0 18px 14px">Reset Password</div><div style="font-size:16px;color:#111;margin:0 0 4px 14px">Email</div><input id="auRstEm" type="email" autocomplete="email" style="display:block;width:calc(100% - 28px);margin:0 14px 30px;border:none;border-bottom:2.5px solid #000;font-size:19px;padding:6px 0 8px;outline:none;background:transparent;color:#111;border-radius:0;-webkit-user-select:text;user-select:text"><div style="display:flex;gap:14px"><button type="button" class="au-btn p" id="auRstNo" style="margin:0;height:48px;font-size:17px;text-transform:uppercase">Cancel</button><button type="button" class="au-btn g" id="auRstGo" style="margin:0;height:48px;font-size:17px;text-transform:uppercase">Send Link</button></div></div>';
+    document.body.appendChild(o);
+    o.querySelector('#auRstNo').onclick=()=>{ o.style.display='none'; };
+    o.querySelector('#auRstGo').onclick=async()=>{
+      const b=o.querySelector('#auRstGo'), v=o.querySelector('#auRstEm').value.trim();
+      if(!v||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return showToast('Enter a valid email',true);
+      b.disabled=true;
+      try{ await auth.sendPasswordResetEmail(v); showToast('Password reset link sent to your email'); o.style.display='none'; }catch(e){ showToast(e?.code==='auth/user-not-found'?'No account found with this email (for accounts without email, ask admin to reset)':'Could not send reset email',true); }
+      b.disabled=false;
+    };
+  }
+  const le=(document.getElementById('loginEmail')?.value||'').trim();
+  o.querySelector('#auRstEm').value=le.includes('@')?le:'';
+  o.style.display='flex'; setTimeout(()=>o.querySelector('#auRstEm').focus(),50);
 };
 
 
@@ -4230,8 +4244,6 @@ window.__setPh=function(url,name){
 .pc-in{display:flex;gap:8px;padding:10px;border-top:1px solid #ddd;background:#fff}
 .pc-in input{flex:1;min-width:0;height:44px;border:1px solid #ccc;background:#f3f3f3;color:#111;border-radius:22px;padding:0 16px;font-size:16px;font-family:inherit;outline:0}
 .pc-in .pd-btn{border-radius:22px;height:44px}
-@keyframes pvSwL{from{transform:translateX(40px);opacity:.3}to{transform:none;opacity:1}}@keyframes pvSwR{from{transform:translateX(-40px);opacity:.3}to{transform:none;opacity:1}}
-.pv-list.pvSwL{animation:pvSwL .22s ease-out}.pv-list.pvSwR{animation:pvSwR .22s ease-out}
 #pvDetail{background:#fafafa;color:#111;padding-bottom:76px}
 #pvDetail .pd-top{background:#fff;padding:6px 14px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 #pvDetail .pd-hd{font-size:17px;font-weight:700;color:#111;min-height:42px;gap:12px}#pvDetail .pd-hd i{font-size:17px}
@@ -4307,7 +4319,7 @@ window.__setPh=function(url,name){
 
   /* Challenges screen */
   window.pvtOpen=function(id,name){
-    cid=id; tab='open'; $('pvTitle').textContent=name||'Private Contest';
+    cid=id; tab='open'; pvCache={}; $('pvTitle').textContent=name||'Private Contest';
     $('pvtScreen').style.display='block'; $('pvNav').style.display='flex'; $('pvtScreen').scrollTop=0; setTabUI(); pvtLoad();
   };
   window.pvtClose=function(){ $('pvtScreen').style.display='none'; $('pvNav').style.display='none'; };
@@ -4325,16 +4337,73 @@ window.__setPh=function(url,name){
       +'<div class="pv-side"><img src="'+esc(logo())+'" alt="">'+right+'</div></div>'
       +'<div class="pv-bar"><div class="pv-w">Winning '+fmt(c.win)+' Coins</div>'+act+'</div></div>';
   }
-  window.pvtLoad=function(){
-    var l=$('pvList'); l.innerHTML='<div class="pv-empty">Loading...</div>';
-    try{ jbShow(); }catch(e){}
-    var my=tab, mc=cid;
+  var pvCache={};
+  function pvHtml(a,my){ return (a&&a.length)?a.map(card).join(''):'<div class="pv-empty">'+(my==='open'?'No challenges yet':'Nothing here yet')+'</div>'; }
+  window.pvtLoad=function(silent){
+    var l=$('pvList'), my=tab, mc=cid, key=mc+'|'+my, hasC=pvCache[key]!=null, quiet=(silent===true&&hasC);
+    if(quiet){ l.innerHTML=pvCache[key]; } else { l.innerHTML='<div class="pv-empty">Loading...</div>'; try{ jbShow(); }catch(e){} }
     rpc('pvt_challenge_list',{p_contest:mc,p_tab:my}).then(function(a){
       try{ jbHide(); }catch(e){}
+      var h=pvHtml(a,my); pvCache[key]=h;
       if(my!==tab||mc!==cid) return;
-      l.innerHTML=(a&&a.length)?a.map(card).join(''):'<div class="pv-empty">'+(my==='open'?'No challenges yet':'Nothing here yet')+'</div>';
-    }).catch(function(e){ try{ jbHide(); }catch(x){} l.innerHTML='<div class="pv-empty">'+esc(err(e))+'</div>'; });
+      if(quiet&&l.innerHTML===h) return;
+      l.innerHTML=h;
+    }).catch(function(e){ try{ jbHide(); }catch(x){} if(quiet) return; l.innerHTML='<div class="pv-empty">'+esc(err(e))+'</div>'; });
   };
+
+  /* Tabs ke beech finger-follow swipe (Ongoing / My Contest / Results) - match screen jaisa smooth */
+  (function(){
+    var sc=$('pvtScreen'); if(!sc) return;
+    var T=['open','mine','results'], DUR=280, EASE='transform '+DUR+'ms cubic-bezier(.22,.61,.36,1)';
+    var ds=null, busy=false, nb=null;
+    sc.style.touchAction='pan-y';
+    function reset(e){ ['transform','transition','position','left','right','top','willChange'].forEach(function(k){ e.style[k]=''; }); }
+    function mkNb(){ if(!nb){ nb=document.createElement('div'); nb.className='pv-list'; nb.id='pvListNb'; nb.style.display='none'; sc.appendChild(nb); } return nb; }
+    function prefetch(t){ var mc=cid; rpc('pvt_challenge_list',{p_contest:mc,p_tab:t}).then(function(a){ var h=pvHtml(a,t); pvCache[mc+'|'+t]=h; if(nb&&nb.getAttribute('data-t')===t&&mc===cid) nb.innerHTML=h; }).catch(function(){}); }
+    function fillNb(t){ nb.setAttribute('data-t',t||''); var k=cid+'|'+t; if(t&&pvCache[k]!=null) nb.innerHTML=pvCache[k]; else { nb.innerHTML=''; if(t) prefetch(t); } }
+    function hl(t){ document.querySelectorAll('#pvtScreen .pv-tab').forEach(function(x){ x.classList.toggle('on',x.getAttribute('data-t')===t); }); }
+    function tr(x){ return 'translate3d('+x+'px,0,0)'; }
+    sc.addEventListener('touchstart',function(e){
+      ds=null; if(busy||e.touches.length!==1) return;
+      var ov=$('pvOv'); if(ov&&ov.style.display==='flex') return;
+      var t=e.target; if(t&&t.closest&&t.closest('input,textarea,select')) return;
+      var x=e.touches[0].clientX, W=window.innerWidth; if(x<14||x>W-14) return;
+      ds={sx:x,sy:e.touches[0].clientY,t:Date.now(),lock:0,dx:0,dir:0,cur:tab};
+    },{passive:true});
+    sc.addEventListener('touchmove',function(e){
+      if(!ds||busy) return;
+      var tc=e.touches[0], ddx=tc.clientX-ds.sx, ddy=tc.clientY-ds.sy;
+      if(!ds.lock){
+        if(Math.abs(ddx)<6&&Math.abs(ddy)<6) return;
+        if(Math.abs(ddx)>Math.abs(ddy)*1.2){
+          ds.lock=1; ds.curE=$('pvList'); mkNb();
+          nb.style.display='block'; nb.style.position='absolute'; nb.style.left='0'; nb.style.right='0'; nb.style.top=ds.curE.offsetTop+'px';
+          ds.curE.style.willChange=nb.style.willChange='transform';
+        } else { ds=null; return; }
+      }
+      if(e.cancelable) e.preventDefault();
+      ds.dx=ddx; var W=window.innerWidth, dir=ddx<0?1:-1, n=T.indexOf(ds.cur)+dir, valid=n>=0&&n<T.length;
+      if(dir!==ds.dir){ ds.dir=dir; fillNb(valid?T[n]:''); }
+      var eff=valid?ddx:ddx*0.25;
+      ds.curE.style.transform=tr(eff); nb.style.transform=tr(eff+(dir>0?W:-W));
+    },{passive:false});
+    function end(cancel){
+      if(!ds) return; if(ds.lock!==1){ ds=null; return; }
+      var d=ds; ds=null; busy=true;
+      var W=window.innerWidth, dt=Math.max(1,Date.now()-d.t), adx=Math.abs(d.dx), dir=d.dir||(d.dx<0?1:-1), n=T.indexOf(d.cur)+dir, valid=n>=0&&n<T.length;
+      var commit=!cancel&&valid&&(adx>W*0.28||(adx/dt>0.5&&adx>40)), side=dir>0?W:-W;
+      d.curE.style.transition=EASE; nb.style.transition=EASE; void d.curE.offsetWidth;
+      d.curE.style.transform=tr(commit?-side:0); nb.style.transform=tr(commit?0:side);
+      if(commit) hl(T[n]);
+      setTimeout(function(){
+        reset(d.curE); reset(nb); nb.style.display='none';
+        if(commit){ tab=T[n]; setTabUI(); var k=cid+'|'+tab; if(pvCache[k]!=null) d.curE.innerHTML=pvCache[k]; pvtLoad(true); }
+        busy=false;
+      },DUR+30);
+    }
+    sc.addEventListener('touchend',function(){ end(false); },{passive:true});
+    sc.addEventListener('touchcancel',function(){ end(true); },{passive:true});
+  })();
 
   /* Dialogs */
   function dlg(html){ $('pvBox').innerHTML=html; $('pvOv').style.display='flex'; }
@@ -4522,28 +4591,6 @@ window.__setPh=function(url,name){
     return _hb?_hb.apply(this,arguments):false;
   };
   $('pvOv').addEventListener('click',function(ev){ if(ev.target===this) pvtDlgClose(); });
-})();
-</script>
-<script>
-/* Private Contest: Ongoing / My Contest / Results ke beech swipe */
-(function(){
-  var el=document.getElementById('pvtScreen'); if(!el) return;
-  var T=['open','mine','results'], sx=0, sy=0, on=false;
-  el.addEventListener('touchstart',function(e){
-    on=false; if(e.touches.length!==1) return;
-    var ov=document.getElementById('pvOv'); if(ov&&ov.style.display==='flex') return;
-    var t=e.target; if(t&&t.closest&&t.closest('input,textarea,select')) return;
-    sx=e.touches[0].clientX; sy=e.touches[0].clientY; if(sx<14||sx>window.innerWidth-14) return; on=true;
-  },{passive:true});
-  el.addEventListener('touchend',function(e){
-    if(!on) return; on=false;
-    var c=e.changedTouches[0], dx=c.clientX-sx, dy=c.clientY-sy;
-    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5) return;
-    var cur=el.querySelector('.pv-tab.on'); var i=T.indexOf(cur?cur.getAttribute('data-t'):'open'); if(i<0) return;
-    var n=i+(dx<0?1:-1); if(n<0||n>=T.length) return;
-    window.pvtTab(T[n]);
-    var l=document.getElementById('pvList'); if(l){ l.classList.remove('pvSwL','pvSwR'); void l.offsetWidth; l.classList.add(dx<0?'pvSwL':'pvSwR'); }
-  },{passive:true});
 })();
 </script>
 <script>
