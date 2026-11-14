@@ -1124,16 +1124,14 @@ window.setSplashLogo(window.SPLASH_LOGO);
       <div class="me-head"><h2>Me</h2></div>
       <div class="account-card">
         <div class="account-main">
-          <div><div class="account-label">Username</div><div class="account-name" id="meName">unknown</div><div class="account-label">Balance</div><div style="font-size:17px;font-weight:700;margin-top:3px"><svg viewBox="0 0 32 32" style="width:20px;height:20px;vertical-align:-4px"><use href="#coinSym"/></svg> <span id="meBalance">0.0</span></div></div>
-          <div class="account-avatar"><img class="app-brand-logo" src="" alt="Logo"></div>
+          <div class="me-tile"><img class="app-brand-logo" src="" alt="Logo"></div>
+          <div class="me-info"><div class="account-label">Username</div><div class="account-name" id="meName">unknown</div><div class="account-label">Balance</div><div class="me-bal"><svg viewBox="0 0 32 32" style="width:18px;height:18px"><use href="#coinSym"/></svg><span id="meBalance">0.0</span></div></div>
+          <img class="app-brand-logo me-bigl" src="" alt="Logo">
         </div>
       </div>
-      <div class="stats-card"><div class="card-heading">Account Actions</div><div class="account-stats"><div><i class="fa-solid fa-gamepad"></i><div class="n" id="mePlayed">0</div><div class="l">Matches Played</div></div><div><i class="fa-solid fa-chart-column"></i><div class="n" id="meKilled">0</div><div class="l">Total Killed</div></div><div><i style="font-style:normal"><svg viewBox="0 0 32 32" style="width:24px;height:24px"><use href="#coinSym"/></svg></i><div class="n" id="meWon">0</div><div class="l">Amount Won</div></div></div></div>
+      <div class="stats-card"><div class="card-heading">Account Actions</div><div class="account-stats"><div><i class="fa-solid fa-gamepad"></i><div class="n" id="mePlayed">0</div><div class="l">MatchesPlayed</div></div><div><i class="fa-solid fa-chart-column"></i><div class="n" id="meKilled">0</div><div class="l">TotalKilled</div></div><div><i style="font-style:normal"><svg viewBox="0 0 32 32" style="width:24px;height:24px"><use href="#coinSym"/></svg></i><div class="n" id="meWon">0</div><div class="l">AmountWon</div></div></div></div>
       <div class="settings-card"><div class="card-heading">Settings</div>
-        <div class="list-row" onclick="switchTab('Profile')"><div class="list-row-left"><i class="fa-solid fa-circle-user"></i>My Profile</div><i class="fa-solid fa-chevron-right arrow"></i></div>
-        <div class="list-row" onclick="openVipLounge()"><div class="list-row-left"><i class="fa-solid fa-crown" style="color:#e0a800"></i>VIP &amp; Store</div><i class="fa-solid fa-chevron-right arrow"></i></div>
-        <div class="list-row" onclick="openDirectMessage()"><div class="list-row-left"><i class="fa-solid fa-headset"></i>VIP Support Chat</div><i class="fa-solid fa-chevron-right arrow"></i></div>
-        <div class="list-row" onclick="openModal('passwordModal')"><div class="list-row-left"><i class="fa-solid fa-key"></i>Change Password</div><i class="fa-solid fa-chevron-right arrow"></i></div>
+        <div class="list-row" onclick="openEditProfile()"><div class="list-row-left"><i class="fa-solid fa-circle-user"></i>My Profile</div><div class="me-rr"><i class="fa-solid fa-chevron-right arrow"></i><span class="me-sw"></span></div></div>
       </div>
       <div class="info-card"><div class="card-heading">My Statistics Card</div><div class="menu-grid">
         <div class="menu-cell" onclick="openMyMatches()"><i class="fa-solid fa-gamepad"></i>My Matches</div>
@@ -1143,14 +1141,14 @@ window.setSplashLogo(window.SPLASH_LOGO);
         <div class="menu-cell" onclick="openMyReferrals()"><i class="fa-solid fa-users"></i>My Referrals</div>
         <div class="menu-cell" onclick="openNotifs()"><i class="fa-solid fa-flag"></i>Announcement</div>
       </div></div>
-      <div class="info-card"><div class="card-heading">Platform Information</div>
+      <div class="info-card"><div class="card-heading">Platform Information Card (new)</div>
         <div class="list-row" onclick="switchTab('Leaderboard')"><div class="list-row-left"><i class="fa-solid fa-star"></i>Top Players</div><i class="fa-solid fa-chevron-right arrow"></i></div>
         <div class="list-row" onclick="openAppTutorial()"><div class="list-row-left"><i class="fa-solid fa-circle-question"></i>App Tutorial</div><i class="fa-solid fa-chevron-right arrow"></i></div>
-        <div class="list-row" onclick="openPolicyModal('Fair Play Policy')"><div class="list-row-left"><i class="fa-solid fa-shield-halved"></i>Fair Play Policy</div><i class="fa-solid fa-chevron-right arrow"></i></div>
-        <div class="list-row" onclick="openPolicyModal('Privacy Policy')"><div class="list-row-left"><i class="fa-solid fa-clipboard-list"></i>Privacy Policy</div><i class="fa-solid fa-chevron-right arrow"></i></div>
+        <div class="list-row" onclick="openPolicyModal('About us')"><div class="list-row-left"><i class="fa-solid fa-circle-info"></i>About us</div><i class="fa-solid fa-chevron-right arrow"></i></div>
+        <div class="list-row" onclick="openPolicyModal('Terms &amp; Conditions')"><div class="list-row-left"><i class="fa-solid fa-clipboard-list"></i>Terms &amp; Conditions</div><i class="fa-solid fa-chevron-right arrow"></i></div>
         <div class="list-row" onclick="openSupportWa()"><div class="list-row-left"><i class="fa-solid fa-headset"></i>Customer Support</div><i class="fa-solid fa-chevron-right arrow"></i></div>
         <div class="list-row" onclick="shareApp()"><div class="list-row-left"><i class="fa-solid fa-share-nodes"></i>Share App</div><i class="fa-solid fa-chevron-right arrow"></i></div>
-        <div class="list-row" onclick="openDeveloperContact()"><div class="list-row-left"><i class="fa-solid fa-code"></i>Contact Developer</div><i class="fa-solid fa-chevron-right arrow"></i></div>
+        <div class="list-row" onclick="showToast('Coming soon')"><div class="list-row-left"><i class="fa-solid fa-globe"></i>Change Language</div><i class="fa-solid fa-chevron-right arrow"></i></div>
         <div class="list-row logout-row" onclick="logoutUser()"><div class="list-row-left"><i class="fa-solid fa-power-off"></i>Logout</div><i class="fa-solid fa-chevron-right arrow"></i></div>
       </div>
       <div style="text-align:center;color:#999;font-size:11px;padding:5px 0 15px">Version : <span id="meVersion">1</span></div>
@@ -1898,6 +1896,7 @@ window.handleBack=function(){
     if(vis(byId('acScreen'))){ window.closeAddCoins(); return true; }
     const mods=[...document.querySelectorAll('.modal-overlay')].filter(m=>m.id!=='forceUpdateModal'&&vis(m));
     if(mods.length){ const m=mods[mods.length-1]; if(m.id==='depositModal'&&window.closeDepositModal) window.closeDepositModal(); else window.closeModal(m.id); return true; }
+    if(vis(byId('epScreen'))){ window.epClose(); return true; }
     if(sh('joinSuccess')){ window.joinSuccessHome(); return true; }
     if(sh('jdOverlay')){ window.jdClose(); return true; }
     if(sh('jmScreen')){ window.jmBack(); return true; }
@@ -2589,7 +2588,7 @@ window.saveNewPassword=async()=>{
 };
 window.openPolicyModal=(type)=>{
   setTxt('policyTitle',type); let c="Policy not configured by admin yet.";
-  if(window.appSettings){ if(type==='Privacy Policy'&&window.appSettings.privacyPolicy) c=window.appSettings.privacyPolicy; if(type==='Fair Play Policy'&&window.appSettings.fairPlayPolicy) c=window.appSettings.fairPlayPolicy; }
+  if(window.appSettings){ if(type==='Privacy Policy'&&window.appSettings.privacyPolicy) c=window.appSettings.privacyPolicy; if(type==='About us'&&window.appSettings.aboutUs) c=window.appSettings.aboutUs; if(type==='Terms & Conditions'){ const t=window.appSettings.termsPolicy||[window.appSettings.fairPlayPolicy,window.appSettings.privacyPolicy].filter(Boolean).join('\n\n'); if(t) c=t; } if(type==='Fair Play Policy'&&window.appSettings.fairPlayPolicy) c=window.appSettings.fairPlayPolicy; }
   if(c.startsWith("http")) setHtml('policyContent',`<a href="${c}" target="_blank" style="color:var(--info)">Click here to view ${type}</a>`); else setTxt('policyContent',c);
   openModal('policyModal');
 };
@@ -3053,7 +3052,7 @@ window.openMatchDetails=(mId,force)=>{
   document.getElementById('mTabDetailsBtn').classList.add('active'); document.getElementById('mTabDetails').style.display='block';
   setTxt('mModalName',m.name+(m.serial?` [#${m.serial}]`:'')); setTxt('mModalTime',new Date(m.time).toLocaleString());
   setTxt('mModalFee',"₹"+m.fee); setTxt('mModalPool',"₹"+m.pool); setTxt('mModalKill',"₹"+(m.perKill||0)); setTxt('mModalType',`${m.map} | ${m.type}`); setTxt('mModalRules',m.rules||"No specific rules provided by Admin.");
-  const bn=document.getElementById('mModalBanner'); if(bn) bn.style.backgroundImage=(m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:"none")+',var(--phn)';
+  const bn=document.getElementById('mModalBanner'); if(bn) bn.style.backgroundImage=(m.banner?`url('${bnUrl(m.banner).replace(/'/g,'%27')}')`:"none")+',var(--phn)'; try{ window.__gateBg&&window.__gateBg(bn); }catch(e){}
   let isJoined=false,mySlots="";
   if(m.joinedUsers){ const mine=m.joinedUsers.filter(u=>u.userDocId===window.currentUser.uid); if(mine.length){isJoined=true; mySlots=mine.map(u=>u.slot).join(', ');} }
   let ph='';
@@ -4617,6 +4616,194 @@ window.__cxConfirm=function(msg){
     document.body.appendChild(ov);
   });
 };
+</script>
+<script>
+/* Banner ek saath dikhe: pehle chupchaap poora download, phir ek baar me dikhao (upar se neeche utarna band). Baaki kuch nahi badla. */
+(function(){
+  var done={}, SEL='.banner-card,.mc2-banner,.og-img';
+  function gate(el){
+    try{
+      if(!el||el.__g) return;
+      var bg=el.style.backgroundImage||''; var m=/url\((["']?)(.*?)\1\)/.exec(bg); if(!m) return;
+      var u=m[2]; if(!u||/^data:/i.test(u)||done[u]) return;
+      el.__g=1; var orig=bg;
+      el.style.backgroundImage='var(--phn)';
+      var i=new Image();
+      var fin=function(){ done[u]=1; el.__g=0; if(el.style.backgroundImage==='var(--phn)') el.style.backgroundImage=orig; };
+      i.onload=fin; i.onerror=fin;
+      i.src=u;
+      setTimeout(function(){ if(el.__g) fin(); },8000);
+    }catch(e){}
+  }
+  window.__gateBg=gate;
+  try{
+    new MutationObserver(function(ms){
+      for(var a=0;a<ms.length;a++){ var ad=ms[a].addedNodes; for(var b=0;b<ad.length;b++){ var n=ad[b]; if(n.nodeType!==1) continue; if(n.matches&&n.matches(SEL)) gate(n); if(n.querySelectorAll){ var q=n.querySelectorAll(SEL); for(var c=0;c<q.length;c++) gate(q[c]); } } }
+    }).observe(document.documentElement,{childList:true,subtree:true});
+  }catch(e){}
+})();
+</script>
+<style id="meNew">
+/* ===== Me page = reference image jaisa (sirf #tab-Me ke andar) ===== */
+#tab-Me .account-card{padding:31px 16px;border-radius:18px;margin-bottom:10px}
+#tab-Me .account-main{justify-content:flex-start;gap:14px}
+#tab-Me .me-tile{width:70px;height:70px;flex:0 0 70px;border-radius:16px;background:#555;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#tab-Me .me-tile img{width:48px;height:48px;object-fit:contain}
+#tab-Me .me-info{flex:1;min-width:0}
+#tab-Me .me-bigl{width:44px;height:48px;object-fit:contain;margin-right:6px}
+#tab-Me .account-label{font-size:11px;color:#8d9099;line-height:16px}
+#tab-Me .account-name{font-size:20px;font-weight:500;margin:0 0 8px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tab-Me .me-bal{font-size:17px;font-weight:500;margin-top:2px;display:flex;align-items:center;gap:8px;line-height:1.3}
+#tab-Me .stats-card,#tab-Me .settings-card,#tab-Me .info-card{padding:12px;border-radius:18px;margin-bottom:10px}
+#tab-Me .card-heading{font-size:11px;font-weight:500;line-height:16px;margin-bottom:6px;color:#8e8f93}
+#tab-Me .stats-card .card-heading{margin-bottom:12.5px}
+#tab-Me .account-stats{border-radius:11px;padding:7px 0 8px;background:#f1f1f3}
+#tab-Me .account-stats>div{border:0;position:relative}
+#tab-Me .account-stats>div:not(:last-child)::after{content:"";position:absolute;right:0;top:21px;height:37px;width:1px;background:#dcdce0}
+#tab-Me .account-stats i{display:block;height:20px;font-size:18px;line-height:20px}
+#tab-Me .account-stats svg{display:block;margin:0 auto}
+#tab-Me .account-stats i svg{width:20px!important;height:20px!important}
+#tab-Me .account-stats .n{font-size:17px;font-weight:500;margin:2px 0;line-height:25px}
+#tab-Me .account-stats .l{font-size:10px;line-height:15px;color:#989ba3}
+#tab-Me .list-row{height:49px;padding:0 2px;font-size:13px;border-bottom:1px solid #f1f1f3}
+#tab-Me .list-row:last-child{border:0}
+#tab-Me .list-row-left{gap:10px}
+#tab-Me .list-row i{font-size:19px;width:22px}
+#tab-Me .list-row i.arrow{font-size:13px;width:auto}
+#tab-Me .me-rr{display:flex;align-items:center;gap:19px}
+#tab-Me .me-sw{position:relative;display:block;width:32px;height:14px;border-radius:7px;background:#b9b9bb;margin-right:2px}
+#tab-Me .me-sw::after{content:"";position:absolute;right:-3px;top:-3px;width:20px;height:20px;border-radius:50%;background:#000;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+#tab-Me .menu-cell{height:49px;padding:0 2px;font-size:13px;gap:10px;border-color:#f1f1f3}
+#tab-Me .menu-cell:nth-child(even){padding-left:16px}
+#tab-Me .menu-cell:nth-last-child(-n+2){border-bottom:0}
+#tab-Me .menu-cell i{font-size:18px;width:22px;text-align:center}
+
+/* ===== My Profile (edit) page ===== */
+#epScreen{display:none;position:fixed;inset:0;background:#fafafa;color:#222;z-index:10002;overflow-y:auto;overflow-x:hidden;padding-bottom:40px;-webkit-overflow-scrolling:touch}
+#epScreen .ep-head{position:sticky;top:0;z-index:2;background:#000;color:#fff;height:68px;padding:28px 16px 0;display:flex;align-items:center;gap:9px}
+#epScreen .ep-head i{font-size:20px;width:20px;cursor:pointer}
+#epScreen .ep-head span{font-size:17.5px;font-weight:500}
+#epScreen .ep-h{font-size:13.8px;font-weight:500;line-height:21px;margin:10px 10px 0;color:#333}
+#epScreen .ep-in{padding:0 24px}
+#epScreen .ep-av{position:relative;width:100px;height:100px;margin:3px auto 11px}
+#epScreen .ep-avc{width:100px;height:100px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:56px}
+#epScreen .ep-avc img{width:76px;height:76px;object-fit:contain;display:block}
+#epScreen .ep-pen{position:absolute;right:9.5px;bottom:9.5px;width:26px;height:26px;border-radius:50%;background:#b0bec5;display:flex;align-items:center;justify-content:center;font-size:12px;color:#222;cursor:pointer}
+#epScreen .ep-f{position:relative;height:46px;margin-bottom:9.5px;border-bottom:1px solid #8b8b8b}
+#epScreen .ep-f:focus-within{border-bottom:2.5px solid #000}
+#epScreen .ep-f input{position:absolute;left:0;right:0;top:19px;height:24px;border:0;outline:0;background:transparent;padding:0;font:inherit;font-size:14px;line-height:24px;color:#222;border-radius:0;-webkit-user-select:text;user-select:text}
+#epScreen .ep-f label{position:absolute;left:0;top:0;font-size:11.6px;line-height:16px;color:#666;pointer-events:none;transition:.12s;white-space:nowrap}
+#epScreen .ep-f input:placeholder-shown:not(:focus)~label,#epScreen .ep-f.emp:not(:focus-within) label{top:19.5px;font-size:14px;line-height:24px;color:#555}
+#epScreen .ep-f.ro{pointer-events:none}
+#epScreen .ep-row{display:flex;gap:8px}
+#epScreen .ep-row .ep-f{flex:1;min-width:0}
+#epScreen .ep-cc{flex:0 0 66px!important;display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:7px}
+#epScreen .ep-cc span{font-size:14px;line-height:24px;color:#222}
+#epScreen .ep-cc b{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #000;margin:0 9px 9px 0}
+#epScreen .ep-dob input{color:#222}
+#epScreen .ep-dob.emp input{color:transparent}
+#epScreen .ep-dob input::-webkit-calendar-picker-indicator{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;margin:0;padding:0}
+#epScreen .ep-g{display:flex;align-items:center;gap:0;margin:12px 0 0 -4px;font-size:14px;height:40px}
+#epScreen .ep-g>span{margin-right:11px}
+#epScreen .ep-g label{display:flex;align-items:center;gap:6.5px;margin-right:6.5px}
+#epScreen .ep-g input{appearance:none;-webkit-appearance:none;width:20px;height:20px;border:2px solid #777;border-radius:50%;margin:0;background:transparent;position:relative}
+#epScreen .ep-g input:checked::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#000}
+#epScreen .ep-btn{display:block;width:calc(100% - 27px);margin:21.5px auto 0;height:47.5px;border:0;border-radius:4px;background:#55ea96;color:#fff;font:inherit;font-size:13.5px;font-weight:500;text-transform:uppercase;box-shadow:0 2px 5px rgba(0,0,0,.28)}
+#epScreen .ep-btn:disabled{opacity:.6}
+#epScreen .ep-pw input{right:34px}
+#epScreen .ep-pw{margin-bottom:12px}
+#epScreen .ep-eye{position:absolute;right:9px;top:19px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#4a4a4a;cursor:pointer}
+#epScreen .ep-note{font-size:11px;color:#777;margin:-4px 0 0}
+</style>
+<div id="epScreen">
+  <div class="ep-head"><i class="fa-solid fa-arrow-left" onclick="epClose()"></i><span>My Profile</span></div>
+  <div class="ep-h">Edit Profile</div>
+  <div class="ep-av"><div class="ep-avc" id="epAv"></div><span class="ep-pen" onclick="openEmojiPicker()"><i class="fa-solid fa-pencil"></i></span></div>
+  <div class="ep-in">
+    <div class="ep-row"><div class="ep-f"><input id="epFn" maxlength="30" autocomplete="off" placeholder=" "><label>First Name</label></div><div class="ep-f"><input id="epLn" maxlength="30" autocomplete="off" placeholder=" "><label>Last Name</label></div></div>
+    <div class="ep-f ro"><input id="epUn" readonly tabindex="-1" placeholder=" "><label>Username *</label></div>
+    <div class="ep-f ro"><input id="epEm" readonly tabindex="-1" placeholder=" "><label>Email Address</label></div>
+    <div class="ep-row"><div class="ep-f ep-cc ro"><span id="epCc">+91</span><b></b></div><div class="ep-f ro"><input id="epMo" readonly tabindex="-1" placeholder=" "><label>Mobile Number</label></div></div>
+    <div class="ep-f ep-dob emp" id="epDw"><input type="date" id="epDb"><label>Date of Birth</label></div>
+    <div class="ep-g"><span>Gender:</span><label><input type="radio" name="epG" value="Male"> Male</label><label><input type="radio" name="epG" value="Female"> Female</label></div>
+    <button class="ep-btn" id="epSaveBtn" onclick="epSave()">Update Profile</button>
+  </div>
+  <div class="ep-h" style="margin-top:14.5px">Reset Password</div>
+  <div class="ep-in" style="margin-top:16px">
+    <div class="ep-f ep-pw"><input type="password" id="epOp" autocomplete="off" placeholder=" "><label>Old Password</label><span class="ep-eye" onclick="epEye('epOp',this)"><i class="fa-solid fa-eye"></i></span></div>
+    <div class="ep-f ep-pw"><input type="password" id="epNp" autocomplete="off" placeholder=" "><label>New Password</label><span class="ep-eye" onclick="epEye('epNp',this)"><i class="fa-solid fa-eye"></i></span></div>
+    <div class="ep-note">&#8377;10 fee will be deducted for a password change</div>
+    <button class="ep-btn" id="epPassBtn" style="margin-top:14px" onclick="epPass()">Reset Password</button>
+  </div>
+</div>
+<script>
+/* ===== My Profile (edit) page: naam, DOB, gender edit; email/mobile/username sirf dikhte hain ===== */
+(function(){
+  var $=function(i){ return document.getElementById(i); };
+  function dw(){ var w=$('epDw'); if(w) w.classList.toggle('emp',!$('epDb').value); }
+  document.addEventListener('input',function(e){ if(e.target&&e.target.id==='epDb') dw(); },true);
+  document.addEventListener('change',function(e){ if(e.target&&e.target.id==='epDb') dw(); },true);
+  window.epFill=function(){
+    var d=window.userData||{};
+    $('epFn').value=d.firstName||''; $('epLn').value=d.lastName||'';
+    $('epUn').value=d.ffName||d.username||'';
+    $('epEm').value=(d.email&&!d.emailIsSynthetic)?d.email:'';
+    var mob=String(d.mobile||'').replace(/\s+/g,''), cc='+91', num=mob;
+    var codes=['+91','+880','+977','+971','+92','+94','+44','+1'];
+    for(var i=0;i<codes.length;i++){ if(mob.indexOf(codes[i])===0){ cc=codes[i]; num=mob.slice(codes[i].length); break; } }
+    $('epCc').textContent=cc; $('epMo').value=num;
+    $('epDb').value=d.dob||''; dw();
+    var g=d.gender||''; var rs=document.getElementsByName('epG'); for(var r=0;r<rs.length;r++) rs[r].checked=(rs[r].value===g);
+    var av=d.avatar, box=$('epAv');
+    if(av&&String(av).indexOf('http')===0) box.innerHTML='<img src="'+String(av).replace(/"/g,'&quot;')+'" alt="">';
+    else if(av) box.textContent=av;
+    else { var lg=document.querySelector('.app-brand-logo'); var src=(window.appSettings&&window.appSettings.logoUrl)||(lg&&lg.src)||''; box.innerHTML=src?'<img src="'+src.replace(/"/g,'&quot;')+'" alt="">':'<i class="fa-solid fa-user" style="font-size:40px;color:#999"></i>'; }
+    $('epOp').value=''; $('epNp').value='';
+  };
+  window.openEditProfile=function(){ try{ window.epFill(); }catch(e){} $('epScreen').style.display='block'; $('epScreen').scrollTop=0; };
+  window.epClose=function(){ $('epScreen').style.display='none'; };
+  window.epEye=function(id,el){ var i=$(id); if(!i) return; var show=i.type==='password'; i.type=show?'text':'password'; el.innerHTML='<i class="fa-solid '+(show?'fa-eye-slash':'fa-eye')+'"></i>'; };
+  window.epSave=async function(){
+    var b=$('epSaveBtn'); if(b.disabled) return;
+    var fn=$('epFn').value.trim(), ln=$('epLn').value.trim(), dob=$('epDb').value, g='';
+    var rs=document.getElementsByName('epG'); for(var r=0;r<rs.length;r++) if(rs[r].checked) g=rs[r].value;
+    try{ var re=new RegExp("^[\\p{L} .'-]{0,30}$","u"); if(!re.test(fn)||!re.test(ln)) return showToast('Name can have only letters',true); }catch(e){}
+    if(dob){ var t=new Date(dob+'T00:00:00'); if(isNaN(t)||t>new Date()||t.getFullYear()<1900) return showToast('Enter a valid date of birth',true); }
+    b.disabled=true;
+    try{
+      await sbRpc('rpc_profile_update',{p_first:fn,p_last:ln,p_dob:dob||'',p_gender:g});
+      if(window.userData){ window.userData.firstName=fn; window.userData.lastName=ln; window.userData.dob=dob||''; window.userData.gender=g; }
+      showToast('Profile updated');
+    }catch(e){ showToast('Could not update profile. Try again.',true); }
+    b.disabled=false;
+  };
+  window.epPass=async function(){
+    var b=$('epPassBtn'); if(b.disabled) return;
+    var op=$('epOp').value, np=$('epNp').value;
+    if(!op) return showToast('Enter your old password',true);
+    if(np.length<6) return showToast('Password must be 6+ chars',true);
+    if(op===np) return showToast('New password must be different',true);
+    var wDep=Number(window.userData.wallets&&window.userData.wallets.deposit||0), wWin=Number(window.userData.wallets&&window.userData.wallets.winning||0);
+    if(sbOn()&&wDep<0) return showToast(SB_DUES_MSG,true);
+    if((sbOn()?sbSpend(wDep,wWin):(wDep+wWin))<10) return showToast('Insufficient balance for ₹10 fee',true);
+    b.disabled=true;
+    try{
+      var u=window.currentUser;
+      try{ await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email,op)); }
+      catch(e){ b.disabled=false; return showToast('Old password is wrong',true); }
+      await u.updatePassword(np);
+      if(sbOn()){ await sbRpc('rpc_password_fee'); }
+      else{
+        var nd=wDep,nw=wWin,rem=10; if(nd>=rem){nd-=rem;}else{rem-=nd;nd=0;nw-=rem;}
+        await db.collection('users').doc(u.uid).update({'wallets.deposit':nd,'wallets.winning':nw});
+        await db.collection('transactions').add({userId:u.uid,type:'Password Change Fee',desc:'Security update',amount:10,status:'Success',date:new Date()});
+      }
+      showToast('Password Updated (₹10 deducted)!'); $('epOp').value=''; $('epNp').value='';
+      try{ await loadUserProfile(u.uid); await loadUserTransactions(); }catch(e){}
+    }catch(e){ showToast('Error: Please Logout and Login again to change password.',true); }
+    b.disabled=false;
+  };
+})();
 </script>
 </body>
 </html>
