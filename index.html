@@ -4648,9 +4648,9 @@ window.__cxConfirm=function(msg){
 #tab-Me .account-card{padding:31px 16px;border-radius:18px;margin-bottom:10px}
 #tab-Me .account-main{justify-content:flex-start;gap:14px}
 #tab-Me .me-tile{width:70px;height:70px;flex:0 0 70px;border-radius:16px;background:#555;display:flex;align-items:center;justify-content:center;overflow:hidden}
-#tab-Me .me-tile img{width:48px;height:48px;object-fit:contain}
+#tab-Me .me-tile img{width:52px;height:52px;object-fit:cover;border-radius:50%}
 #tab-Me .me-info{flex:1;min-width:0}
-#tab-Me .me-bigl{width:44px;height:48px;object-fit:contain;margin-right:6px}
+#tab-Me .me-bigl{width:46px;height:46px;object-fit:cover;border-radius:50%;margin-right:6px}
 #tab-Me .account-label{font-size:11px;color:#8d9099;line-height:16px}
 #tab-Me .account-name{font-size:20px;font-weight:500;margin:0 0 8px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tab-Me .me-bal{font-size:17px;font-weight:500;margin-top:2px;display:flex;align-items:center;gap:8px;line-height:1.3}
@@ -4687,7 +4687,8 @@ window.__cxConfirm=function(msg){
 #epScreen .ep-in{padding:0 24px}
 #epScreen .ep-av{position:relative;width:100px;height:100px;margin:3px auto 11px}
 #epScreen .ep-avc{width:100px;height:100px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:56px}
-#epScreen .ep-avc img{width:76px;height:76px;object-fit:contain;display:block}
+#epScreen .ep-avc img{width:80px;height:80px;object-fit:cover;border-radius:50%;display:block}
+#epScreen .ep-avc.up img{width:100%;height:100%;object-fit:cover}
 #epScreen .ep-pen{position:absolute;right:9.5px;bottom:9.5px;width:26px;height:26px;border-radius:50%;background:#b0bec5;display:flex;align-items:center;justify-content:center;font-size:12px;color:#222;cursor:pointer}
 #epScreen .ep-f{position:relative;height:46px;margin-bottom:9.5px;border-bottom:1px solid #8b8b8b}
 #epScreen .ep-f:focus-within{border-bottom:2.5px solid #000}
@@ -4718,7 +4719,7 @@ window.__cxConfirm=function(msg){
 <div id="epScreen">
   <div class="ep-head"><i class="fa-solid fa-arrow-left" onclick="epClose()"></i><span>My Profile</span></div>
   <div class="ep-h">Edit Profile</div>
-  <div class="ep-av"><div class="ep-avc" id="epAv"></div><span class="ep-pen" onclick="openEmojiPicker()"><i class="fa-solid fa-pencil"></i></span></div>
+  <div class="ep-av"><div class="ep-avc" id="epAv"></div><span class="ep-pen" onclick="document.getElementById('epFile').click()"><i class="fa-solid fa-pencil"></i></span><input type="file" id="epFile" accept="image/*" style="display:none" onchange="epPick(this)"></div>
   <div class="ep-in">
     <div class="ep-row"><div class="ep-f"><input id="epFn" maxlength="30" autocomplete="off" placeholder=" "><label>First Name</label></div><div class="ep-f"><input id="epLn" maxlength="30" autocomplete="off" placeholder=" "><label>Last Name</label></div></div>
     <div class="ep-f ro"><input id="epUn" readonly tabindex="-1" placeholder=" "><label>Username *</label></div>
@@ -4755,13 +4756,33 @@ window.__cxConfirm=function(msg){
     $('epDb').value=d.dob||''; dw();
     var g=d.gender||''; var rs=document.getElementsByName('epG'); for(var r=0;r<rs.length;r++) rs[r].checked=(rs[r].value===g);
     var av=d.avatar, box=$('epAv');
-    if(av&&String(av).indexOf('http')===0) box.innerHTML='<img src="'+String(av).replace(/"/g,'&quot;')+'" alt="">';
+    box.className='ep-avc'+((av&&String(av).indexOf('http')===0)?' up':''); if(av&&String(av).indexOf('http')===0) box.innerHTML='<img src="'+String(av).replace(/"/g,'&quot;')+'" alt="">';
     else if(av) box.textContent=av;
     else { var lg=document.querySelector('.app-brand-logo'); var src=(window.appSettings&&window.appSettings.logoUrl)||(lg&&lg.src)||''; box.innerHTML=src?'<img src="'+src.replace(/"/g,'&quot;')+'" alt="">':'<i class="fa-solid fa-user" style="font-size:40px;color:#999"></i>'; }
     $('epOp').value=''; $('epNp').value='';
   };
   window.openEditProfile=function(){ try{ window.epFill(); }catch(e){} $('epScreen').style.display='block'; $('epScreen').scrollTop=0; };
   window.epClose=function(){ $('epScreen').style.display='none'; };
+
+  window.epPick=async function(inp){
+    var f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+    if(!/^image\//.test(f.type)) return showToast('Select an image',true);
+    if(f.size>8*1024*1024) return showToast('Image is too big (max 8 MB)',true);
+    var box=$('epAv'); box.style.opacity='.45';
+    try{
+      var fd=new FormData(); fd.append('image',f);
+      var res=await fetch('https://api.imgbb.com/1/upload?key=4d3486df57ed390c7ca337185635b11d',{method:'POST',body:fd}); var data=await res.json();
+      if(!data.success) throw new Error('upload');
+      var url=data.data.url;
+      if(sbOn()) await sbRpc('rpc_set_avatar',{p_url:url}); else await db.collection('users').doc(window.currentUser.uid).update({avatar:url});
+      window.userData.avatar=url;
+      box.className='ep-avc up'; box.innerHTML='<img src="'+url+'" alt="">';
+      try{ setHtml('pAvatarIcon','<img src="'+url+'">'); }catch(e){}
+      try{ updateHeaderAvatar(); }catch(e){}
+      showToast('Profile Picture Updated!');
+    }catch(e){ showToast('Upload Failed!',true); }
+    box.style.opacity='';
+  };
   window.epEye=function(id,el){ var i=$(id); if(!i) return; var show=i.type==='password'; i.type=show?'text':'password'; el.innerHTML='<i class="fa-solid '+(show?'fa-eye-slash':'fa-eye')+'"></i>'; };
   window.epSave=async function(){
     var b=$('epSaveBtn'); if(b.disabled) return;
