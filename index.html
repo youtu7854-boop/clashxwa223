@@ -4414,7 +4414,7 @@ window.__setPh=function(url,name){
   window.pvtAccept=function(id){
     if(busy) return; busy=true; pvtDlgClose();
     try{ jbShow(); }catch(e){}
-    rpc('pvt_challenge_accept',{p_id:id}).then(function(){ toast('Challenge accepted'); }).catch(function(e){ toast(err(e)); })
+    rpc('pvt_challenge_accept',{p_id:id}).then(function(){ toast('Challenge accepted'); pvtNotify(id,'accept'); }).catch(function(e){ toast(err(e)); })
       .then(function(){ busy=false; try{ jbHide(); }catch(e){} pvtLoad(); });
   };
   window.pvtCancel=function(id){
@@ -4500,8 +4500,8 @@ window.__setPh=function(url,name){
     $('pcTitle').textContent=(me===c.creatorUid?c.acceptorName:c.creatorName)||'Chat'; $('pcMsgs').innerHTML=''; $('pcMsgs').dataset.s=''; lastChat='';
     $('pvChat').style.display='flex'; loadChat(); clearInterval(window.__pcP); window.__pcP=setInterval(loadChat,3000); };
   window.pvtChatClose=function(){ $('pvChat').style.display='none'; clearInterval(window.__pcP); };
-  function pvtNotify(id){ try{ var u=window.currentUser; if(!u||!u.getIdToken) return;
-    u.getIdToken().then(function(t){ return fetch('https://clashxwa2notifyu-w1xu.vercel.app/api/pvt-notify',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({challengeId:id})}); }).catch(function(){}); }catch(e){} }
+  function pvtNotify(id,type){ try{ var u=window.currentUser; if(!u||!u.getIdToken) return;
+    u.getIdToken().then(function(t){ return fetch('https://clashxwa2notifyu-w1xu.vercel.app/api/pvt-notify',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({challengeId:id,type:type||''})}); }).then(function(r){ if(type!=='accept') return; return r.text().then(function(t){ toast('DEBUG notify '+r.status+': '+String(t).slice(0,90)); }); }).catch(function(e){ if(type==='accept') toast('DEBUG notify fail: '+(e&&e.message||e)); }); }catch(e){} }
   window.pvtSend=function(){ var i=$('pcMsg'); if(!i) return; var m=i.value.trim(); if(!m) return; i.value='';
     rpc('pvt_chat_send',{p_id:dId,p_msg:m}).then(function(){ pvtNotify(dId); lastChat=''; $('pcMsgs').dataset.s=''; loadChat(); }).catch(function(e){ toast(err(e)); }); };
   window.pvtCopy=function(t){ try{ navigator.clipboard.writeText(t); toast('Copied'); }catch(e){} };
@@ -4551,7 +4551,7 @@ window.__setPh=function(url,name){
     if(busy) return; var c=cache[id]||{}, pw=$('pvAP')?$('pvAP').value.trim():'';
     if(c.locked&&!pw) return toast('Enter the password');
     busy=true; pvtDlgClose(); try{ jbShow(); }catch(e){}
-    rpc('pvt_challenge_accept',{p_id:id,p_password:c.locked?pw:null}).then(function(){ toast('Challenge accepted'); return rpc('pvt_challenge_get',{p_id:id}).then(function(r){ cache[id]=r; return true; }); })
+    rpc('pvt_challenge_accept',{p_id:id,p_password:c.locked?pw:null}).then(function(){ toast('Challenge accepted'); pvtNotify(id,'accept'); return rpc('pvt_challenge_get',{p_id:id}).then(function(r){ cache[id]=r; return true; }); })
       .catch(function(e){ toast(err(e)); return false; })
       .then(function(ok){ busy=false; try{ jbHide(); }catch(e){} if(ok) pvtDetail(id); pvtLoad(); });
   };
