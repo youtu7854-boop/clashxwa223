@@ -4501,7 +4501,7 @@ window.__setPh=function(url,name){
     $('pvChat').style.display='flex'; loadChat(); clearInterval(window.__pcP); window.__pcP=setInterval(loadChat,3000); };
   window.pvtChatClose=function(){ $('pvChat').style.display='none'; clearInterval(window.__pcP); };
   function pvtNotify(id,type){ try{ var u=window.currentUser; if(!u||!u.getIdToken) return;
-    u.getIdToken().then(function(t){ return fetch('https://clashxwa2notifyu-w1xu.vercel.app/api/pvt-notify',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({challengeId:id,type:type||''})}); }).then(function(r){ if(type!=='accept') return; return r.text().then(function(t){ toast('DEBUG notify '+r.status+': '+String(t).slice(0,90)); }); }).catch(function(e){ if(type==='accept') toast('DEBUG notify fail: '+(e&&e.message||e)); }); }catch(e){} }
+    u.getIdToken().then(function(t){ return fetch('https://clashxwa2notifyu-w1xu.vercel.app/api/pvt-notify',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({challengeId:id,type:type||''})}); }).catch(function(){}); }catch(e){} }
   window.pvtSend=function(){ var i=$('pcMsg'); if(!i) return; var m=i.value.trim(); if(!m) return; i.value='';
     rpc('pvt_chat_send',{p_id:dId,p_msg:m}).then(function(){ pvtNotify(dId); lastChat=''; $('pcMsgs').dataset.s=''; loadChat(); }).catch(function(e){ toast(err(e)); }); };
   window.pvtCopy=function(t){ try{ navigator.clipboard.writeText(t); toast('Copied'); }catch(e){} };
