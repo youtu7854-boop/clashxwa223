@@ -4216,6 +4216,9 @@ window.__setPh=function(url,name){
 .pv-rd label{display:flex;align-items:center;gap:8px}
 .pv-rd input{accent-color:#111;width:17px;height:17px;margin:0}
 .pv-ncn{font-size:14px;line-height:1.35;margin:14px 0 22px;color:#111}
+.pv-jb{display:flex;gap:14px;margin-top:4px}
+.pv-jb button{flex:1;height:46px;border:0;border-radius:3px;color:#fff;font-size:15px;text-transform:uppercase;box-shadow:0 2px 5px rgba(0,0,0,.3);font-family:inherit}
+.pv-jb .c{background:#8b7bf0}.pv-jb .j{background:#55e896}
 .pv-cb{display:block;width:88%;margin:0 auto;height:40px;border:0;border-radius:3px;background:#8b7bf0;color:#fff;font-size:14px;box-shadow:0 2px 5px rgba(0,0,0,.3);font-family:inherit}
 .pv-card.tp{cursor:pointer}
 #pvDetail{display:none;position:fixed;inset:0;background:#000;color:#fff;z-index:10003;overflow-y:auto;overflow-x:hidden;padding-bottom:30px;animation:slideInRight .3s}
@@ -4544,14 +4547,22 @@ window.__setPh=function(url,name){
   err=function(e){ var m=String((e&&e.message)||e||''); if(m.indexOf('wrong password')>=0) return 'Wrong password'; if(m.indexOf('min entry')>=0) return 'Minimum amount is 6 coins'; if(m.indexOf('bad username')>=0) return 'Username must be 2 to 30 characters'; if(m.indexOf('bad password')>=0) return 'Password can be up to 20 characters'; return _err(e); };
   tick=function(){ if(!dId) return; rpc('pvt_challenge_get',{p_id:dId}).then(function(c){ if(!c||!dId) return; cache[c.id]=c; if(c.status!==lastStatus||c.roomId!==lastRoom||c.myResult!==lastRes||c.acceptorUid!==lastAcc) draw(false); loadChat(); }).catch(function(){}); };
   window.pvtAcceptDlg=function(id,entry){
-    var c=cache[id]||{};
-    dlg('<p>'+fmt(entry)+' coins will be deducted from your wallet</p>'+(c.win?'<p style="color:#1a9d5b;font-weight:600">Winning: '+fmt(c.win)+' Coins</p>':'')+(c.locked?'<div class="pv-fl"><input id="pvAP" type="text" autocomplete="off" placeholder=" "><label>Enter password</label></div>':'')+'<p>Are you sure want to accept this challenge?</p><div class="pv-btns"><button onclick="pvtAccept(\''+id+'\')">Yes</button><button onclick="pvtDlgClose()">No</button></div>');
+    dlg('<p>'+fmt(entry)+' coins will be deducted from your wallet</p><p>Are you sure want to accept this challenge?</p><div class="pv-btns"><button onclick="pvtJoinDlg(\''+id+'\')">Yes</button><button onclick="pvtDlgClose()">No</button></div>');
+  };
+  window.pvtJoinDlg=function(id){
+    var c=cache[id]||{}, nm=($('pvTitle').textContent||'').trim();
+    dlg('<div class="pv-nc">Join Challenge</div><div class="pv-ncb">'
+      +'<div class="pv-fl"><input id="pvAU" maxlength="30" autocomplete="off" placeholder=" "><label>'+esc(nm)+' username</label></div>'
+      +(c.locked?'<div class="pv-fl"><input id="pvAP" maxlength="20" autocomplete="off" placeholder=" "><label>Enter password</label></div>':'')
+      +'<div class="pv-ncn">Make sure you have entered correct information</div>'
+      +'<div class="pv-jb"><button class="c" onclick="pvtDlgClose()">Cancel</button><button class="j" onclick="pvtAccept(\''+id+'\')">Join</button></div></div>');
   };
   window.pvtAccept=function(id){
-    if(busy) return; var c=cache[id]||{}, pw=$('pvAP')?$('pvAP').value.trim():'';
+    if(busy) return; var c=cache[id]||{}, pw=$('pvAP')?$('pvAP').value.trim():'', un=$('pvAU')?$('pvAU').value.trim():'';
+    if(un.length<2) return toast('Enter your username');
     if(c.locked&&!pw) return toast('Enter the password');
     busy=true; pvtDlgClose(); try{ jbShow(); }catch(e){}
-    rpc('pvt_challenge_accept',{p_id:id,p_password:c.locked?pw:null}).then(function(){ toast('Challenge accepted'); pvtNotify(id,'accept'); return rpc('pvt_challenge_get',{p_id:id}).then(function(r){ cache[id]=r; return true; }); })
+    rpc('pvt_challenge_accept',{p_id:id,p_password:c.locked?pw:null,p_name:un}).then(function(){ toast('Challenge accepted'); pvtNotify(id,'accept'); return rpc('pvt_challenge_get',{p_id:id}).then(function(r){ cache[id]=r; return true; }); })
       .catch(function(e){ toast(err(e)); return false; })
       .then(function(ok){ busy=false; try{ jbHide(); }catch(e){} if(ok) pvtDetail(id); pvtLoad(); });
   };
