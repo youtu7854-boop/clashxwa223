@@ -4706,13 +4706,19 @@ window.__cxConfirm=function(msg){
 #epScreen .ep-g label{display:flex;align-items:center;gap:6.5px;margin-right:6.5px}
 #epScreen .ep-g input{appearance:none;-webkit-appearance:none;width:20px;height:20px;border:2px solid #777;border-radius:50%;margin:0;background:transparent;position:relative}
 #epScreen .ep-g input:checked::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#000}
-#epScreen .ep-btn{display:block;width:calc(100% - 27px);margin:21.5px auto 0;height:47.5px;border:0;border-radius:4px;background:#55ea96;color:#fff;font:inherit;font-size:13.5px;font-weight:500;text-transform:uppercase;box-shadow:0 2px 5px rgba(0,0,0,.28)}
+#epScreen .ep-btn{display:block;width:calc(100% + 20px);margin:21.5px -10px 0;height:47.5px;border:0;border-radius:4px;background:#55ea96;color:#fff;font:inherit;font-size:13.5px;font-weight:500;text-transform:uppercase;box-shadow:0 2px 5px rgba(0,0,0,.28)}
 #epScreen .ep-btn:disabled{opacity:.6}
 #epScreen .ep-pw input{right:34px}
 #epScreen .ep-pw{margin-bottom:12px}
 #epScreen .ep-eye{position:absolute;right:9px;top:19px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#4a4a4a;cursor:pointer}
+#epLoad{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10010;align-items:center;justify-content:center}
+#epLoad.on{display:flex;animation:epFade .2s ease-out}
+#epLoad svg{width:44px;height:44px;animation:epSpin .9s linear infinite}
+@keyframes epSpin{to{transform:rotate(360deg)}}
+@keyframes epFade{from{opacity:0}to{opacity:1}}
 #epScreen .ep-note{font-size:11px;color:#777;margin:-4px 0 0}
 </style>
+<div id="epLoad"><svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-dasharray="80 126"/></svg></div>
 <div id="epScreen">
   <div class="ep-head"><i class="fa-solid fa-arrow-left" onclick="epClose()"></i><span>My Profile</span></div>
   <div class="ep-h">Edit Profile</div>
@@ -4758,8 +4764,14 @@ window.__cxConfirm=function(msg){
     else { var lg=document.querySelector('.app-brand-logo'); var src=(window.appSettings&&window.appSettings.logoUrl)||(lg&&lg.src)||''; box.innerHTML=src?'<img src="'+src.replace(/"/g,'&quot;')+'" alt="">':'<i class="fa-solid fa-user" style="font-size:40px;color:#999"></i>'; }
     $('epOp').value=''; $('epNp').value='';
   };
-  window.openEditProfile=function(){ try{ window.epFill(); }catch(e){} $('epScreen').style.display='block'; $('epScreen').scrollTop=0; };
-  window.epClose=function(){ $('epScreen').style.display='none'; };
+  function ld(on){ var l=$('epLoad'); if(l) l.classList.toggle('on',!!on); }
+  window.openEditProfile=function(){
+    window.__epNew=null; window.__epUpP=null;
+    try{ window.epFill(); ['epFn','epLn','epUn','epEm','epMo','epDb'].forEach(function(i){ $(i).value=''; }); dw(); }catch(e){}
+    $('epScreen').style.display='block'; $('epScreen').scrollTop=0; ld(true);
+    setTimeout(function(){ try{ window.epFill(); }catch(e){} ld(false); },850);
+  };
+  window.epClose=function(){ $('epScreen').style.display='none'; ld(false); };
 
   function epShrink(f){
     return new Promise(function(ok){
@@ -4788,21 +4800,18 @@ window.__cxConfirm=function(msg){
   window.epPick=async function(inp){
     var f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
     if(f.type&&!/^image\//.test(f.type)) return showToast('Select an image',true);
-    var box=$('epAv'); box.style.opacity='.45';
-    try{
-      var small=await epShrink(f);
+    var box=$('epAv'), small=await epShrink(f);
+    try{ var pu=URL.createObjectURL(small); box.className='ep-avc up'; box.innerHTML='<img src="'+pu+'" alt="">'; }catch(e){}
+    window.__epNew={url:null};
+    var cur=window.__epNew;
+    window.__epUpP=(async function(){
       if(small===f&&f.size>3*1024*1024) throw new Error('big');
       var data; try{ data=await epUp(small); }catch(e){ data=await epUp(small); }
       if(!data||!data.success) throw new Error('upload');
-      var url=data.data.url;
-      if(sbOn()) await sbRpc('rpc_set_avatar',{p_url:url}); else await db.collection('users').doc(window.currentUser.uid).update({avatar:url});
-      window.userData.avatar=url;
-      box.className='ep-avc up'; box.innerHTML='<img src="'+url+'" alt="">';
-      try{ setHtml('pAvatarIcon','<img src="'+url+'">'); }catch(e){}
-      try{ updateHeaderAvatar(); }catch(e){}
-      showToast('Profile Picture Updated!');
-    }catch(e){ showToast('Upload failed. Check internet and try again.',true); }
-    box.style.opacity='';
+      cur.url=data.data.url; return cur.url;
+    })();
+    window.__epUpP.catch(function(){});
+    showToast('Image ready \u2014 tap Save to upload');
   };
   window.epEye=function(id,el){ var i=$(id); if(!i) return; var show=i.type==='password'; i.type=show?'text':'password'; el.innerHTML='<i class="fa-solid '+(show?'fa-eye-slash':'fa-eye')+'"></i>'; };
   window.epSave=async function(){
@@ -4811,12 +4820,13 @@ window.__cxConfirm=function(msg){
     var rs=document.getElementsByName('epG'); for(var r=0;r<rs.length;r++) if(rs[r].checked) g=rs[r].value;
     try{ var re=new RegExp("^[\\p{L} .'-]{0,30}$","u"); if(!re.test(fn)||!re.test(ln)) return showToast('Name can have only letters',true); }catch(e){}
     if(dob){ var t=new Date(dob+'T00:00:00'); if(isNaN(t)||t>new Date()||t.getFullYear()<1900) return showToast('Enter a valid date of birth',true); }
-    b.disabled=true;
+    b.disabled=true; ld(true);
     try{
+      if(window.__epNew){ var nu; try{ nu=await window.__epUpP; }catch(e){ nu=null; } if(!nu){ ld(false); b.disabled=false; return showToast('Upload failed. Check internet and try again.',true); } if(sbOn()) await sbRpc('rpc_set_avatar',{p_url:nu}); else await db.collection('users').doc(window.currentUser.uid).update({avatar:nu}); window.userData.avatar=nu; window.__epNew=null; try{ setHtml('pAvatarIcon','<img src="'+nu+'">'); }catch(e){} try{ updateHeaderAvatar(); }catch(e){} }
       await sbRpc('rpc_profile_update',{p_first:fn,p_last:ln,p_dob:dob||'',p_gender:g});
       if(window.userData){ window.userData.firstName=fn; window.userData.lastName=ln; window.userData.dob=dob||''; window.userData.gender=g; }
-      showToast('Profile updated');
-    }catch(e){ showToast('Could not update profile. Try again.',true); }
+      ld(false); showToast('Profile Updated Successfully');
+    }catch(e){ ld(false); showToast('Could not update profile. Try again.',true); }
     b.disabled=false;
   };
   window.epPass=async function(){
@@ -4828,11 +4838,11 @@ window.__cxConfirm=function(msg){
     var wDep=Number(window.userData.wallets&&window.userData.wallets.deposit||0), wWin=Number(window.userData.wallets&&window.userData.wallets.winning||0);
     if(sbOn()&&wDep<0) return showToast(SB_DUES_MSG,true);
     if((sbOn()?sbSpend(wDep,wWin):(wDep+wWin))<10) return showToast('Insufficient balance for ₹10 fee',true);
-    b.disabled=true;
+    b.disabled=true; ld(true);
     try{
       var u=window.currentUser;
       try{ await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email,op)); }
-      catch(e){ b.disabled=false; return showToast('Old password is wrong',true); }
+      catch(e){ b.disabled=false; ld(false); return showToast('Old password is wrong',true); }
       await u.updatePassword(np);
       if(sbOn()){ await sbRpc('rpc_password_fee'); }
       else{
@@ -4843,7 +4853,7 @@ window.__cxConfirm=function(msg){
       showToast('Password Updated (₹10 deducted)!'); $('epOp').value=''; $('epNp').value='';
       try{ await loadUserProfile(u.uid); await loadUserTransactions(); }catch(e){}
     }catch(e){ showToast('Error: Please Logout and Login again to change password.',true); }
-    b.disabled=false;
+    b.disabled=false; ld(false);
   };
 })();
 </script>
