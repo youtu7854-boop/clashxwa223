@@ -3368,7 +3368,7 @@ window.ogRender=(m)=>{
   let ph='';
   const js=m.joinedUsers||[];
   if(js.length){ js.forEach((u,i)=>{
-    ph+=`<div class="og-mr"><span class="n">${ogEsc(u.slot||i+1)}.</span><span class="u">${ogEsc(u.ffName)}</span></div>`;
+    ph+=`<div class="og-mr"><span class="n">${i+1}.</span><span class="u">${ogEsc(u.ffName)}</span></div>`;
   }); } else ph='<div style="padding:30px;text-align:center;color:var(--text-sub);font-size:13px">No players joined.</div>';
   setHtml('ogMem',ph);
 };
